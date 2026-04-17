@@ -10,35 +10,89 @@ jobs:
 
     steps:
       - name: Move issue to In Review and remove PR card
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           github-token: ${{ secrets.GH_TOKEN }}
           script: |
             const prBody = context.payload.pull_request.body ?? ''
+            const prTitle = context.payload.pull_request.title ?? ''
+            const branchName = context.payload.pull_request.head.ref ?? ''
+            const prNumber = context.payload.pull_request.number
             const prNodeId = context.payload.pull_request.node_id
             const owner = context.repo.owner
             const repo = context.repo.repo
 
-            const match = prBody.match(/#(\d+)/)
-            if (!match) {
-              core.info('No linked issue found in PR body')
-              return
+            const extractIssueNumber = (...texts) => {
+              for (const text of texts) {
+                if (!text) continue
+
+                const closingKeywordMatch = text.match(
+                  /\b(?:close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved)\s+#?(\d+)\b/i
+                )
+                if (closingKeywordMatch) {
+                  return parseInt(closingKeywordMatch[1], 10)
+                }
+
+                const issueReferenceMatch = text.match(/#(\d+)/)
+                if (issueReferenceMatch) {
+                  return parseInt(issueReferenceMatch[1], 10)
+                }
+
+                const branchNumberMatch = text.match(/\b(\d+)\b/)
+                if (branchNumberMatch) {
+                  return parseInt(branchNumberMatch[1], 10)
+                }
+              }
+
+              return null
             }
 
-            const issueNumber = parseInt(match[1])
-
-            // Resolve the issue node ID
-            const issueData = await github.graphql(`
+            const prData = await github.graphql(`
               query($owner: String!, $repo: String!, $number: Int!) {
                 repository(owner: $owner, name: $repo) {
-                  issue(number: $number) {
-                    id
+                  pullRequest(number: $number) {
+                    closingIssuesReferences(first: 10) {
+                      nodes {
+                        id
+                        number
+                      }
+                    }
                   }
                 }
               }
-            `, { owner, repo, number: issueNumber })
+            `, { owner, repo, number: prNumber })
 
-            const issueNodeId = issueData.repository.issue.id
+            const linkedIssues = prData.repository.pullRequest?.closingIssuesReferences?.nodes ?? []
+            let issueNumber = linkedIssues[0]?.number ?? null
+            let issueNodeId = linkedIssues[0]?.id ?? null
+
+            if (!issueNumber) {
+              issueNumber = extractIssueNumber(prBody, prTitle, branchName)
+            }
+
+            if (!Number.isFinite(issueNumber)) {
+              core.setFailed('Could not resolve a linked issue from pull request metadata, body, title, or branch name')
+              return
+            }
+
+            if (!issueNodeId) {
+              const issueData = await github.graphql(`
+                query($owner: String!, $repo: String!, $number: Int!) {
+                  repository(owner: $owner, name: $repo) {
+                    issue(number: $number) {
+                      id
+                    }
+                  }
+                }
+              `, { owner, repo, number: issueNumber })
+
+              issueNodeId = issueData.repository.issue?.id
+            }
+
+            if (!issueNodeId) {
+              core.setFailed(\`Issue #\${issueNumber} not found in repository\`)
+              return
+            }
 
             // Fetch project metadata: id, Status field and its options
             const projectData = await github.graphql(`
