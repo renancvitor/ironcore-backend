@@ -92,7 +92,10 @@ Esta secao sera implementada por completo conforme o projeto evoluir.
 
 ## Contato
 
-Esta secao sera implementada por completo conforme o projeto evoluir.
+Se tiver duvidas ou sugestoes, sinta-se a vontade para entrar em contato:
+
+- E-mail: [renan.vitor.cm@gmail.com](mailto:renan.vitor.cm@gmail.com)
+- LinkedIn: [Renan Vitor](https://www.linkedin.com/in/renan-vitor-developer/)
 
 ---
 
