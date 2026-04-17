@@ -90,7 +90,7 @@ jobs:
             }
 
             if (!issueNodeId) {
-              core.setFailed(\`Issue #\${issueNumber} not found in repository\`)
+              core.setFailed(`Issue #${issueNumber} not found in repository`)
               return
             }
 
