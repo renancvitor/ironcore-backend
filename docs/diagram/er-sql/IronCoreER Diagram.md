@@ -263,5 +263,6 @@ De forma resumida, o fluxo do modelo funciona assim:
 - O detalhamento em `workout_activities` permite acomodar treinos de força, cardio e atividades híbridas com diferentes parâmetros de execução.
 - O histórico de medições em `user_body_metrics` favorece rastreabilidade e análise evolutiva do usuário ao longo do tempo.
 - A organização visual do diagrama foi pensada para facilitar a leitura humana; ela não indica ordem de processamento, dependência operacional prioritária ou relevância maior de uma tabela sobre outra.
+- A imagem deste diagrama foi criada com o [dbdiagram.io](https://dbdiagram.io/).
 
 <p align="right"><a href="../../../README.md">🔄 Voltar para a documentação completa</a></p>
