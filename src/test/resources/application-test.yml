@@ -11,3 +11,7 @@ spring:
       ddl-auto: create-drop
   flyway:
     enabled: false
+
+security:
+  token:
+    secret: ${JWT_SECRET}

@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: ${DB_URL_DEV}
+    username: ${DB_USER_DEV}
+    password: ${DB_PASSWORD_DEV}
+    driver-class-name: org.postgressql.Driver
+
+#  kafka:
+#    bootstrap-servers: localhost:9892
+#    producer:
+#      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+#      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+#
+#messaging:
+#  provider: kafka
+#  kafka:
+#    enabled: true
+#
+#outbox:
+#  scheduler:
+#    enabled: true
+
+app:
+  environment: development
