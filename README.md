@@ -1,7 +1,10 @@
 <h1 id="inicio" align="center">
-    IronCore Backend <br>
-    <img src="https://img.shields.io/badge/Status-In%20Progress-yellow" width="150" height="30" />
+  IronCore Backend
 </h1>
+<p align="center">
+  <img src="https://img.shields.io/badge/Status-In%20Progress-yellow" width="150" height="30" />
+</p>
+
 <!-- Troque o texto e a cor do badge conforme o status do projeto:
      Status-Completed-brightgreen   → Projeto concluído
      Status-In%20Progress-yellow    → Projeto em andamento
@@ -10,6 +13,8 @@
      Exemplo de uso:
      https://img.shields.io/badge/Status-Completed-brightgreen
 -->
+
+---
 
 <h2 align="center">🔗 Frontend</h2>
 
