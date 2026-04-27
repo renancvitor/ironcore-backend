@@ -41,6 +41,7 @@ Armazena os dados principais do usuário.
 | `name` | `VARCHAR` | Sim | Nome do usuário. |
 | `email` | `VARCHAR` | Sim | E-mail único para autenticação e contato. |
 | `password_hash` | `VARCHAR` | Sim | Hash da senha do usuário. |
+| `sex` | `VARCHAR` | Sim | Sexo utilizado em cálculos corporais, como estimativa de percentual de gordura. |
 | `created_at` | `TIMESTAMP` | Sim | Data e hora de criação do registro. |
 | `updated_at` | `TIMESTAMP` | Não | Data e hora da última atualização. |
 
@@ -56,8 +57,10 @@ Registra o histórico de medições corporais de cada usuário, permitindo acomp
 | `weight_kg` | `NUMERIC(5,2)` | Sim | Peso corporal em quilogramas. |
 | `height_cm` | `NUMERIC(5,2)` | Sim | Altura em centímetros. |
 | `body_fat_percentage` | `NUMERIC(5,2)` | Não | Percentual de gordura corporal. |
+| `neck_cm` | `NUMERIC(5,2)` | Não | Medida do pescoço em centímetros. |
 | `chest_cm` | `NUMERIC(5,2)` | Não | Medida do tórax em centímetros. |
 | `waist_cm` | `NUMERIC(5,2)` | Não | Medida da cintura em centímetros. |
+| `hip_cm` | `NUMERIC(5,2)` | Não | Medida do quadril em centímetros. |
 | `arm_cm` | `NUMERIC(5,2)` | Não | Medida do braço em centímetros. |
 | `thigh_cm` | `NUMERIC(5,2)` | Não | Medida da coxa em centímetros. |
 | `calf_cm` | `NUMERIC(5,2)` | Não | Medida da panturrilha em centímetros. |
