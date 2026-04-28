@@ -43,11 +43,20 @@ public class UserBodyMetricsEntity {
     @Column(name = "height_cm", nullable = false)
     private Double heightCm;
 
-    @Column(name = "body_fat_percentage")
-    private Double bodyFatPercentage;
+    @Column(name = "neck_cm")
+    private Double neckCm;
 
     @Column(name = "chest_cm")
     private Double chestCm;
+
+    @Column(name = "shoulder_cm")
+    private Double shoulderCm;
+
+    @Column(name = "arm_cm")
+    private Double armCm;
+
+    @Column(name = "forearm_cm")
+    private Double forearmCm;
 
     @Column(name = "waist_cm")
     private Double waistCm;
@@ -55,17 +64,23 @@ public class UserBodyMetricsEntity {
     @Column(name = "hip_cm")
     private Double hipCm;
 
-    @Column(name = "arm_cm")
-    private Double armCm;
-
     @Column(name = "thigh_cm")
     private Double thighCm;
 
     @Column(name = "calf_cm")
     private Double calfCm;
 
-    @Column(name = "neck_cm")
-    private Double neckCm;
+    @Column(name = "bmi")
+    private Double bmi;
+
+    @Column(name = "body_fat_percentage")
+    private Double bodyFatPercentage;
+
+    @Column(name = "fat_mass_kg")
+    private Double fatMassKg;
+
+    @Column(name = "lean_mass_kg")
+    private Double leanMassKg;
 
     private String notes;
 }
