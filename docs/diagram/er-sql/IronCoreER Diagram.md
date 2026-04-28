@@ -1,7 +1,7 @@
 # Diagrama Entidade-Relacionamento (ER)
 
 <p align="center">
-    <img src="./IronCoreER%20Diagram.png" alt="Diagrama entidade-relacionamento do IronCore" />
+    <img src="./IronCoreERDiagram.png" alt="Diagrama entidade-relacionamento do IronCore" />
 </p>
 
 ## Visão Geral
@@ -49,22 +49,27 @@ Armazena os dados principais do usuário.
 
 Registra o histórico de medições corporais de cada usuário, permitindo acompanhamento de evolução física.
 
-| Campo | Tipo | Obrigatório | Descrição |
-| --- | --- | --- | --- |
-| `id` | `BIGINT` | Sim | Identificador único da medição. |
-| `user_id` | `BIGINT` | Sim | Referência ao usuário dono da medição. |
-| `measured_at` | `TIMESTAMP` | Sim | Data e hora em que a medição foi registrada. |
-| `weight_kg` | `NUMERIC(5,2)` | Sim | Peso corporal em quilogramas. |
-| `height_cm` | `NUMERIC(5,2)` | Sim | Altura em centímetros. |
-| `body_fat_percentage` | `NUMERIC(5,2)` | Não | Percentual de gordura corporal. |
-| `neck_cm` | `NUMERIC(5,2)` | Não | Medida do pescoço em centímetros. |
-| `chest_cm` | `NUMERIC(5,2)` | Não | Medida do tórax em centímetros. |
-| `waist_cm` | `NUMERIC(5,2)` | Não | Medida da cintura em centímetros. |
-| `hip_cm` | `NUMERIC(5,2)` | Não | Medida do quadril em centímetros. |
-| `arm_cm` | `NUMERIC(5,2)` | Não | Medida do braço em centímetros. |
-| `thigh_cm` | `NUMERIC(5,2)` | Não | Medida da coxa em centímetros. |
-| `calf_cm` | `NUMERIC(5,2)` | Não | Medida da panturrilha em centímetros. |
-| `notes` | `TEXT` | Não | Observações livres sobre a medição. |
+| Campo                | Tipo | Obrigatório | Descrição                                    |
+|----------------------| --- | --- |----------------------------------------------|
+| `id`                 | `BIGINT` | Sim | Identificador único da medição.              |
+| `user_id`            | `BIGINT` | Sim | Referência ao usuário dono da medição.       |
+| `measured_at`        | `TIMESTAMP` | Sim | Data e hora em que a medição foi registrada. |
+| `weight_kg`          | `NUMERIC(5,2)` | Sim | Peso corporal em quilogramas.                |
+| `height_cm`          | `NUMERIC(5,2)` | Sim | Altura em centímetros.                       |
+| `neck_cm`            | `NUMERIC(5,2)` | Não | Medida do pescoço em centímetros.            |
+| `chest_cm`           | `NUMERIC(5,2)` | Não | Medida do tórax em centímetros.              |
+| `shoulder_cm`        | `NUMERIC(5,2)` | Não | Medida do ombro em centímetros.              |
+| `arm_cm`             | `NUMERIC(5,2)` | Não | Medida do braço em centímetros.              |
+| `forearm_cm`         | `NUMERIC(5,2)` | Não | Medida do antebraço em centímetros.          |
+| `waist_cm`           | `NUMERIC(5,2)` | Não | Medida da cintura em centímetros.            |
+| `hip_cm`             | `NUMERIC(5,2)` | Não | Medida do quadril em centímetros.            |
+| `thigh_cm`           | `NUMERIC(5,2)` | Não | Medida da coxa em centímetros.               |
+| `calf_cm`            | `NUMERIC(5,2)` | Não | Medida da panturrilha em centímetros.        |
+| `bmi`                | `NUMERIC(5,2)` | Não | Índice de Massa Corporal.                    |
+| `body_fat_percentage`| `NUMERIC(5,2)` | Não | Percentual de gordura corporal.              |
+| `fat_mass_kg`        | `NUMERIC(5,2)` | Não | Percentual de massa gorda.                   |
+| `lean_mass_kg`       | `NUMERIC(5,2)` | Não | Percentual de massa magra.                   |
+| `notes`              | `TEXT` | Não | Observações livres sobre a medição.          |
 
 ### `muscle_group`
 
