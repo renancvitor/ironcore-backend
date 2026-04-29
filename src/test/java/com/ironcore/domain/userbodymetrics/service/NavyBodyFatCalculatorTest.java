@@ -1,89 +1,62 @@
 package com.ironcore.domain.userbodymetrics.service;
 
+import static com.ironcore.domain.userbodymetrics.UserBodyMetricsTestFactory.heightInCm;
+import static com.ironcore.domain.userbodymetrics.UserBodyMetricsTestFactory.navyCircumferences;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.data.Offset.offset;
+
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
 import com.ironcore.domain.user.model.Sex;
-import com.ironcore.domain.userbodymetrics.valueobject.BodyCircumferenceCm;
 import com.ironcore.domain.userbodymetrics.valueobject.BodyCircumferences;
 import com.ironcore.domain.userbodymetrics.valueobject.BodyFatPercentage;
 import com.ironcore.domain.userbodymetrics.valueobject.BodyHeightCm;
-import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class NavyBodyFatCalculatorTest {
 
     private final NavyBodyFatCalculator calculator = new NavyBodyFatCalculator();
 
-    @Test
-    void shouldCalculateMaleBodyFatPercentage() {
-        BodyFatPercentage result = calculateMaleBodyFat();
+    @Nested
+    class SuccessfulCalculations {
 
-        assertThat(result.value()).isCloseTo(18.0, withinPercentagePoint());
+        @Test
+        void shouldCalculateMaleBodyFatPercentage() {
+            BodyFatPercentage result = calculator.calculate(
+                    Sex.MALE,
+                    heightInCm(178.0),
+                    navyCircumferences(39.0, 88.0));
+
+            assertThat(result.value()).isCloseTo(18.0, withinPercentagePoint());
+        }
+
+        @Test
+        void shouldCalculateFemaleBodyFatPercentage() {
+            BodyFatPercentage result = calculator.calculate(
+                    Sex.FEMALE,
+                    heightInCm(165.0),
+                    navyCircumferences(33.0, 70.0, 98.0));
+
+            assertThat(result.value()).isCloseTo(26.2, withinPercentagePoint());
+        }
     }
 
-    private BodyFatPercentage calculateMaleBodyFat() {
-        return calculator.calculate(
-                Sex.MALE,
-                new BodyHeightCm(178.0),
-                new BodyCircumferences(
-                        new BodyCircumferenceCm(39.0),
-                        null,
-                        new BodyCircumferenceCm(88.0),
-                        null,
-                        null,
-                        null,
-                        null
-                )
-        );
-    }
+    @Nested
+    class ValidationErrors {
 
-    @Test
-    void shouldCalculateFemaleBodyFatPercentage() {
-        BodyFatPercentage result = calculateFemaleBodyFat();
+        @Test
+        void shouldRequireHipCircumferenceForFemaleCalculation() {
+            BodyHeightCm height = heightInCm(165.0);
+            BodyCircumferences circumferencesWithoutHip = navyCircumferences(33.0, 70.0);
 
-        assertThat(result.value()).isCloseTo(26.2, withinPercentagePoint());
-    }
-
-    private BodyFatPercentage calculateFemaleBodyFat() {
-        return calculator.calculate(
-                Sex.FEMALE,
-                new BodyHeightCm(165.0),
-                new BodyCircumferences(
-                        new BodyCircumferenceCm(33.0),
-                        null,
-                        new BodyCircumferenceCm(70.0),
-                        new BodyCircumferenceCm(98.0),
-                        null,
-                        null,
-                        null
-                )
-        );
-    }
-
-    @Test
-    void shouldRequireHipCircumferenceForFemaleCalculation() {
-        assertThatThrownBy(this::calculateFemaleBodyFatWithoutHip)
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Hip circumference is required");
-    }
-
-    private BodyFatPercentage calculateFemaleBodyFatWithoutHip() {
-        return calculator.calculate(
-                Sex.FEMALE,
-                new BodyHeightCm(165.0),
-                new BodyCircumferences(
-                        new BodyCircumferenceCm(33.0),
-                        null,
-                        new BodyCircumferenceCm(70.0),
-                        null,
-                        null,
-                        null,
-                        null
-                )
-        );
+            assertThatThrownBy(() -> calculator.calculate(Sex.FEMALE, height, circumferencesWithoutHip))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("Hip circumference is required");
+        }
     }
 
     private org.assertj.core.data.Offset<Double> withinPercentagePoint() {
-        return org.assertj.core.data.Offset.offset(0.1);
+        return offset(0.1);
     }
 }
