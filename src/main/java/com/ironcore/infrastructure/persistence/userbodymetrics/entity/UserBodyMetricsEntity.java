@@ -31,7 +31,7 @@ public class UserBodyMetricsEntity {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
 
     @Column(name = "measured_at", nullable = false)
@@ -82,5 +82,6 @@ public class UserBodyMetricsEntity {
     @Column(name = "lean_mass_kg")
     private Double leanMassKg;
 
+    @Column(columnDefinition = "TEXT")
     private String notes;
 }

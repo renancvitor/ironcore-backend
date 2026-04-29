@@ -34,6 +34,7 @@ public class UserEntity {
     private String email;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 15)
     private Sex sex;
 
     @Column(name = "password_hash", nullable = false)
