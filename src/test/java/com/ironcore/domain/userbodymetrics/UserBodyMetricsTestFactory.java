@@ -1,8 +1,6 @@
 package com.ironcore.domain.userbodymetrics;
 
-import com.ironcore.domain.userbodymetrics.valueobject.BodyCircumferenceCm;
-import com.ironcore.domain.userbodymetrics.valueobject.BodyCircumferences;
-import com.ironcore.domain.userbodymetrics.valueobject.BodyHeightCm;
+import com.ironcore.domain.userbodymetrics.valueobject.*;
 
 public final class UserBodyMetricsTestFactory {
 
@@ -11,6 +9,10 @@ public final class UserBodyMetricsTestFactory {
 
     public static BodyHeightCm heightInCm(double value) {
         return new BodyHeightCm(value);
+    }
+
+    public static BodyWeightKg weightInKg(double value) {
+        return new BodyWeightKg(value);
     }
 
     public static BodyCircumferences navyCircumferences(double neckCm, double waistCm) {
@@ -36,5 +38,13 @@ public final class UserBodyMetricsTestFactory {
 
     private static BodyCircumferenceCm optionalCircumferenceInCm(Double value) {
         return value == null ? null : circumferenceInCm(value);
+    }
+
+    public static BodyFatPercentage bodyFatPercentage(double value) {
+        return new BodyFatPercentage(value);
+    }
+
+    public static FatMassKg fatMass(double value) {
+        return new FatMassKg(value);
     }
 }

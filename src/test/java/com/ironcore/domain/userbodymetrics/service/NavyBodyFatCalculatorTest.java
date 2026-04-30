@@ -52,7 +52,7 @@ class NavyBodyFatCalculatorTest {
 
             assertThatThrownBy(() -> calculator.calculate(Sex.FEMALE, height, circumferencesWithoutHip))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("Hip circumference is required");
+                    .hasMessage("Circunferência do quadril não pode ser nulo");
         }
     }
 
