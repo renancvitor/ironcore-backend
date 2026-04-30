@@ -33,7 +33,10 @@ public class UserBodyMetrics {
         this.weight = Objects.requireNonNull(weight, "Peso não pode ser nulo");
         this.height = Objects.requireNonNull(height, "Altura não pode ser nulo");
         this.circumferences = circumferences;
+        this.bmi = bmi;
         this.bodyFatPercentage = bodyFatPercentage;
+        this.fatMassKg = fatMassKg;
+        this.leanMassKg = leanMassKg;
         this.notes = notes;
     }
 
