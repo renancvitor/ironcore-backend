@@ -1,4 +1,4 @@
-package com.ironcore.domain.logging.audit;
+package com.ironcore.domain.logging.audit.model;
 
 import com.ironcore.domain.logging.audit.valueobject.AuditAction;
 import com.ironcore.domain.logging.audit.valueobject.AuditActor;
