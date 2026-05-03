@@ -1,0 +1,13 @@
+package com.ironcore.domain.logging.error.enums;
+
+public enum ErrorCode {
+    VALIDATION_ERROR,
+    AUTHENTICATION_ERROR,
+    AUTHORIZATION_ERROR,
+    RESOURCE_NOT_FOUND,
+    BUSINESS_RULE_VIOLATION,
+    DATABASE_ERROR,
+    EXTERNAL_SERVICE_ERROR,
+    INTERNAL_ERROR,
+    UNKNOWN_ERROR
+}
