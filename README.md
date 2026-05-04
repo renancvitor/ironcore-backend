@@ -37,6 +37,7 @@ Planejamento, tarefas e histórico de evolução disponíveis no GitHub Projects
 - [Tecnologias Utilizadas](#tecnologias-utilizadas)
 - [Ferramentas Utilizadas](#ferramentas-utilizadas)
 - [Migrations e Versionamento de Banco](#migrations-e-versionamento-de-banco)
+- [Logging](#logging)
 - [Estratégia de Filtragem nas Listagens](#estrategia-de-filtragem-nas-listagens)
 - [Escopo Inicial / MVP](#escopo-inicial--mvp)
 - [Funcionalidades](#funcionalidades)
@@ -138,6 +139,16 @@ O <b>IronCore</b> está em fase inicial de desenvolvimento. Neste momento, o rep
 <h2 id="migrations-e-versionamento-de-banco" align="center">Migrations e Versionamento de Banco</h2>
 
 O projeto utiliza o [Flyway](https://flywaydb.org/) para gerenciar as **migrations de banco de dados** no [PostgreSQL](https://www.postgresql.org/). Todas as alterações de estrutura no banco, como criação de tabelas e mudanças de schema, são versionadas e controladas. Isso garante consistência entre os ambientes de desenvolvimento e produção.
+
+<p align="right"><a href="#inicio">⬆️ Voltar ao início</a></p>
+
+---
+
+<h2 id="logging" align="center">Logging</h2>
+
+O projeto possui uma estratégia específica para logs persistidos, separando registros de auditoria (`audit_logs`) e registros técnicos de erro (`error_logs`).
+
+A documentação detalhada está disponível em [Logging documentation](docs/logging/README.md).
 
 <p align="right"><a href="#inicio">⬆️ Voltar ao início</a></p>
 
