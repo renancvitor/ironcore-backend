@@ -1,6 +1,6 @@
 package com.ironcore.infrastructure.persistence.logging.error.entity;
 
-import com.ironcore.domain.logging.error.enums.ErrorCode;
+import com.ironcore.domain.logging.error.enums.ErrorCodeType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -23,7 +23,7 @@ public class ErrorLogEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "error_code", length = 30, nullable = false)
-    private ErrorCode errorCode;
+    private ErrorCodeType errorCode;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String message;

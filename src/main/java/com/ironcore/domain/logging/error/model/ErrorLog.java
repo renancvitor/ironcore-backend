@@ -1,10 +1,10 @@
 package com.ironcore.domain.logging.error.model;
 
-import com.ironcore.domain.logging.error.enums.ErrorCode;
-import com.ironcore.domain.logging.error.valueobject.ErrorRequestContext;
-
 import java.time.LocalDateTime;
 import java.util.Objects;
+
+import com.ironcore.domain.logging.error.valueobject.ErrorCode;
+import com.ironcore.domain.logging.error.valueobject.ErrorRequestContext;
 
 public class ErrorLog {
 
@@ -21,10 +21,11 @@ public class ErrorLog {
 
     private LocalDateTime createdAt;
 
-    public ErrorLog() {}
+    public ErrorLog() {
+    }
 
     public ErrorLog(Long id, ErrorCode errorCode, String message, String exceptionClass,
-                    ErrorRequestContext requestContext, Long userId, String correlationId, LocalDateTime createdAt) {
+            ErrorRequestContext requestContext, Long userId, String correlationId, LocalDateTime createdAt) {
         this.id = id;
         this.errorCode = Objects.requireNonNull(errorCode, "Código de erro não pode ser nulo");
         this.message = requireNonBlank(message, "Mensagem do erro não pode ser nulo ou vazio");
