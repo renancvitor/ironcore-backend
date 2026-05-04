@@ -1,6 +1,6 @@
 package com.ironcore.domain.logging.error.enums;
 
-public enum ErrorCode {
+public enum ErrorCodeType {
     VALIDATION_ERROR,
     AUTHENTICATION_ERROR,
     AUTHORIZATION_ERROR,
