@@ -11,7 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import com.ironcore.domain.user.model.Sex;
+import com.ironcore.domain.user.model.SexType;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -30,12 +30,15 @@ public class UserEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true)
     private String name;
+
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 15)
-    private Sex sex;
+    private SexType sex;
 
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
