@@ -7,6 +7,8 @@ import java.util.Objects;
 public record Sex(SexType type) {
 
     public Sex {
-        Objects.requireNonNull(type, "Sexo não pode ser nulo");
+        if (type == null) {
+            throw new IllegalArgumentException("Sexo não pode ser nulo");
+        }
     }
 }
