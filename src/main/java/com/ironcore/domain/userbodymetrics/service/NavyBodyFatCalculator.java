@@ -1,6 +1,6 @@
 package com.ironcore.domain.userbodymetrics.service;
 
-import com.ironcore.domain.user.model.Sex;
+import com.ironcore.domain.user.model.SexType;
 import com.ironcore.domain.userbodymetrics.model.UserBodyMetrics;
 import com.ironcore.domain.userbodymetrics.valueobject.BodyCircumferenceCm;
 import com.ironcore.domain.userbodymetrics.valueobject.BodyCircumferences;
@@ -16,15 +16,15 @@ public class NavyBodyFatCalculator {
     public BodyFatPercentage calculate(UserBodyMetrics metrics) {
         Objects.requireNonNull(metrics, "Medidas corporais não podem ser nulo");
         Objects.requireNonNull(metrics.getUser(), "Usuário não pode ser nulo");
-        return calculate(metrics.getUser().getSex(), metrics);
+        return calculate(metrics.getUser().getSex().type(), metrics);
     }
 
-    public BodyFatPercentage calculate(Sex sex, UserBodyMetrics metrics) {
+    public BodyFatPercentage calculate(SexType sex, UserBodyMetrics metrics) {
         Objects.requireNonNull(metrics, "Medidas corporais não podem ser nulo");
         return calculate(sex, metrics.getHeight(), metrics.getCircumferences());
     }
 
-    public BodyFatPercentage calculate(Sex sex, BodyHeightCm height, BodyCircumferences circumferences) {
+    public BodyFatPercentage calculate(SexType sex, BodyHeightCm height, BodyCircumferences circumferences) {
         Objects.requireNonNull(sex, "Sexo não pode ser nulo");
         Objects.requireNonNull(height, "Peso não pode ser nulo");
         Objects.requireNonNull(circumferences, "Circunferências corporais não pode ser nulo");
