@@ -1,9 +1,11 @@
 package com.ironcore.domain.user.model;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.PasswordHash;
+import com.ironcore.domain.user.valueobject.Sex;
 import com.ironcore.domain.user.valueobject.UserId;
 
 public class User {
@@ -20,13 +22,13 @@ public class User {
     }
 
     public User(UserId id, String name, Email email, PasswordHash passwordHash, Sex sex, LocalDateTime createdAt,
-            LocalDateTime updatedAt) {
+                LocalDateTime updatedAt) {
         this.id = id;
-        this.name = name;
-        this.email = email;
-        this.passwordHash = passwordHash;
-        this.sex = sex;
-        this.createdAt = createdAt;
+        this.name = requireNonBlank(name, "Nome não pode ser nulo ou vazio");
+        this.email = Objects.requireNonNull(email, "E-mail não pode ser nulo");
+        this.passwordHash = Objects.requireNonNull(passwordHash, "Senha hash não pode ser nulo");
+        this.sex = Objects.requireNonNull(sex, "Sexo não pode ser nulo");
+        this.createdAt = Objects.requireNonNull(createdAt, "Data de criação não pode ser nulo");
         this.updatedAt = updatedAt;
     }
 
@@ -43,7 +45,7 @@ public class User {
     }
 
     public void setName(String name) {
-        this.name = name;
+        this.name = requireNonBlank(name, "Nome não pode ser nulo ou vazio");
     }
 
     public Email getEmail() {
@@ -51,7 +53,7 @@ public class User {
     }
 
     public void setEmail(Email email) {
-        this.email = email;
+        this.email = Objects.requireNonNull(email, "E-mail não pode ser nulo");
     }
 
     public PasswordHash getPasswordHash() {
@@ -59,7 +61,7 @@ public class User {
     }
 
     public void setPasswordHash(PasswordHash passwordHash) {
-        this.passwordHash = passwordHash;
+        this.passwordHash = Objects.requireNonNull(passwordHash, "Senha hash não pode ser nulo");
     }
 
     public Sex getSex() {
@@ -67,7 +69,7 @@ public class User {
     }
 
     public void setSex(Sex sex) {
-        this.sex = sex;
+        this.sex = Objects.requireNonNull(sex, "Sexo não pode ser nulo");
     }
 
     public LocalDateTime getCreatedAt() {
@@ -75,7 +77,7 @@ public class User {
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+        this.createdAt = Objects.requireNonNull(createdAt, "Data de criação não pode ser nulo");
     }
 
     public LocalDateTime getUpdatedAt() {
@@ -84,5 +86,13 @@ public class User {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    private String requireNonBlank(String value, String message) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(message);
+        }
+
+        return value.trim();
     }
 }

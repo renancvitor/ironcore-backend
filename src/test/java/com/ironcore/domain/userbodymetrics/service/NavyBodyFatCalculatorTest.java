@@ -9,7 +9,7 @@ import static org.assertj.core.data.Offset.offset;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.ironcore.domain.user.model.Sex;
+import com.ironcore.domain.user.model.SexType;
 import com.ironcore.domain.userbodymetrics.valueobject.BodyCircumferences;
 import com.ironcore.domain.userbodymetrics.valueobject.BodyFatPercentage;
 import com.ironcore.domain.userbodymetrics.valueobject.BodyHeightCm;
@@ -24,7 +24,7 @@ class NavyBodyFatCalculatorTest {
         @Test
         void shouldCalculateMaleBodyFatPercentage() {
             BodyFatPercentage result = calculator.calculate(
-                    Sex.MALE,
+                    SexType.MALE,
                     heightInCm(178.0),
                     navyCircumferences(39.0, 88.0));
 
@@ -34,7 +34,7 @@ class NavyBodyFatCalculatorTest {
         @Test
         void shouldCalculateFemaleBodyFatPercentage() {
             BodyFatPercentage result = calculator.calculate(
-                    Sex.FEMALE,
+                    SexType.FEMALE,
                     heightInCm(165.0),
                     navyCircumferences(33.0, 70.0, 98.0));
 
@@ -50,7 +50,7 @@ class NavyBodyFatCalculatorTest {
             BodyHeightCm height = heightInCm(165.0);
             BodyCircumferences circumferencesWithoutHip = navyCircumferences(33.0, 70.0);
 
-            assertThatThrownBy(() -> calculator.calculate(Sex.FEMALE, height, circumferencesWithoutHip))
+            assertThatThrownBy(() -> calculator.calculate(SexType.FEMALE, height, circumferencesWithoutHip))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage("Circunferência do quadril não pode ser nulo");
         }
