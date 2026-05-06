@@ -2,8 +2,6 @@ package com.ironcore.domain.userbodymetrics.valueobject;
 
 import com.ironcore.domain.userbodymetrics.exception.InvalidBodyMetricException;
 
-import java.util.Objects;
-
 public record BodyHeightCm(Double value) {
 
     private static final double MAX_EXPECTED_HEIGHT_CM = 300.0;

@@ -2,8 +2,6 @@ package com.ironcore.domain.userbodymetrics.valueobject;
 
 import com.ironcore.domain.userbodymetrics.exception.InvalidBodyMetricException;
 
-import java.util.Objects;
-
 public record BodyWeightKg(Double value) {
 
     private static final double MAX_EXPECTED_WEIGHT_KG = 500.0;

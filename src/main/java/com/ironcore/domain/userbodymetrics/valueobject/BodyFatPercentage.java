@@ -2,8 +2,6 @@ package com.ironcore.domain.userbodymetrics.valueobject;
 
 import com.ironcore.domain.userbodymetrics.exception.InvalidBodyMetricException;
 
-import java.util.Objects;
-
 public record BodyFatPercentage(Double value) {
 
     public BodyFatPercentage {

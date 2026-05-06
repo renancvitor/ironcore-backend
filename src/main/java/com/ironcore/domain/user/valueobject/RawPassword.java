@@ -6,7 +6,7 @@ public record RawPassword(String value) {
 
     public RawPassword {
         if (value == null || value.isBlank()) {
-            throw new InvalidPasswordException("A senha não pode ser nulo ou vazio");
+            throw new InvalidPasswordException("A senha não pode ser nula ou vazia");
         }
 
         if (value.length() < 8) {

@@ -2,8 +2,6 @@ package com.ironcore.domain.userbodymetrics.valueobject;
 
 import com.ironcore.domain.userbodymetrics.exception.InvalidBodyMetricException;
 
-import java.util.Objects;
-
 public record BodyCircumferenceCm(Double value) {
 
     private static final double MAX_EXPECTED_CIRCUMFERENCE_CM = 300.0;
