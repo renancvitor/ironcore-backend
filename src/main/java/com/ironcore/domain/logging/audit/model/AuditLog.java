@@ -1,12 +1,12 @@
 package com.ironcore.domain.logging.audit.model;
 
+import com.ironcore.domain.logging.audit.exception.InvalidAuditLogException;
 import com.ironcore.domain.logging.audit.valueobject.AuditAction;
 import com.ironcore.domain.logging.audit.valueobject.AuditActor;
 import com.ironcore.domain.logging.audit.valueobject.AuditSnapshot;
 import com.ironcore.domain.logging.audit.valueobject.AuditTarget;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 public class AuditLog {
 
@@ -26,12 +26,12 @@ public class AuditLog {
     public AuditLog(Long id, AuditActor actor, AuditAction action, AuditTarget target,
                     AuditSnapshot beforeState, AuditSnapshot afterState, LocalDateTime createdAt) {
         this.id = id;
-        this.actor = Objects.requireNonNull(actor, "Ator da auditoria não pode ser nulo");
-        this.action = Objects.requireNonNull(action, "Ação da auditoria não pode ser nulo");
-        this.target = Objects.requireNonNull(target, "Alvo da auditoria não pode ser nulo");
+        this.actor = requireNonNull(actor, "Ator da auditoria não pode ser nulo");
+        this.action = requireNonNull(action, "Ação da auditoria não pode ser nulo");
+        this.target = requireNonNull(target, "Alvo da auditoria não pode ser nulo");
         this.beforeState = beforeState;
         this.afterState = afterState;
-        this.createdAt = Objects.requireNonNull(createdAt, "Data de criação da auditoria não pode ser nulo");
+        this.createdAt = requireNonNull(createdAt, "Data de criação da auditoria não pode ser nulo");
     }
 
     public Long getId() {
@@ -47,7 +47,7 @@ public class AuditLog {
     }
 
     public void setActor(AuditActor actor) {
-        this.actor = Objects.requireNonNull(actor, "Ator da auditoria não pode ser nulo");
+        this.actor = requireNonNull(actor, "Ator da auditoria não pode ser nulo");
     }
 
     public AuditAction getAction() {
@@ -55,7 +55,7 @@ public class AuditLog {
     }
 
     public void setAction(AuditAction action) {
-        this.action = Objects.requireNonNull(action, "Ação da auditoria não pode ser nulo");
+        this.action = requireNonNull(action, "Ação da auditoria não pode ser nulo");
     }
 
     public AuditTarget getTarget() {
@@ -63,7 +63,7 @@ public class AuditLog {
     }
 
     public void setTarget(AuditTarget target) {
-        this.target = Objects.requireNonNull(target, "Alvo da auditoria não pode ser nulo");
+        this.target = requireNonNull(target, "Alvo da auditoria não pode ser nulo");
     }
 
     public AuditSnapshot getBeforeState() {
@@ -87,6 +87,14 @@ public class AuditLog {
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = Objects.requireNonNull(createdAt, "Data de criação da auditoria não pode ser nulo");
+        this.createdAt = requireNonNull(createdAt, "Data de criação da auditoria não pode ser nulo");
+    }
+
+    private <T> T requireNonNull(T value, String message) {
+        if (value == null) {
+            throw new InvalidAuditLogException(message);
+        }
+
+        return value;
     }
 }

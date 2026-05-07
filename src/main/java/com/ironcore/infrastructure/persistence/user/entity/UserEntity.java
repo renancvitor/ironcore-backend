@@ -11,7 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import com.ironcore.domain.user.model.SexType;
+import com.ironcore.domain.user.enums.SexType;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

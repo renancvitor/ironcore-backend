@@ -1,10 +1,10 @@
 package com.ironcore.domain.logging.error.model;
 
-import java.time.LocalDateTime;
-import java.util.Objects;
-
+import com.ironcore.domain.logging.error.exception.InvalidErrorLogException;
 import com.ironcore.domain.logging.error.valueobject.ErrorCode;
 import com.ironcore.domain.logging.error.valueobject.ErrorRequestContext;
+
+import java.time.LocalDateTime;
 
 public class ErrorLog {
 
@@ -27,13 +27,13 @@ public class ErrorLog {
     public ErrorLog(Long id, ErrorCode errorCode, String message, String exceptionClass,
             ErrorRequestContext requestContext, Long userId, String correlationId, LocalDateTime createdAt) {
         this.id = id;
-        this.errorCode = Objects.requireNonNull(errorCode, "Código de erro não pode ser nulo");
+        this.errorCode = requireNonNull(errorCode, "Código de erro não pode ser nulo");
         this.message = requireNonBlank(message, "Mensagem do erro não pode ser nulo ou vazio");
         this.exceptionClass = requireNonBlank(exceptionClass, "Classe da exceção não pode ser nulo ou vazio");
-        this.requestContext = Objects.requireNonNull(requestContext, "Contexto da requisição não pode ser nulo");
+        this.requestContext = requireNonNull(requestContext, "Contexto da requisição não pode ser nulo");
         this.userId = requirePositiveIfPresent(userId);
         this.correlationId = requireNonBlank(correlationId, "Correlation id não pode ser nulo ou vazio");
-        this.createdAt = Objects.requireNonNull(createdAt, "Data de criação do erro não pode ser nulo");
+        this.createdAt = requireNonNull(createdAt, "Data de criação do erro não pode ser nulo");
     }
 
     public Long getId() {
@@ -49,7 +49,7 @@ public class ErrorLog {
     }
 
     public void setErrorCode(ErrorCode errorCode) {
-        this.errorCode = Objects.requireNonNull(errorCode, "Código de erro não pode ser nulo");
+        this.errorCode = requireNonNull(errorCode, "Código de erro não pode ser nulo");
     }
 
     public String getMessage() {
@@ -73,7 +73,7 @@ public class ErrorLog {
     }
 
     public void setRequestContext(ErrorRequestContext requestContext) {
-        this.requestContext = Objects.requireNonNull(requestContext, "Contexto da requisição não pode ser nulo");
+        this.requestContext = requireNonNull(requestContext, "Contexto da requisição não pode ser nulo");
     }
 
     public Long getUserId() {
@@ -97,12 +97,12 @@ public class ErrorLog {
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = Objects.requireNonNull(createdAt, "Data de criação do erro não pode ser nula");
+        this.createdAt = requireNonNull(createdAt, "Data de criação do erro não pode ser nula");
     }
 
     private String requireNonBlank(String value, String message) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(message);
+            throw new InvalidErrorLogException(message);
         }
 
         return value.trim();
@@ -110,7 +110,15 @@ public class ErrorLog {
 
     private Long requirePositiveIfPresent(Long value) {
         if (value != null && value <= 0) {
-            throw new IllegalArgumentException("Id do usuário deve ser positivo");
+            throw new InvalidErrorLogException("Id do usuário deve ser positivo");
+        }
+
+        return value;
+    }
+
+    private <T> T requireNonNull(T value, String message) {
+        if (value == null) {
+            throw new InvalidErrorLogException(message);
         }
 
         return value;
