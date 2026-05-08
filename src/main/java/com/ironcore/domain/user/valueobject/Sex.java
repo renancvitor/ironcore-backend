@@ -1,12 +1,13 @@
 package com.ironcore.domain.user.valueobject;
 
-import com.ironcore.domain.user.model.SexType;
-
-import java.util.Objects;
+import com.ironcore.domain.user.enums.SexType;
+import com.ironcore.domain.user.exception.InvalidUserException;
 
 public record Sex(SexType type) {
 
     public Sex {
-        Objects.requireNonNull(type, "Sexo não pode ser nulo");
+        if (type == null) {
+            throw new InvalidUserException("Sexo não pode ser nulo");
+        }
     }
 }

@@ -9,7 +9,8 @@ import static org.assertj.core.data.Offset.offset;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.ironcore.domain.user.model.SexType;
+import com.ironcore.domain.user.enums.SexType;
+import com.ironcore.domain.userbodymetrics.exception.InvalidBodyMetricException;
 import com.ironcore.domain.userbodymetrics.valueobject.BodyCircumferences;
 import com.ironcore.domain.userbodymetrics.valueobject.BodyFatPercentage;
 import com.ironcore.domain.userbodymetrics.valueobject.BodyHeightCm;
@@ -51,7 +52,7 @@ class NavyBodyFatCalculatorTest {
             BodyCircumferences circumferencesWithoutHip = navyCircumferences(33.0, 70.0);
 
             assertThatThrownBy(() -> calculator.calculate(SexType.FEMALE, height, circumferencesWithoutHip))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(InvalidBodyMetricException.class)
                     .hasMessage("Circunferência do quadril não pode ser nulo");
         }
     }
