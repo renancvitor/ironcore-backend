@@ -1,4 +1,4 @@
-package com.ironcore.domain.user.model;
+package com.ironcore.domain.user.enums;
 
 public enum SexType {
     MALE,

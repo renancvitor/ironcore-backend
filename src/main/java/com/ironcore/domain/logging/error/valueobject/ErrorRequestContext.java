@@ -1,5 +1,7 @@
 package com.ironcore.domain.logging.error.valueobject;
 
+import com.ironcore.domain.logging.error.exception.InvalidErrorLogException;
+
 public record ErrorRequestContext(String path, String httpMethod) {
 
     public ErrorRequestContext {
@@ -9,7 +11,7 @@ public record ErrorRequestContext(String path, String httpMethod) {
 
     private static String requireNonBlank(String value, String message) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(message);
+            throw new InvalidErrorLogException(message);
         }
 
         return value.trim();

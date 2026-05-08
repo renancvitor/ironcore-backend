@@ -4,6 +4,7 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 .env
+simple-ddd.md
 
 ### STS ###
 .apt_generated
@@ -32,3 +33,4 @@ build/
 
 ### VS Code ###
 .vscode/
+

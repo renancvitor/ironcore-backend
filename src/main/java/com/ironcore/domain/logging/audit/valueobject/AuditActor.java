@@ -1,14 +1,18 @@
 package com.ironcore.domain.logging.audit.valueobject;
 
+import com.ironcore.domain.logging.audit.exception.InvalidAuditLogException;
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.UserId;
-
-import java.util.Objects;
 
 public record AuditActor(UserId userId, Email email) {
 
     public AuditActor {
-        Objects.requireNonNull(userId, "Id do ator não pode ser nulo");
-        Objects.requireNonNull(email, "Email do ator não pode ser nulo");
+        if (userId == null) {
+            throw new InvalidAuditLogException("Id do ator não pode ser nulo");
+        }
+
+        if (email == null) {
+            throw new InvalidAuditLogException("Email do ator não pode ser nulo");
+        }
     }
 }

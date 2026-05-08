@@ -1,10 +1,12 @@
 package com.ironcore.domain.user.valueobject;
 
+import com.ironcore.domain.user.exception.InvalidPasswordException;
+
 public record PasswordHash(String value) {
 
     public PasswordHash {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("O hash da senha não pode ser nulo ou vazio");
+            throw new InvalidPasswordException("O hash da senha não pode ser nulo ou vazio");
         }
     }
 

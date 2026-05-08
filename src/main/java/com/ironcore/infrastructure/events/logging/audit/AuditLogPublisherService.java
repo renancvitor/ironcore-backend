@@ -7,6 +7,7 @@ import com.ironcore.application.logging.audit.port.AuditLogPublisher;
 import com.ironcore.application.logging.audit.payload.LoggableData;
 import com.ironcore.domain.logging.audit.enums.AuditActionType;
 import com.ironcore.domain.logging.audit.enums.AuditTargetType;
+import com.ironcore.infrastructure.exception.JsonSerializationException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,8 +69,7 @@ public class AuditLogPublisherService implements AuditLogPublisher {
         try {
             return mapper.writeValueAsString(data);
         } catch (JsonProcessingException exception) {
-            log.error("Falha ao serializar audit log.", exception);
-            return null;
+            throw new JsonSerializationException("Falha ao serializar audit log.", exception);
         }
     }
 }

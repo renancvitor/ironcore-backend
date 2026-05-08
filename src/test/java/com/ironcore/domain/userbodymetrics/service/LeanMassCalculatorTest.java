@@ -4,7 +4,7 @@ import static com.ironcore.domain.userbodymetrics.UserBodyMetricsTestFactory.fat
 import static com.ironcore.domain.userbodymetrics.UserBodyMetricsTestFactory.heightInCm;
 import static com.ironcore.domain.userbodymetrics.UserBodyMetricsTestFactory.weightInKg;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatNullPointerException;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.data.Offset.offset;
 
 import java.time.LocalDateTime;
@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.ironcore.domain.user.model.User;
+import com.ironcore.domain.userbodymetrics.exception.InvalidBodyMetricException;
 import com.ironcore.domain.userbodymetrics.model.UserBodyMetrics;
 import com.ironcore.domain.userbodymetrics.valueobject.LeanMassKg;
 
@@ -57,21 +58,21 @@ class LeanMassCalculatorTest {
 
         @Test
         void shouldRequireBodyMetrics() {
-            assertThatNullPointerException()
+            assertThatExceptionOfType(InvalidBodyMetricException.class)
                     .isThrownBy(() -> calculator.calculate((UserBodyMetrics) null))
                     .withMessage("Medidas corporais não podem ser nulo");
         }
 
         @Test
         void shouldRequireWeight() {
-            assertThatNullPointerException()
+            assertThatExceptionOfType(InvalidBodyMetricException.class)
                     .isThrownBy(() -> calculator.calculate(null, fatMass(18.04)))
                     .withMessage("Peso não pode ser nulo");
         }
 
         @Test
         void shouldRequireFatMass() {
-            assertThatNullPointerException()
+            assertThatExceptionOfType(InvalidBodyMetricException.class)
                     .isThrownBy(() -> calculator.calculate(weightInKg(82.0), null))
                     .withMessage("Massa gorda não pode ser nulo");
         }

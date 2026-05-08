@@ -1,12 +1,13 @@
 package com.ironcore.domain.logging.audit.valueobject;
 
 import com.ironcore.domain.logging.audit.enums.AuditActionType;
-
-import java.util.Objects;
+import com.ironcore.domain.logging.audit.exception.InvalidAuditLogException;
 
 public record AuditAction(AuditActionType type) {
 
     public AuditAction {
-        Objects.requireNonNull(type, "Tipo da ação não pode ser nulo");
+        if (type == null) {
+            throw new InvalidAuditLogException("Tipo da ação não pode ser nulo");
+        }
     }
 }

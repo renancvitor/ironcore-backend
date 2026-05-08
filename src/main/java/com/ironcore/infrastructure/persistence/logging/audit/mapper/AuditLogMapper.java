@@ -7,34 +7,43 @@ import com.ironcore.domain.logging.audit.valueobject.AuditSnapshot;
 import com.ironcore.domain.logging.audit.valueobject.AuditTarget;
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.UserId;
+import com.ironcore.infrastructure.exception.DataMappingException;
 import com.ironcore.infrastructure.persistence.logging.audit.entity.AuditLogEntity;
 
 public class AuditLogMapper {
 
     public static AuditLogEntity toEntity(AuditLog auditLog) {
-        return new AuditLogEntity(
-                auditLog.getId(),
-                auditLog.getActor().userId().value(),
-                auditLog.getActor().email().value(),
-                auditLog.getAction().type(),
-                auditLog.getTarget().type(),
-                auditLog.getTarget().id(),
-                snapshotValue(auditLog.getBeforeState()),
-                snapshotValue(auditLog.getAfterState()),
-                auditLog.getCreatedAt()
-        );
+        try {
+            return new AuditLogEntity(
+                    auditLog.getId(),
+                    auditLog.getActor().userId().value(),
+                    auditLog.getActor().email().value(),
+                    auditLog.getAction().type(),
+                    auditLog.getTarget().type(),
+                    auditLog.getTarget().id(),
+                    snapshotValue(auditLog.getBeforeState()),
+                    snapshotValue(auditLog.getAfterState()),
+                    auditLog.getCreatedAt()
+            );
+        } catch (RuntimeException exception) {
+            throw new DataMappingException("Falha ao converter audit log de domínio para entidade.", exception);
+        }
     }
 
     public static AuditLog toDomain(AuditLogEntity entity) {
-        return new AuditLog(
-                entity.getId(),
-                new AuditActor(new UserId(entity.getActorUserId()), new Email(entity.getActorEmail())),
-                new AuditAction(entity.getAction()),
-                new AuditTarget(entity.getTargetType(), entity.getTargetId()),
-                snapshot(entity.getBeforeStateJson()),
-                snapshot(entity.getAfterStateJson()),
-                entity.getCreatedAt()
-        );
+        try {
+            return new AuditLog(
+                    entity.getId(),
+                    new AuditActor(new UserId(entity.getActorUserId()), new Email(entity.getActorEmail())),
+                    new AuditAction(entity.getAction()),
+                    new AuditTarget(entity.getTargetType(), entity.getTargetId()),
+                    snapshot(entity.getBeforeStateJson()),
+                    snapshot(entity.getAfterStateJson()),
+                    entity.getCreatedAt()
+            );
+        } catch (RuntimeException exception) {
+            throw new DataMappingException("Falha ao converter audit log de entidade para domínio.", exception);
+        }
     }
 
     private static String snapshotValue(AuditSnapshot snapshot) {
