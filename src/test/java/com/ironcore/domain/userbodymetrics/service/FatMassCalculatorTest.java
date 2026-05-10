@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.data.Offset.offset;
 
-import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.userbodymetrics.exception.InvalidBodyMetricException;
 import com.ironcore.domain.userbodymetrics.model.UserBodyMetrics;
 import com.ironcore.domain.userbodymetrics.valueobject.FatMassKg;
@@ -32,7 +31,7 @@ class FatMassCalculatorTest {
         void shouldCalculateFatMassFromBodyMetrics() {
             UserBodyMetrics metrics = new UserBodyMetrics(
                     null,
-                    new User(),
+                    validUser(),
                     LocalDateTime.now(),
                     weightInKg(82.0),
                     heightInCm(180.0),
