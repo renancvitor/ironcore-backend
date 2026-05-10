@@ -36,12 +36,18 @@ public class UserEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column(name = "password_hash", nullable = false)
+    private String passwordHash;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 15)
     private SexType sex;
 
-    @Column(name = "password_hash", nullable = false)
-    private String passwordHash;
+    @Column(name = "must_change_password", nullable = false)
+    private Boolean mustChangePassword;
+
+    @Column(nullable = false)
+    private Boolean active;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

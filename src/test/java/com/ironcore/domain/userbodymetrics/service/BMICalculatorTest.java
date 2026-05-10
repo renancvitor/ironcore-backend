@@ -1,6 +1,7 @@
 package com.ironcore.domain.userbodymetrics.service;
 
 import static com.ironcore.domain.userbodymetrics.UserBodyMetricsTestFactory.heightInCm;
+import static com.ironcore.domain.userbodymetrics.UserBodyMetricsTestFactory.validUser;
 import static com.ironcore.domain.userbodymetrics.UserBodyMetricsTestFactory.weightInKg;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -11,7 +12,6 @@ import java.time.LocalDateTime;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.userbodymetrics.exception.InvalidBodyMetricException;
 import com.ironcore.domain.userbodymetrics.model.UserBodyMetrics;
 import com.ironcore.domain.userbodymetrics.valueobject.BMI;
@@ -34,7 +34,7 @@ class BMICalculatorTest {
         void shouldCalculateBmiFromBodyMetrics() {
             UserBodyMetrics metrics = new UserBodyMetrics(
                     null,
-                    new User(),
+                    validUser(),
                     LocalDateTime.now(),
                     weightInKg(72.0),
                     heightInCm(180.0),

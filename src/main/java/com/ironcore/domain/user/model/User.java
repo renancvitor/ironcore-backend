@@ -5,9 +5,11 @@ import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.PasswordHash;
 import com.ironcore.domain.user.valueobject.Sex;
 import com.ironcore.domain.user.valueobject.UserId;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
+@Getter
 public class User {
 
     private UserId id;
@@ -15,77 +17,70 @@ public class User {
     private Email email;
     private PasswordHash passwordHash;
     private Sex sex;
+    private Boolean mustChangePassword;
+    private Boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public User() {
-    }
-
-    public User(UserId id, String name, Email email, PasswordHash passwordHash, Sex sex, LocalDateTime createdAt,
-                LocalDateTime updatedAt) {
+    private User(UserId id, String name, Email email, PasswordHash passwordHash, Sex sex, Boolean mustChangePassword,
+                 Boolean active, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.name = requireNonBlank(name, "Nome não pode ser nulo ou vazio");
         this.email = requireNonNull(email, "E-mail não pode ser nulo");
         this.passwordHash = requireNonNull(passwordHash, "Senha hash não pode ser nulo");
         this.sex = requireNonNull(sex, "Sexo não pode ser nulo");
+        this.mustChangePassword = requireNonNull(mustChangePassword, "Tag de troca de senha não pode ser nulo");
+        this.active = requireNonNull(active, "Tag de usuário ativo não pode ser nulo");
         this.createdAt = requireNonNull(createdAt, "Data de criação não pode ser nulo");
         this.updatedAt = updatedAt;
     }
 
-    public UserId getId() {
-        return id;
+    public static User register(String name, Email email, PasswordHash passwordHash, Sex sex, LocalDateTime createdAt) {
+        return new User(null, name, email, passwordHash, sex, true, true, createdAt, null);
     }
 
-    public void setId(UserId id) {
-        this.id = id;
+    public static User restore(UserId id, String name, Email email, PasswordHash passwordHash, Sex sex,
+                               Boolean mustChangePassword, Boolean active, LocalDateTime createdAt,
+                               LocalDateTime updatedAt) {
+        return new User(id, name, email, passwordHash, sex, mustChangePassword, active, createdAt, updatedAt);
     }
 
-    public String getName() {
-        return name;
+    public boolean isActive() {
+        return active;
     }
 
-    public void setName(String name) {
+    public boolean mustChangePassword() {
+        return mustChangePassword;
+    }
+
+    public void rename(String name, LocalDateTime updatedAt) {
         this.name = requireNonBlank(name, "Nome não pode ser nulo ou vazio");
+        markUpdatedAt(updatedAt);
     }
 
-    public Email getEmail() {
-        return email;
-    }
-
-    public void setEmail(Email email) {
-        this.email = requireNonNull(email, "E-mail não pode ser nulo");
-    }
-
-    public PasswordHash getPasswordHash() {
-        return passwordHash;
-    }
-
-    public void setPasswordHash(PasswordHash passwordHash) {
+    public void changePasswordHash(PasswordHash passwordHash, LocalDateTime updatedAt) {
         this.passwordHash = requireNonNull(passwordHash, "Senha hash não pode ser nulo");
+        this.mustChangePassword = false;
+        markUpdatedAt(updatedAt);
     }
 
-    public Sex getSex() {
-        return sex;
-    }
-
-    public void setSex(Sex sex) {
+    public void changeSex(Sex sex, LocalDateTime updatedAt) {
         this.sex = requireNonNull(sex, "Sexo não pode ser nulo");
+        markUpdatedAt(updatedAt);
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public void activate(LocalDateTime updatedAt) {
+        this.active = true;
+        markUpdatedAt(updatedAt);
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = requireNonNull(createdAt, "Data de criação não pode ser nulo");
+    public void deactivate(LocalDateTime updatedAt) {
+        this.active = false;
+        markUpdatedAt(updatedAt);
     }
 
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+    private void markUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = requireNonNull(updatedAt, "Data de atualização não pode ser nulo");
     }
 
     private String requireNonBlank(String value, String message) {
