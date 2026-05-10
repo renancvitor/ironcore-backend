@@ -9,7 +9,7 @@ import org.springframework.test.context.ActiveProfiles;
         webEnvironment = SpringBootTest.WebEnvironment.NONE
 )
 @ActiveProfiles("test")
-class IroncoreBackendApplicationTests {
+class IroncoreBackendApplicationIntegrationTest {
 
     @Test
     void contextLoads() {
