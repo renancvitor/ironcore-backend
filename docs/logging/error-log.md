@@ -1,4 +1,6 @@
-# Error Log
+# Documentação de Error Log
+
+**Status:** atual para a `v0.1.0`.
 
 ## Propósito
 
@@ -144,13 +146,31 @@ O domínio usa Value Objects para expressar conceitos relevantes:
 
 O fluxo atual usa eventos Spring:
 
-1. algum componente chama a porta `ErrorLogPublisher`;
+1. algum componente chama a porta `ErrorLogPublisher`, ou o `GlobalExceptionHandler` publica o erro ao tratar uma exception REST;
 2. `ErrorLogPublisherService` publica um `ErrorLogEvent`;
 3. `ErrorLogListener` escuta o evento com `TransactionPhase.AFTER_COMPLETION` e `fallbackExecution = true`;
 4. `ErrorLogApplicationService` cria o `ErrorLog` de domínio;
 5. `ErrorLogRepository` persiste o registro.
 
 Diferente de audit logs, error logs são registrados após a conclusão da transação, inclusive em cenários de rollback, e também podem ser processados quando não houver transação ativa.
+
+## Integração com Tratamento REST de Exceptions
+
+O projeto possui `GlobalExceptionHandler` anotado com `@RestControllerAdvice`.
+
+Esse handler recebe exceptions de domínio, aplicação, infraestrutura, validação, rotas ausentes, métodos HTTP inválidos e erros inesperados. Para esses casos, ele publica um error log por meio de `ErrorLogPublisher`.
+
+O handler registra:
+
+- código categórico de erro;
+- mensagem da exception ou nome da classe quando a mensagem estiver vazia;
+- classe da exception;
+- path da requisição;
+- método HTTP;
+- `correlationId` vindo do header `X-Correlation-Id` ou gerado automaticamente;
+- `userId` como `null` na implementação atual.
+
+Como ainda não há controllers REST de negócio na release `v0.1.0`, essa integração existe como infraestrutura de tratamento global, mas ainda não é exercitada por endpoints de negócio.
 
 ## Mensagem, Código e Contexto
 
@@ -188,18 +208,18 @@ Não registre:
 
 ## Limitações Atuais
 
-- Não há controller, handler global ou filter implementado chamando `ErrorLogPublisher` neste momento.
 - Não há consulta específica implementada para error logs.
 - Não há política de retenção, expurgo ou arquivamento implementada.
 - `exceptionClass` é uma `String`; não há normalização adicional além das validações do domínio.
 - `message` não possui mascaramento automático de dados sensíveis.
+- O `userId` publicado pelo `GlobalExceptionHandler` ainda é `null`.
+- Não há controllers REST de negócio exercitando esse fluxo em cenários funcionais.
 
 ## Decisões Atuais e Fora do Escopo
 
 Os itens abaixo não fazem parte da implementação atual e não representam compromisso de evolução. Eles podem ser avaliados apenas se surgir necessidade real no projeto.
 
-- Integração com um `ControllerAdvice` global não faz parte do escopo atual.
-- Captura automática de correlation id a partir de headers ou contexto MDC não faz parte do escopo atual.
+- Captura de usuário autenticado para preencher `userId` não faz parte do escopo atual.
 - Mascaramento automático de mensagens não está implementado neste momento.
 - Persistência de stack trace resumido ou hash técnico não faz parte do escopo atual.
 - Consultas específicas por código de erro, usuário, correlation id e período não fazem parte do escopo atual.
@@ -207,7 +227,7 @@ Os itens abaixo não fazem parte da implementação atual e não representam com
 
 ## Veja Também
 
-- [Logging Strategy](./README.md)
+- [Estratégia de Logging](./README.md)
 - [Audit Log](./audit-log.md)
 
-<p align="right"><a href="../../README.md">🔄 Voltar para a documentação completa</a></p>
+<p align="right"><a href="./README.md">🔄 Voltar para Logging</a></p>
