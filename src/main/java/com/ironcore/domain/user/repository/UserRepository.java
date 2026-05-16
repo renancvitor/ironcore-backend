@@ -16,4 +16,6 @@ public interface UserRepository {
     boolean existsById(UserId id);
 
     boolean existsByEmail(Email email);
+
+    boolean existsAny();
 }
