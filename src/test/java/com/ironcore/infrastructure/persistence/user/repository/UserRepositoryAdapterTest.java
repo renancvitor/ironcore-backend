@@ -1,10 +1,7 @@
 package com.ironcore.infrastructure.persistence.user.repository;
 
-import com.ironcore.domain.user.enums.SexType;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.valueobject.Email;
-import com.ironcore.domain.user.valueobject.PasswordHash;
-import com.ironcore.domain.user.valueobject.Sex;
 import com.ironcore.domain.user.valueobject.UserId;
 import com.ironcore.infrastructure.exception.DataMappingException;
 import com.ironcore.infrastructure.exception.PersistenceException;
@@ -17,10 +14,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.lang.NonNull;
 
-import java.time.LocalDateTime;
-import java.util.Objects;
 import java.util.Optional;
 
+import static com.ironcore.domain.user.UserTestFactory.userWithoutId;
+import static com.ironcore.infrastructure.persistence.user.UserEntityTestFactory.invalidUserEntity;
+import static com.ironcore.infrastructure.persistence.user.UserEntityTestFactory.userEntity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.notNull;
@@ -30,8 +28,6 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserRepositoryAdapterTest {
-
-    private static final LocalDateTime CREATED_AT = LocalDateTime.of(2026, 5, 10, 10, 0);
 
     @Mock
     private UserJpaRepository userJpaRepository;
@@ -66,7 +62,7 @@ class UserRepositoryAdapterTest {
 
         @Test
         void shouldWrapMappingFailureAfterPersistence() {
-            doReturn(invalidEntity()).when(userJpaRepository).save(anyUserEntity());
+            doReturn(invalidUserEntity()).when(userJpaRepository).save(anyUserEntity());
             User user = userWithoutId();
 
             assertThatExceptionOfType(DataMappingException.class)
@@ -199,50 +195,40 @@ class UserRepositoryAdapterTest {
         }
     }
 
+    @Nested
+    class ExistsAny {
+
+        @Test
+        void shouldReturnTrueWhenAnyUserExists() {
+            when(userJpaRepository.count()).thenReturn(1L);
+
+            boolean result = adapter.existsAny();
+
+            assertThat(result).isTrue();
+        }
+
+        @Test
+        void shouldReturnFalseWhenNoUserExists() {
+            when(userJpaRepository.count()).thenReturn(0L);
+
+            boolean result = adapter.existsAny();
+
+            assertThat(result).isFalse();
+        }
+
+        @Test
+        void shouldWrapRepositoryFailure() {
+            when(userJpaRepository.count()).thenThrow(new RuntimeException("database unavailable"));
+
+            assertThatExceptionOfType(PersistenceException.class)
+                    .isThrownBy(() -> adapter.existsAny())
+                    .withMessage("Falha ao verificar existência de qualquer user.");
+        }
+    }
+
     @SuppressWarnings("null")
     @NonNull
     private UserEntity anyUserEntity() {
         return notNull(UserEntity.class);
-    }
-
-    @NonNull
-    private User userWithoutId() {
-        return Objects.requireNonNull(User.register(
-                "Renan",
-                new Email("renan@example.com"),
-                new PasswordHash("hashed-password"),
-                new Sex(SexType.MALE),
-                CREATED_AT
-        ));
-    }
-
-    @NonNull
-    private UserEntity userEntity() {
-        return new UserEntity(
-                1L,
-                "Renan",
-                "renan@example.com",
-                "hashed-password",
-                SexType.MALE,
-                true,
-                true,
-                CREATED_AT,
-                null
-        );
-    }
-
-    @NonNull
-    private UserEntity invalidEntity() {
-        return new UserEntity(
-                null,
-                "Renan",
-                "renan@example.com",
-                "hashed-password",
-                SexType.MALE,
-                true,
-                true,
-                CREATED_AT,
-                null
-        );
     }
 }

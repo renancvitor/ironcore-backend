@@ -100,4 +100,13 @@ public class UserRepositoryAdapter implements UserRepository {
             throw new PersistenceException("Falha ao verificar existência de user por email.", exception);
         }
     }
+
+    @Override
+    public boolean existsAny() {
+        try {
+            return userJpaRepository.count() > 0;
+        } catch (RuntimeException exception) {
+            throw new PersistenceException("Falha ao verificar existência de qualquer user.", exception);
+        }
+    }
 }

@@ -3,6 +3,7 @@ package com.ironcore.application.user.service;
 import com.ironcore.domain.user.port.PasswordHasher;
 import com.ironcore.domain.user.valueobject.PasswordHash;
 import com.ironcore.domain.user.valueobject.RawPassword;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,36 +23,44 @@ class PasswordHashingServiceTest {
     @InjectMocks
     private PasswordHashingService passwordHashingService;
 
-    @Test
-    void shouldHashRawPassword() {
-        RawPassword rawPassword = new RawPassword("StrongPass123");
+    @Nested
+    class Hash {
 
-        PasswordHash passwordHash = new PasswordHash("hashed-password");
+        @Test
+        void shouldHashRawPassword() {
+            RawPassword rawPassword = new RawPassword("StrongPass123");
 
-        when(passwordHasher.hash(rawPassword))
-                .thenReturn(passwordHash);
+            PasswordHash passwordHash = new PasswordHash("hashed-password");
 
-        PasswordHash result = passwordHashingService.hash(rawPassword);
+            when(passwordHasher.hash(rawPassword))
+                    .thenReturn(passwordHash);
 
-        verify(passwordHasher).hash(rawPassword);
+            PasswordHash result = passwordHashingService.hash(rawPassword);
 
-        assertThat(result).isEqualTo(passwordHash);
+            verify(passwordHasher).hash(rawPassword);
+
+            assertThat(result).isEqualTo(passwordHash);
+        }
     }
 
-    @Test
-    void shouldMatchRawPasswordAndPasswordHash() {
-        RawPassword rawPassword = new RawPassword("StrongPass123");
+    @Nested
+    class Matches {
 
-        PasswordHash passwordHash = new PasswordHash("hashed-password");
+        @Test
+        void shouldMatchRawPasswordAndPasswordHash() {
+            RawPassword rawPassword = new RawPassword("StrongPass123");
 
-        when(passwordHasher.matches(rawPassword, passwordHash))
-                .thenReturn(true);
+            PasswordHash passwordHash = new PasswordHash("hashed-password");
 
-        boolean result = passwordHashingService.matches(rawPassword, passwordHash);
+            when(passwordHasher.matches(rawPassword, passwordHash))
+                    .thenReturn(true);
 
-        verify(passwordHasher).matches(rawPassword, passwordHash);
+            boolean result = passwordHashingService.matches(rawPassword, passwordHash);
 
-        assertThat(result)
-                .isTrue();
+            verify(passwordHasher).matches(rawPassword, passwordHash);
+
+            assertThat(result)
+                    .isTrue();
+        }
     }
 }

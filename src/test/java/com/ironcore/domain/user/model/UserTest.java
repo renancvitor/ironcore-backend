@@ -2,22 +2,21 @@ package com.ironcore.domain.user.model;
 
 import com.ironcore.domain.user.enums.SexType;
 import com.ironcore.domain.user.exception.InvalidUserException;
-import com.ironcore.domain.user.valueobject.Email;
-import com.ironcore.domain.user.valueobject.PasswordHash;
-import com.ironcore.domain.user.valueobject.Sex;
 import com.ironcore.domain.user.valueobject.UserId;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDateTime;
-
+import static com.ironcore.domain.user.UserTestFactory.CREATED_AT;
+import static com.ironcore.domain.user.UserTestFactory.UPDATED_AT;
+import static com.ironcore.domain.user.UserTestFactory.email;
+import static com.ironcore.domain.user.UserTestFactory.passwordHash;
+import static com.ironcore.domain.user.UserTestFactory.restoredUser;
+import static com.ironcore.domain.user.UserTestFactory.sex;
+import static com.ironcore.domain.user.UserTestFactory.userWithoutId;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 class UserTest {
-
-    private static final LocalDateTime CREATED_AT = LocalDateTime.of(2026, 5, 9, 10, 0);
-    private static final LocalDateTime UPDATED_AT = LocalDateTime.of(2026, 5, 9, 11, 0);
 
     @Nested
     class Creation {
@@ -44,16 +43,7 @@ class UserTest {
 
         @Test
         void shouldRestoreExistingUserState() {
-            User user = User.restore(
-                    new UserId(1L),
-                    "Renan",
-                    email("renan@example.com"),
-                    passwordHash("hashed-password"),
-                    sex(SexType.MALE),
-                    true,
-                    false,
-                    CREATED_AT,
-                    UPDATED_AT);
+            User user = restoredUser(true, false);
 
             assertThat(user.getId()).isEqualTo(new UserId(1L));
             assertThat(user.mustChangePassword()).isTrue();
@@ -125,23 +115,6 @@ class UserTest {
     }
 
     private User validUser() {
-        return User.register(
-                "Renan",
-                email("renan@example.com"),
-                passwordHash("hashed-password"),
-                sex(SexType.MALE),
-                CREATED_AT);
-    }
-
-    private Email email(String value) {
-        return new Email(value);
-    }
-
-    private PasswordHash passwordHash(String value) {
-        return new PasswordHash(value);
-    }
-
-    private Sex sex(SexType type) {
-        return new Sex(type);
+        return userWithoutId();
     }
 }
