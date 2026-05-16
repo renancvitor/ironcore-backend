@@ -1,6 +1,9 @@
 package com.ironcore.domain.userbodymetrics.service;
 
-import static com.ironcore.domain.userbodymetrics.UserBodyMetricsTestFactory.*;
+import static com.ironcore.domain.userbodymetrics.UserBodyMetricsTestFactory.bodyFatPercentage;
+import static com.ironcore.domain.userbodymetrics.UserBodyMetricsTestFactory.heightInCm;
+import static com.ironcore.domain.userbodymetrics.UserBodyMetricsTestFactory.validUser;
+import static com.ironcore.domain.userbodymetrics.UserBodyMetricsTestFactory.weightInKg;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.data.Offset.offset;

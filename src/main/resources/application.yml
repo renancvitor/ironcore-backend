@@ -30,3 +30,12 @@ app:
   name: IronCore
   version: 1.0.0
   environment: default
+
+ironcore:
+  bootstrap:
+    single-user:
+      enabled: ${IRONCORE_BOOTSTRAP_USER_ENABLED:false}
+      name: ${IRONCORE_BOOTSTRAP_USER_NAME:}
+      email: ${IRONCORE_BOOTSTRAP_USER_EMAIL:}
+      password: ${IRONCORE_BOOTSTRAP_USER_PASSWORD:}
+      sex: ${IRONCORE_BOOTSTRAP_USER_SEX:}
