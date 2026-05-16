@@ -1,13 +1,9 @@
 package com.ironcore.domain.userbodymetrics;
 
-import com.ironcore.domain.user.enums.SexType;
 import com.ironcore.domain.user.model.User;
-import com.ironcore.domain.user.valueobject.Email;
-import com.ironcore.domain.user.valueobject.PasswordHash;
-import com.ironcore.domain.user.valueobject.Sex;
 import com.ironcore.domain.userbodymetrics.valueobject.*;
 
-import java.time.LocalDateTime;
+import static com.ironcore.domain.user.UserTestFactory.userWithoutId;
 
 public final class UserBodyMetricsTestFactory {
 
@@ -15,12 +11,7 @@ public final class UserBodyMetricsTestFactory {
     }
 
     public static User validUser() {
-        return User.register(
-                "Renan",
-                new Email("renan@example.com"),
-                new PasswordHash("hashed-password"),
-                new Sex(SexType.MALE),
-                LocalDateTime.of(2026, 5, 9, 10, 0));
+        return userWithoutId();
     }
 
     public static BodyHeightCm heightInCm(double value) {

@@ -1,40 +1,23 @@
 package com.ironcore.infrastructure.persistence.user.mapper;
 
-import com.ironcore.domain.user.enums.SexType;
 import com.ironcore.domain.user.model.User;
-import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.PasswordHash;
-import com.ironcore.domain.user.valueobject.Sex;
-import com.ironcore.domain.user.valueobject.UserId;
 import com.ironcore.infrastructure.persistence.user.entity.UserEntity;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDateTime;
-
+import static com.ironcore.domain.user.UserTestFactory.restoredUser;
+import static com.ironcore.infrastructure.persistence.user.UserEntityTestFactory.inactiveUserEntity;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class UserMapperTest {
-
-    private static final LocalDateTime CREATED_AT = LocalDateTime.of(2026, 5, 10, 10, 0);
-    private static final LocalDateTime UPDATED_AT = LocalDateTime.of(2026, 5, 10, 11, 0);
 
     @Nested
     class ToEntity {
 
         @Test
         void shouldMapSecurityAndStatusFields() {
-            User user = User.restore(
-                    new UserId(1L),
-                    "Renan",
-                    new Email("renan@example.com"),
-                    new PasswordHash("hashed-password"),
-                    new Sex(SexType.MALE),
-                    false,
-                    false,
-                    CREATED_AT,
-                    UPDATED_AT
-            );
+            User user = restoredUser(false, false);
 
             UserEntity entity = UserMapper.toEntity(user);
 
@@ -49,17 +32,7 @@ class UserMapperTest {
 
         @Test
         void shouldRestoreSecurityAndStatusFields() {
-            UserEntity entity = new UserEntity(
-                    1L,
-                    "Renan",
-                    "renan@example.com",
-                    "hashed-password",
-                    SexType.MALE,
-                    false,
-                    false,
-                    CREATED_AT,
-                    UPDATED_AT
-            );
+            UserEntity entity = inactiveUserEntity();
 
             User user = UserMapper.toDomain(entity);
 
