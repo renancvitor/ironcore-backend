@@ -1,4 +1,6 @@
-# Logging Strategy
+# Estratégia de Logging
+
+**Status:** atual para a `v0.1.0`.
 
 ## Visão Geral
 
@@ -10,6 +12,8 @@ O projeto possui dois fluxos de logs persistidos em banco relacional:
 - `error_logs`: registros técnicos de erro para suporte, debugging e rastreabilidade de falhas.
 
 Esses logs são parte da infraestrutura de rastreabilidade da aplicação, mas não substituem observabilidade externa, métricas, tracing distribuído ou alertas operacionais.
+
+Na release `v0.1.0`, a estrutura de persistência e publicação dos logs existe. O projeto ainda não possui endpoints REST de negócio, então o fluxo de erro já está preparado no `GlobalExceptionHandler`, mas ainda não é exercitado por controllers de negócio.
 
 ## Tipos de Log
 
@@ -41,11 +45,15 @@ O error log responde principalmente:
 
 Leia mais em [Error Log](./error-log.md).
 
+O fluxo atual de error log também é acionado pelo `GlobalExceptionHandler`, que publica eventos por meio de `ErrorLogPublisher` ao tratar exceptions REST.
+
 ## Quando Usar
 
 Use `audit_logs` quando o objetivo for rastrear uma ação relevante do usuário ou do sistema sobre um recurso de domínio.
 
 Use `error_logs` quando o objetivo for investigar falhas, apoiar suporte técnico ou depurar comportamentos inesperados.
+
+Na implementação atual, audit logs precisam ser publicados explicitamente por casos de uso. Error logs podem ser publicados explicitamente ou pelo tratamento global de exceptions REST.
 
 ## O Que Não Deve Ser Logado
 
@@ -68,4 +76,4 @@ Quando houver dúvida, prefira registrar identificadores técnicos e metadados m
 - [Audit Log](./audit-log.md)
 - [Error Log](./error-log.md)
 
-<p align="right"><a href="../../README.md">🔄 Voltar para a documentação completa</a></p>
+<p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>

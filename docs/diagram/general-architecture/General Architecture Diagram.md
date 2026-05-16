@@ -1,4 +1,6 @@
-# General Architecture Diagram
+# Diagrama de Arquitetura Geral
+
+**Status:** Parcialmente implementado / blueprint planejado — Spring Boot e PostgreSQL fazem parte da `v0.1.0`; Angular, autenticação completa, orquestração de IA, integração com LLM e persistência documental funcional estão planejados.
 
 <p align="center">
     <img src="./General%20Architecture%20Diagram.png" alt="General Architecture Diagram" />
@@ -32,7 +34,7 @@ Ele ajuda a entender:
 
 Ele não foi feito para detalhar a arquitetura interna do backend, o modelo relacional ou a sequência completa de chamadas entre módulos.
 
-## Layers da arquitetura
+## Camadas da arquitetura
 
 ### `Client Layer`
 

@@ -1,4 +1,4 @@
-<h1 id="inicio" align="center">
+<h1 align="center">
   IronCore Backend
 </h1>
 <p align="center">
@@ -44,6 +44,7 @@ Planejamento, tarefas e histórico de evolução disponíveis no GitHub Projects
 - [Documentação Visual](#documentacao-visual)
   - [API - Swagger](#api---swagger)
   - [Documentação Arquitetural](#documentacao-arquitetural)
+- [Documentação Técnica](#documentacao-tecnica)
 - [Mensageria com Apache Kafka](#mensageria-kafka)
 - [Testes Automatizados](#testes-automatizados)
 - [Testando a API via Insomnia](#testando-a-api-via-insomnia)
@@ -58,7 +59,7 @@ Planejamento, tarefas e histórico de evolução disponíveis no GitHub Projects
 
 <h2 id="visao-geral-do-projeto" align="center">Visão Geral do Projeto</h2>
 
-<b>IronCore</b> é uma API REST desenvolvida com <b>[Spring Boot](https://spring.io/projects/spring-boot)</b> para gerenciamento de histórico de treinos, evolução física, catálogo de exercícios e planejamento de ciclos de treino.
+<b>IronCore</b> é um backend em desenvolvimento com <b>[Spring Boot](https://spring.io/projects/spring-boot)</b>, planejado para evoluir como uma API REST para gerenciamento de histórico de treinos, evolução física, catálogo de exercícios e planejamento de ciclos de treino. Na release técnica <b>v0.1.0</b>, ainda não há endpoints REST de negócio consumíveis.
 
 O projeto nasce como uma aplicação prática de backend com foco em arquitetura limpa, modelagem de domínio e evolução incremental. A proposta é permitir que o usuário registre medições corporais, organize treinos de musculação ou cárdio, acompanhe sessões executadas e, em uma etapa posterior, gere treinos manualmente ou com apoio de um agente de IA.
 
@@ -69,35 +70,45 @@ O desenvolvimento do projeto busca consolidar habilidades como:
 - 🧪 Testes unitários e de integração com [JUnit 5](https://junit.org/) e 🔧 [Mockito](https://site.mockito.org/)
 - ✅ Validações robustas com [Bean Validation](https://docs.spring.io/spring-framework/reference/core/validation/beanvalidation.html)
 - 🛠️ Tratamento de erros
-- 📖 Documentação automatizada com [Swagger (OpenAPI)](https://swagger.io/specification/)
-- 🔒 Segurança com [JWT (JSON Web Token)](https://jwt.io/)
+- 📖 Documentação automatizada com [Swagger (OpenAPI)](https://swagger.io/specification/) conforme os endpoints forem implementados
+- 🔒 Segurança com [JWT (JSON Web Token)](https://jwt.io/) como evolução planejada; a base atual possui configuração e hashing de senha
 
-<p align="right"><a href="#inicio">⬆️ Voltar ao início</a></p>
+<p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
 ---
 
 <h2 id="status-atual-do-projeto" align="center">Status Atual do Projeto</h2>
 
-O <b>IronCore</b> está em fase inicial de desenvolvimento. Neste momento, o repositório já possui a base Spring Boot e a documentação arquitetural inicial, mas as funcionalidades de negócio ainda serão implementadas de forma incremental.
+O <b>IronCore</b> está em fase inicial de desenvolvimento. A release <b>v0.1.0</b> é uma release técnica de fundação: ela consolida base Spring Boot, domínio inicial, persistência, migrations, logging, testes e CI, mas ainda não entrega uma API pública funcional ou um MVP.
 
 ### Já existe no projeto
 - Estrutura inicial do backend com Spring Boot.
 - Configuração Maven com Java 21.
+- Organização em camadas com abordagem pragmática inspirada em DDD.
+- Domínios iniciais de usuários, métricas corporais e logging.
+- Migrations Flyway para `users`, `user_body_metrics`, `audit_logs` e `error_logs`.
+- Persistência relacional com PostgreSQL.
+- Logging persistido de auditoria e erro.
+- Bootstrap opcional de usuário único.
+- Testes automatizados e CI executando build/test.
 - Documentação visual com diagramas de domínio, arquitetura e fluxos principais.
-- Modelo relacional planejado para usuários, medições corporais, exercícios, ciclos de treino e atividades.
-- Planejamento de arquitetura interna seguindo camadas e princípios de DDD.
+
+### Parcialmente preparado
+- Spring Security está presente para suporte técnico e hashing de senha, mas ainda não há fluxo completo de autenticação/autorização.
+- Configuração de segredo JWT existe, mas JWT completo ainda não está implementado.
+- MongoDB sobe localmente via Docker Compose, mas ainda não há uso funcional de domínio/documentos.
 
 ### Planejado para as próximas etapas
-- Implementação das entidades, migrations e repositórios.
 - Endpoints REST para usuários, métricas corporais, exercícios e treinos.
 - Autenticação e autorização com JWT.
 - Swagger/OpenAPI conforme os endpoints forem criados.
-- Testes unitários e de integração.
 - Integração futura com frontend Angular.
 - Fluxo de geração de treino com apoio de IA.
 - Persistência documental para artefatos/contexto de IA, caso necessária.
 
-<p align="right"><a href="#inicio">⬆️ Voltar ao início</a></p>
+Notas da release: [v0.1.0 - Fundação técnica do backend](docs/releases/v0.1.0.md).
+
+<p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
 ---
 
@@ -110,17 +121,18 @@ O <b>IronCore</b> está em fase inicial de desenvolvimento. Neste momento, o rep
   - ✅ Validações ([Bean Validation](https://docs.spring.io/spring-framework/reference/core/validation/beanvalidation.html))
   - 🔄 [Spring Boot DevTools](https://docs.spring.io/spring-boot/reference/using/devtools.html)
   - 🔧 Lombok
-  - 📄 [Swagger (OpenAPI)](https://swagger.io/specification/)
+  <!-- - 📄 [Swagger (OpenAPI)](https://swagger.io/specification/) - planejado para quando houver endpoints REST de negócio -->
 
 - 🗄️ **Banco de Dados**
   - 🛠️ Controle de versionamento de banco com [Flyway](https://flywaydb.org/)
   - 🐘 [PostgreSQL](https://www.postgresql.org/): Banco de dados
+  - 🍃 MongoDB: preparado localmente via Docker Compose, ainda sem uso funcional de domínio
 
 - 🧰 **Build e Ambiente**
   - 📦 [Maven](https://maven.apache.org/): Gerenciamento de dependências e build
   - 🐳 [Docker CLI](https://www.docker.com/products/cli/)
   <!-- - 📘 [Apache Kafka](https://kafka.apache.org/) -->
-<p align="right"><a href="#inicio">⬆️ Voltar ao início</a></p>
+<p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
 ---
 
@@ -130,9 +142,9 @@ O <b>IronCore</b> está em fase inicial de desenvolvimento. Neste momento, o rep
 - 💻 [IntelliJ IDEA](https://www.jetbrains.com/idea/): IDE robusta e rica em recursos, ideal para desenvolvimento Java e Spring Boot.
 - 🐳 [Docker](https://www.docker.com/): Utilizado via Docker CLI para execução e gerenciamento dos contêineres do projeto.
 - 🐘 [PostgreSQL](https://www.postgresql.org/): Banco de dados relacional executado em contêiner Docker, acessado via CLI (psql).
-- 📡 [Insomnia](https://insomnia.rest/): Ferramenta de teste de APIs REST que permite enviar requisições HTTP, validar respostas e testar endpoints com facilidade.
+- 📡 [Insomnia](https://insomnia.rest/): Ferramenta prevista para teste de APIs REST conforme os endpoints de negócio forem implementados.
 
-<p align="right"><a href="#inicio">⬆️ Voltar ao início</a></p>
+<p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
 ---
 
@@ -140,7 +152,15 @@ O <b>IronCore</b> está em fase inicial de desenvolvimento. Neste momento, o rep
 
 O projeto utiliza o [Flyway](https://flywaydb.org/) para gerenciar as **migrations de banco de dados** no [PostgreSQL](https://www.postgresql.org/). Todas as alterações de estrutura no banco, como criação de tabelas e mudanças de schema, são versionadas e controladas. Isso garante consistência entre os ambientes de desenvolvimento e produção.
 
-<p align="right"><a href="#inicio">⬆️ Voltar ao início</a></p>
+Migrations existentes na release técnica v0.1.0:
+- `V1__create_table_users.sql`: cria a tabela `users`.
+- `V2__create_table_user_body_metrics.sql`: cria a tabela `user_body_metrics`.
+- `V3__create_table_audit_log.sql`: cria a tabela `audit_logs`.
+- `V4__create_table_error_log.sql`: cria a tabela `error_logs`.
+
+Documentação detalhada: [Banco de Dados e Migrations](docs/database/README.md).
+
+<p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
 ---
 
@@ -148,9 +168,11 @@ O projeto utiliza o [Flyway](https://flywaydb.org/) para gerenciar as **migratio
 
 O projeto possui uma estratégia específica para logs persistidos, separando registros de auditoria (`audit_logs`) e registros técnicos de erro (`error_logs`).
 
-A documentação detalhada está disponível em [Logging documentation](docs/logging/README.md).
+Essa estrutura faz parte da fundação técnica da release v0.1.0.
 
-<p align="right"><a href="#inicio">⬆️ Voltar ao início</a></p>
+A documentação detalhada está disponível em [Estratégia de Logging](docs/logging/README.md).
+
+<p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
 ---
 
@@ -158,11 +180,13 @@ A documentação detalhada está disponível em [Logging documentation](docs/log
 
 > Esta seção será implementada por completo conforme o projeto evoluir.
 
-<p align="right"><a href="#inicio">⬆️ Voltar ao início</a></p>
+<p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
 ---
 
 <h2 id="escopo-inicial--mvp" align="center">Escopo Inicial / MVP</h2>
+
+> Esta seção descreve o escopo planejado do MVP, não o conteúdo entregue na release técnica v0.1.0.
 
 O escopo inicial do <b>IronCore</b> foi inferido a partir da modelagem de banco, dos diagramas de arquitetura e dos fluxos principais documentados.
 
@@ -185,13 +209,13 @@ O escopo inicial do <b>IronCore</b> foi inferido a partir da modelagem de banco,
 - Observabilidade, auditoria e rastreabilidade dos fluxos principais.
 - Integração com frontend Angular.
 
-<p align="right"><a href="#inicio">⬆️ Voltar ao início</a></p>
+<p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
 ---
 
 <h2 id="funcionalidades" align="center">Funcionalidades</h2>
 
-As funcionalidades abaixo representam o escopo funcional planejado para o projeto. A implementação será feita de forma incremental conforme o backend evoluir.
+As funcionalidades abaixo representam o escopo funcional planejado para o projeto, não funcionalidades já disponíveis na release técnica v0.1.0. A implementação será feita de forma incremental conforme o backend evoluir.
 
 ### Autenticação e Usuários
 - Cadastro de usuários.
@@ -237,7 +261,7 @@ As funcionalidades abaixo representam o escopo funcional planejado para o projet
 - Persistência relacional dos metadados do treino gerado.
 - Persistência documental de artefatos e contexto, quando aplicável.
 
-<p align="right"><a href="#inicio">⬆️ Voltar ao início</a></p>
+<p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
 ---
 
@@ -245,11 +269,11 @@ As funcionalidades abaixo representam o escopo funcional planejado para o projet
 
 <h3 id="api---swagger">🌐 <strong>API - Swagger</strong></h3>
 
-A documentação [Swagger/OpenAPI](https://swagger.io/specification/) será adicionada conforme os endpoints REST forem implementados. Como o projeto ainda está em fase inicial, esta seção será atualizada depois que os primeiros módulos da API estiverem disponíveis.
+A documentação [Swagger/OpenAPI](https://swagger.io/specification/) será adicionada conforme os endpoints REST de negócio forem implementados. Como a release v0.1.0 ainda não possui endpoints de negócio consumíveis nem dependência Springdoc/OpenAPI configurada, esta seção permanece planejada.
 
 <h3 id="documentacao-arquitetural">🗂️ <strong>Documentação Arquitetural</strong></h3>
 
-Os principais diagramas do projeto já estão disponíveis e funcionam como blueprint técnico da aplicação:
+Os principais diagramas do projeto já estão disponíveis e funcionam como blueprint técnico da aplicação. Alguns diagramas representam planejamento futuro e não devem ser lidos como estado totalmente implementado na v0.1.0. Índice geral: [Diagrama](./docs/diagram/README.md).
 
 - [Diagrama ER — Banco de Dados](./docs/diagram/er-sql/IronCoreER%20Diagram.md): descreve as entidades, campos, relacionamentos e valores controlados do domínio.
 - [Diagrama de Arquitetura Geral](./docs/diagram/general-architecture/General%20Architecture%20Diagram.md): apresenta a visão macro entre frontend, backend, persistência e camada de IA.
@@ -257,39 +281,63 @@ Os principais diagramas do projeto já estão disponíveis e funcionam como blue
 - [Diagrama de Sequência — Geração de Treino](./docs/diagram/sequence-diagram/Sequence%20Diagram.md): mostra o fluxo planejado para geração de treino com apoio de IA.
 - [Diagrama de Sequência — Registro de Treino](./docs/diagram/sequence-log-diagram/Sequence%20Log%20Diagram.md): mostra o fluxo planejado para registro de uma sessão real de treino.
 
-<p align="right"><a href="#inicio">⬆️ Voltar ao início</a></p>
+<p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
+
+---
+
+<h2 id="documentacao-tecnica" align="center">Documentação Técnica</h2>
+
+A documentação técnica detalhada do projeto está disponível no índice central da pasta [docs](docs/README.md).
+
+Esse índice central reúne os principais documentos sobre arquitetura, banco de dados, logging, exceptions, módulos de domínio, diagramas e notas de release, mantendo o README principal como uma visão geral do projeto.
+
+<p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
 ---
 
 <h2 id="mensageria-kafka" align="center"> Mensageria com Apache Kafka</h2>
 
-> Esta seção será implementada por completo conforme o projeto evoluir.
+> Esta seção representa planejamento futuro e será implementada conforme o projeto evoluir.
 
-<p align="right"><a href="#inicio">⬆️ Voltar ao início</a></p>
+<p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
 ---
 
 <h2 id="testes-automatizados" align="center"> Testes Automatizados</h2>
 
-> Esta seção será implementada por completo conforme o projeto evoluir.
+O projeto já possui testes automatizados cobrindo partes do domínio, aplicação, infraestrutura e inicialização do contexto Spring.
 
-<p align="right"><a href="#inicio">⬆️ Voltar ao início</a></p>
+Para executar a validação local:
+```bash
+./mvnw clean verify --batch-mode
+```
+
+O CI do GitHub Actions também executa `./mvnw clean verify --batch-mode` em `push` e `pull_request` para a branch `main`.
+
+<p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
 ---
 
 <h2 id="testando-a-api-via-insomnia" align="center">Testando a API via Insomnia</h2>
 
-> Esta seção será implementada por completo conforme o projeto evoluir.
+> Esta seção será atualizada quando os primeiros endpoints REST de negócio forem implementados. A release v0.1.0 ainda não possui API de negócio consumível para testes via Insomnia.
 
-<p align="right"><a href="#inicio">⬆️ Voltar ao início</a></p>
+<p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
 ---
 
 <h2 id="estrutura-do-projeto" align="center">Estrutura do Projeto</h2>
 
-> Esta seção será implementada por completo conforme o projeto evoluir.
+O backend segue uma organização em camadas:
 
-<p align="right"><a href="#inicio">⬆️ Voltar ao início</a></p>
+- `domain`: modelos, value objects, services de domínio, exceptions e contratos.
+- `application`: use cases, services de aplicação, eventos e ports.
+- `infrastructure`: persistência, adapters, configuração, bootstrap, eventos e segurança técnica.
+- `interfaces`: entrada REST e tratamento global de erros.
+
+Documentação detalhada: [Documentação da Arquitetura](docs/architecture/README.md).
+
+<p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
 ---
 
@@ -310,11 +358,11 @@ git clone git@github.com:renancvitor/ironcore-backend.git
 ```bash
 cd ironcore-backend
 ```
-3. Inicie os serviços necessários no Docker (PostgreSQL)
+3. Inicie os serviços necessários no Docker (PostgreSQL e MongoDB)
 ```bash
 docker compose -f docker-compose.dev.yml up -d
 ```
-Isso vai criar o container do banco de dados PostgreSQL. Certifique-se de que as portas configuradas no docker-compose.yml não estejam sendo usadas por outros serviços.
+Isso vai criar os containers locais de PostgreSQL e MongoDB. O PostgreSQL é a persistência funcional atual; o MongoDB está preparado localmente, mas ainda não possui uso funcional de domínio. Certifique-se de que as portas configuradas no docker-compose.yml não estejam sendo usadas por outros serviços.
 
 4. Verifique se todos os containers estão disponíveis
 ```bash
@@ -322,28 +370,39 @@ docker ps
 ```
 ⚠️ **Se algum container não estiver ativo, volte ao passo 3.**
 
-5. Configure o banco de dados no arquivo `src/main/resources/application-dev.yml` com suas credenciais locais. Ao iniciar o projeto, as migrations serão aplicadas automaticamente pelo [Flyway](https://flywaydb.org/).
+5. Configure as variáveis de ambiente esperadas pelo perfil de desenvolvimento. Ao iniciar o projeto, as migrations serão aplicadas automaticamente pelo [Flyway](https://flywaydb.org/).
 ```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/nome_do_banco
-spring.datasource.username=seu_usuario
-spring.datasource.password=sua_senha
+DB_URL_DEV=jdbc:postgresql://localhost:5432/nome_do_banco
+DB_USER_DEV=seu_usuario
+DB_PASSWORD_DEV=sua_senha
+MONGO_URL_DEV=<uri_local_do_mongodb>
+MONGO_USER_DEV=<usuario_local_do_mongodb>
+MONGO_PASSWORD_DEV=<senha_local_do_mongodb>
+JWT_SECRET=<segredo_local>
 ```
+Também existem variáveis opcionais para bootstrap de usuário inicial: `IRONCORE_BOOTSTRAP_USER_ENABLED`, `IRONCORE_BOOTSTRAP_USER_NAME`, `IRONCORE_BOOTSTRAP_USER_EMAIL`, `IRONCORE_BOOTSTRAP_USER_PASSWORD` e `IRONCORE_BOOTSTRAP_USER_SEX`.
+
 6. Execute o backend com o Maven Wrapper no perfil de desenvolvimento:
 ```bash
 SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
 ```
-7. Acesse a API pelo navegador ou ferramentas como [Insomnia](https://insomnia.rest/) na porta configurada (por padrão http://localhost:8080).<br>
+7. Execute a validação local de build e testes:
+```bash
+./mvnw clean verify --batch-mode
+```
+
+8. Acesse a aplicação pela porta configurada (por padrão http://localhost:8080). A release v0.1.0 ainda não possui endpoints REST de negócio consumíveis.<br>
 ⚠️ **Lembre-se de manter o Docker rodando enquanto estiver utilizando a aplicação.**
 
-<p align="right"><a href="#inicio">⬆️ Voltar ao início</a></p>
+<p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
 ---
 
 <h2 id="deploy" align="center">Deploy</h2>
 
-> Esta seção será implementada por completo conforme o projeto evoluir.
+> Esta seção será implementada por completo conforme o projeto evoluir. Deploy ainda não faz parte da release técnica v0.1.0.
 
-<p align="right"><a href="#inicio">⬆️ Voltar ao início</a></p>
+<p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
 ---
 
@@ -358,7 +417,7 @@ Se você quiser contribuir para o projeto, siga estas etapas:
 
 Obrigado pelo interesse em contribuir!
 
-<p align="right"><a href="#inicio">⬆️ Voltar ao início</a></p>
+<p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
 ---
 
@@ -370,7 +429,7 @@ Se tiver dúvidas ou sugestões, sinta-se à vontade para entrar em contato:
 
 - 🟦 **LinkedIn**: [Renan Vitor](https://www.linkedin.com/in/renan-vitor-developer/)
 
-<p align="right"><a href="#inicio">⬆️ Voltar ao início</a></p>
+<p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
 ---
 
@@ -378,6 +437,6 @@ Se tiver dúvidas ou sugestões, sinta-se à vontade para entrar em contato:
 
 📌 Este projeto está licenciado sob a [Licença MIT](LICENSE), o que significa que você pode utilizá-lo, modificar, compartilhar e distribuir livremente, desde que mantenha os devidos créditos aos autores e inclua uma cópia da licença original - veja o arquivo [LICENSE](LICENSE) para detalhes ou acesse a [licença MIT oficial](https://opensource.org/licenses/MIT).
 
-<p align="right"><a href="#inicio">⬆️ Voltar ao início</a></p>
+<p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
 ---

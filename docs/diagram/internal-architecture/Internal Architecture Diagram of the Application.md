@@ -1,4 +1,6 @@
-# Internal Architecture Diagram of the Application
+# Diagrama de Arquitetura Interna da Aplicação
+
+**Status:** Parcialmente implementado — a estrutura de packages em camadas existe na `v0.1.0`; controllers REST de negócio, contratos DTO públicos e fluxos completos de autenticação ainda não estão implementados.
 
 <p align="center">
     <img src="./Internal%20Architecture%20Diagram%20of%20the%20Application.png" alt="Internal Architecture Diagram of the Application" />
@@ -33,7 +35,7 @@ Ele ajuda a entender:
 
 O diagrama prioriza as dependências principais e a clareza visual. Ele não representa todas as chamadas possíveis entre classes, módulos ou componentes internos.
 
-## Layers da arquitetura
+## Camadas da arquitetura
 
 ### `Presentation Layer`
 

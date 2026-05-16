@@ -1,4 +1,6 @@
-# Audit Log
+# Documentação de Audit Log
+
+**Status:** atual para a `v0.1.0`.
 
 ## Propósito
 
@@ -207,7 +209,7 @@ Os itens abaixo não fazem parte da implementação atual e não representam com
 
 ## Veja Também
 
-- [Logging Strategy](./README.md)
+- [Estratégia de Logging](./README.md)
 - [Error Log](./error-log.md)
 
-<p align="right"><a href="../../README.md">🔄 Voltar para a documentação completa</a></p>
+<p align="right"><a href="./README.md">🔄 Voltar para Logging</a></p>
