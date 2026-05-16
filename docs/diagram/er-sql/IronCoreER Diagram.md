@@ -1,12 +1,14 @@
 # Diagrama Entidade-Relacionamento (ER)
 
+**Status:** Parcialmente implementado / blueprint planejado — na `v0.1.0`, somente `users`, `user_body_metrics`, `audit_logs` e `error_logs` possuem migrations Flyway reais. As tabelas de exercise e workout neste diagrama representam escopo planejado.
+
 <p align="center">
     <img src="./IronCoreERDiagram.png" alt="Diagrama entidade-relacionamento do IronCore" />
 </p>
 
 ## Visão Geral
 
-Este documento descreve o modelo relacional da aplicação **IronCore**, responsável por sustentar o cadastro de usuários, medições corporais, catálogo de exercícios e planejamento de treinos.
+Este documento descreve o modelo relacional planejado da aplicação **IronCore**. Parte dele já existe na release `v0.1.0`, e parte representa blueprint para módulos futuros.
 
 O diagrama foi organizado para priorizar a **legibilidade visual**. Portanto, a posição das tabelas na imagem **não representa** prioridade funcional, criticidade técnica ou peso no domínio.
 
