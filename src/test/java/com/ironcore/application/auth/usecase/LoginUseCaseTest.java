@@ -55,7 +55,11 @@ class LoginUseCaseTest {
                     .thenReturn(Optional.of(user));
             when(passwordHashingService.matches(new RawPassword(command.rawPassword()), user.getPasswordHash()))
                     .thenReturn(true);
-            when(accessTokenGenerator.generate(new AccessTokenSubject(user.getId(), user.getEmail())))
+            when(accessTokenGenerator.generate(new AccessTokenSubject(
+                    user.getId(),
+                    user.getEmail(),
+                    user.mustChangePassword()))
+            )
                     .thenReturn(accessToken);
 
             LoginResult result = useCase.execute(command);
@@ -78,6 +82,7 @@ class LoginUseCaseTest {
 
             assertThat(subject.userId()).isEqualTo(user.getId());
             assertThat(subject.email()).isEqualTo(user.getEmail());
+            assertThat(subject.mustChangePassword()).isEqualTo(user.mustChangePassword());
         }
     }
 

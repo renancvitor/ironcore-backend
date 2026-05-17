@@ -37,7 +37,7 @@ public class LoginUseCase {
         }
 
         GeneratedAccessToken accessToken = accessTokenGenerator.generate(
-                new AccessTokenSubject(user.getId(), user.getEmail())
+                new AccessTokenSubject(user.getId(), user.getEmail(), user.mustChangePassword())
         );
 
         return new LoginResult(
