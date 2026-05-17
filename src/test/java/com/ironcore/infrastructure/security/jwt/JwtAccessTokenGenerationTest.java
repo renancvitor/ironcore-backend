@@ -51,6 +51,7 @@ class JwtAccessTokenGenerationTest {
             assertThat(decodedJWT.getIssuer()).isEqualTo(ISSUER);
             assertThat(decodedJWT.getSubject()).isEqualTo("1");
             assertThat(decodedJWT.getClaim("email").asString()).isEqualTo("renan@example.com");
+            assertThat(decodedJWT.getClaim("mustChangePassword").asBoolean()).isTrue();
             assertThat(decodedJWT.getExpiresAt()).isNotNull();
         }
     }
@@ -91,7 +92,8 @@ class JwtAccessTokenGenerationTest {
     private AccessTokenSubject subject() {
         return new AccessTokenSubject(
                 new UserId(1L),
-                new Email("renan@example.com")
+                new Email("renan@example.com"),
+                true
         );
     }
 }
