@@ -5,6 +5,7 @@ import com.ironcore.application.logging.error.port.ErrorLogPublisher;
 import com.ironcore.domain.exception.DomainException;
 import com.ironcore.domain.logging.error.enums.ErrorCodeType;
 import com.ironcore.infrastructure.exception.*;
+import com.ironcore.infrastructure.security.jwt.exception.JwtTokenException;
 import com.ironcore.interfaces.rest.exception.factory.ApiErrorResponseFactory;
 import com.ironcore.interfaces.rest.exception.factory.FieldErrorResponseFactory;
 import com.ironcore.interfaces.rest.exception.model.ApiErrorResponse;
@@ -95,6 +96,28 @@ public class GlobalExceptionHandler {
         ApiErrorResponse response = ApiErrorResponseFactory.create(
                 status,
                 exception.getMessage(),
+                request
+        );
+
+        return ResponseEntity.status(status).body(response);
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidCredentialsException(
+            InvalidCredentialsException exception,
+            HttpServletRequest request
+    ) {
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
+
+        publishErrorLog(
+                ErrorCodeType.VALIDATION_ERROR,
+                exception,
+                request
+        );
+
+        ApiErrorResponse response = ApiErrorResponseFactory.create(
+                status,
+                "Credenciais incorretas.",
                 request
         );
 
@@ -444,6 +467,28 @@ public class GlobalExceptionHandler {
         ApiErrorResponse response = ApiErrorResponseFactory.create(
                 status,
                 "Erro interno ao processar dados.",
+                request
+        );
+
+        return ResponseEntity.status(status).body(response);
+    }
+
+    @ExceptionHandler(JwtTokenException.class)
+    public ResponseEntity<ApiErrorResponse> handlerJwtTokenException(
+            JwtTokenException exception,
+            HttpServletRequest request
+    ) {
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+
+        publishErrorLog(
+                ErrorCodeType.INTERNAL_ERROR,
+                exception,
+                request
+        );
+
+        ApiErrorResponse response = ApiErrorResponseFactory.create(
+                status,
+                "Erro interno ao processar autenticação.",
                 request
         );
 
