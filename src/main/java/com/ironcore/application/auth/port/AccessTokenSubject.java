@@ -5,6 +5,7 @@ import com.ironcore.domain.user.valueobject.UserId;
 
 public record AccessTokenSubject(
         UserId userId,
-        Email email
+        Email email,
+        Boolean mustChangePassword
 ) {
 }
