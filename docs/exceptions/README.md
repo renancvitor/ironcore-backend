@@ -35,6 +35,7 @@ Exceptions de application atuais:
 - `ResourceNotFoundException`
 - `OperationNotAllowedException`
 - `BusinessRuleViolationException`
+- `InvalidCredentialsException`
 
 Use exceptions de application para decisões em nível de use case, como recursos ausentes, recursos duplicados ou regras de operação que coordenam domínio e persistência.
 
@@ -50,8 +51,12 @@ Exceptions de infrastructure atuais:
 - `DataMappingException`
 - `ExternalServiceException`
 - `JsonSerializationException`
+- `JwtTokenException`
+- `JwtTokenConfigurationException`
+- `JwtTokenGenerationException`
+- `JwtTokenValidationException`
 
-Use exceptions de infrastructure para falhas técnicas relacionadas a persistência, mapping, serialização ou serviços externos.
+Use exceptions de infrastructure para falhas técnicas relacionadas a persistência, mapping, serialização, segurança/JWT ou serviços externos.
 
 ## Tratamento REST
 
@@ -76,6 +81,5 @@ O handler cobre exceptions de domínio, exceptions de application, erros de vali
 - Não há controllers REST de negócio na `v0.1.0`.
 - O handler ainda não é exercitado por endpoints públicos de negócio.
 - O error logging está implementado, mas depende de uma requisição chegar ao REST exception handler ou de publicação explícita de error log.
-- O tratamento de erros de autenticação e autorização precisará ser revisado quando os fluxos de JWT/security forem implementados.
 
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>
