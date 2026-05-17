@@ -16,13 +16,15 @@ Implementado:
 - JPA entity, mapper, Spring Data repository and adapter.
 - Password hashing service and BCrypt-based hasher.
 - Optional single-user bootstrap flow.
+- JWT issuing.
+- Application login use case for single-user authentication.
 
 Não implementado:
 
 - Public REST endpoints.
 - Public registration flow.
-- Login flow.
-- JWT issuing/validation.
+- Public REST login endpoint.
+- JWT validation for incoming requests.
 - Frontend screens.
 
 ## Conceitos de Domínio
@@ -98,7 +100,5 @@ Não versionar valores reais.
 
 - Nenhum endpoint REST de negócio expõe operações de usuário.
 - Não há cadastro público de usuário.
-- Não há fluxo completo de autenticação JWT.
-- `security.token.secret` está configurado, mas emissão/validação de tokens ainda não está implementada.
 
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>
