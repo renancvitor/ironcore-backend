@@ -5,8 +5,10 @@ import com.ironcore.application.auth.usecase.LoginCommand;
 import com.ironcore.application.auth.usecase.LoginResult;
 import com.ironcore.application.auth.usecase.LoginUseCase;
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
+import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.UserId;
+import com.ironcore.infrastructure.security.jwt.JwtAccessTokenValidator;
 import com.ironcore.interfaces.rest.auth.dto.LoginRequest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -14,19 +16,23 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.containsString;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -48,16 +54,23 @@ class AuthControllerTest {
     @MockitoBean
     private ErrorLogPublisher errorLogPublisher;
 
+    @MockitoBean
+    private JwtAccessTokenValidator jwtAccessTokenValidator;
+
+    @MockitoBean
+    private UserRepository userRepository;
+
     @Nested
     class Login {
 
         @Test
         void shouldReturnAuthenticationDataWhenCredentialsAreValid() throws Exception {
             LoginRequest request = new LoginRequest("renan@example.com", "StrongPass123@");
+            LocalDateTime expiresAt = LocalDateTime.now().plusHours(1).truncatedTo(ChronoUnit.SECONDS);
             LoginResult result = new LoginResult(
                     "access-token",
                     "Bearer",
-                    LocalDateTime.of(2026, 5, 17, 12, 0),
+                    expiresAt,
                     new UserId(1L),
                     new Email("renan@example.com"),
                     "Renan",
@@ -71,9 +84,14 @@ class AuthControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
+                    .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("access_token=access-token")))
+                    .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Path=/")))
+                    .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Secure")))
+                    .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("HttpOnly")))
+                    .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("SameSite=None")))
                     .andExpect(jsonPath("$.accessToken").value("access-token"))
                     .andExpect(jsonPath("$.tokenType").value("Bearer"))
-                    .andExpect(jsonPath("$.expiresAt").value("2026-05-17T12:00:00"))
+                    .andExpect(jsonPath("$.expiresAt").value(expiresAt.toString()))
                     .andExpect(jsonPath("$.userId").value(1L))
                     .andExpect(jsonPath("$.email").value("renan@example.com"))
                     .andExpect(jsonPath("$.name").value("Renan"))
