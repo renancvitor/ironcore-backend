@@ -33,7 +33,7 @@ public class ChangePasswordUseCase {
         }
 
         if (!command.newPassword().equals(command.confirmPassword())) {
-            throw new BusinessRuleViolationException("A confirmação de senha não confere");
+            throw new BusinessRuleViolationException("A confirmação de senha não confere.");
         }
 
         if (!passwordHashingService.matches(command.currentPassword(), user.getPasswordHash())) {
