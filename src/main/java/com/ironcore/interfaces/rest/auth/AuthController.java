@@ -8,13 +8,18 @@ import com.ironcore.interfaces.rest.auth.dto.LoginResponse;
 import com.ironcore.interfaces.rest.auth.mapper.AuthRestMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+import java.time.Duration;
+import java.time.LocalDateTime;
+
+@RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -26,7 +31,16 @@ public class AuthController {
         LoginCommand command = AuthRestMapper.toCommand(request);
         LoginResult result = loginUseCase.execute(command);
         LoginResponse response = AuthRestMapper.toResponse(result);
+        Duration cookieMaxAge = Duration.between(LocalDateTime.now(), result.expiresAt());
 
-        return ResponseEntity.ok(response);
+        ResponseCookie cookie = ResponseCookie.from("access_token", result.accessToken())
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(cookieMaxAge.isNegative() ? Duration.ZERO : cookieMaxAge)
+                .sameSite("None")
+                .build();
+
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).body(response);
     }
 }
