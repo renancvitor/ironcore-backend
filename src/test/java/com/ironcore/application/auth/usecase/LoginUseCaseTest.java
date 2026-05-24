@@ -19,10 +19,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
-import static com.ironcore.application.auth.LoginTestFactory.activeUser;
 import static com.ironcore.application.auth.LoginTestFactory.command;
 import static com.ironcore.application.auth.LoginTestFactory.generatedAccessToken;
-import static com.ironcore.application.auth.LoginTestFactory.inactiveUser;
+import static com.ironcore.domain.user.UserTestFactory.activeUser;
+import static com.ironcore.domain.user.UserTestFactory.inactiveUser;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Mockito.*;

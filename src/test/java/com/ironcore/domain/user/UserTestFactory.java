@@ -41,6 +41,14 @@ public final class UserTestFactory {
         );
     }
 
+    public static User activeUser() {
+        return restoredUser(false, true);
+    }
+
+    public static User inactiveUser() {
+        return restoredUser(false, false);
+    }
+
     public static Email email(String value) {
         return new Email(value);
     }
