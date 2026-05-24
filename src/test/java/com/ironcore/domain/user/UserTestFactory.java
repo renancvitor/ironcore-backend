@@ -45,6 +45,10 @@ public final class UserTestFactory {
         return restoredUser(false, true);
     }
 
+    public static User activeUserWithMustChangePasswordTrue() {
+        return restoredUser(true, true);
+    }
+
     public static User inactiveUser() {
         return restoredUser(false, false);
     }
