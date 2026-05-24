@@ -22,7 +22,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
@@ -66,7 +65,7 @@ class AuthControllerTest {
         @Test
         void shouldReturnAuthenticationDataWhenCredentialsAreValid() throws Exception {
             LoginRequest request = new LoginRequest("renan@example.com", "StrongPass123@");
-            LocalDateTime expiresAt = LocalDateTime.now().plusHours(1).truncatedTo(ChronoUnit.SECONDS);
+            LocalDateTime expiresAt = LocalDateTime.of(2026, 5, 24, 15, 17, 30);
             LoginResult result = new LoginResult(
                     "access-token",
                     "Bearer",

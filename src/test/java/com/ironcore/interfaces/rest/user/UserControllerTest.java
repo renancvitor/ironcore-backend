@@ -5,6 +5,8 @@ import com.ironcore.application.exception.InvalidCredentialsException;
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
 import com.ironcore.application.user.usecase.ChangePasswordCommand;
 import com.ironcore.application.user.usecase.ChangePasswordUseCase;
+import com.ironcore.application.user.usecase.InitialChangePasswordResult;
+import com.ironcore.application.user.usecase.InitialChangePasswordUseCase;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.RawPassword;
@@ -25,6 +27,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -32,6 +35,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -42,6 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UserControllerTest {
 
     private static final String USER_ENDPOINT = "/api/users/me/change-password";
+    private static final String INITIAL_CHANGE_PASSWORD_ENDPOINT = "/api/users/me/change-initial-password";
 
     @Autowired
     private MockMvc mockMvc;
@@ -50,7 +55,10 @@ class UserControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private ChangePasswordUseCase  changePasswordUseCase;
+    private ChangePasswordUseCase changePasswordUseCase;
+
+    @MockitoBean
+    private InitialChangePasswordUseCase initialChangePasswordUseCase;
 
     @MockitoBean
     private ErrorLogPublisher errorLogPublisher;
@@ -85,6 +93,44 @@ class UserControllerTest {
                     new RawPassword("NewPassword"),
                     new RawPassword("NewPassword")
             ));
+        }
+    }
+
+    @Nested
+    class SuccessfulInitialChangePassword {
+
+        @Test
+        void shouldReturnNewAccessTokenWhenInitialPasswordIsChanged() throws Exception {
+            ChangePasswordRequest request = new ChangePasswordRequest(
+                    "OldPassword",
+                    "NewPassword",
+                    "NewPassword"
+            );
+            ChangePasswordCommand command = new ChangePasswordCommand(
+                    new UserId(1L),
+                    new RawPassword("OldPassword"),
+                    new RawPassword("NewPassword"),
+                    new RawPassword("NewPassword")
+            );
+            InitialChangePasswordResult result = new InitialChangePasswordResult(
+                    "new-access-token",
+                    "Bearer",
+                    LocalDateTime.of(2026, 5, 24, 10, 0)
+            );
+
+            when(initialChangePasswordUseCase.execute(command))
+                    .thenReturn(result);
+
+            mockMvc.perform(post(INITIAL_CHANGE_PASSWORD_ENDPOINT)
+                            .with(authenticatedUser())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.accessToken").value("new-access-token"))
+                    .andExpect(jsonPath("$.tokenType").value("Bearer"))
+                    .andExpect(jsonPath("$.expiresAt").value("2026-05-24T10:00:00"));
+
+            verify(initialChangePasswordUseCase).execute(command);
         }
     }
 
