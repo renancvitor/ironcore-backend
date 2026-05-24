@@ -2,12 +2,9 @@ package com.ironcore.application.auth;
 
 import com.ironcore.application.auth.port.GeneratedAccessToken;
 import com.ironcore.application.auth.usecase.LoginCommand;
-import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.valueobject.Email;
 
 import java.time.LocalDateTime;
-
-import static com.ironcore.domain.user.UserTestFactory.restoredUser;
 
 public final class LoginTestFactory {
 
@@ -21,14 +18,6 @@ public final class LoginTestFactory {
                 new Email("renan@example.com"),
                 "StrongPass123@"
         );
-    }
-
-    public static User activeUser() {
-        return restoredUser(false, true);
-    }
-
-    public static User inactiveUser() {
-        return restoredUser(false, false);
     }
 
     public static GeneratedAccessToken generatedAccessToken() {
