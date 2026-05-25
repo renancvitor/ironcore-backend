@@ -9,6 +9,7 @@ import com.ironcore.domain.user.valueobject.PasswordHash;
 import com.ironcore.domain.user.valueobject.RawPassword;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -17,6 +18,7 @@ public class BootstrapSingleUserUseCase {
     private final UserRepository userRepository;
     private final PasswordHashingService passwordHashingService;
 
+    @Transactional
     public void execute(BootstrapSingleUserCommand command) {
         Email email = command.email();
 
