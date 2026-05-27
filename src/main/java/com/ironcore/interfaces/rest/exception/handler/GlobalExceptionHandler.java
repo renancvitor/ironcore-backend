@@ -148,6 +148,28 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(response);
     }
 
+    @ExceptionHandler(InitialPasswordChangeRequiredException.class)
+    public ResponseEntity<ApiErrorResponse> handleInitialPasswordChangeRequiredException(
+            InitialPasswordChangeRequiredException exception,
+            HttpServletRequest request
+    ) {
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
+
+        publishErrorLog(
+                ErrorCodeType.AUTHENTICATION_ERROR,
+                exception,
+                request
+        );
+
+        ApiErrorResponse response = ApiErrorResponseFactory.create(
+                status,
+                exception.getMessage(),
+                request
+        );
+
+        return  ResponseEntity.status(status).body(response);
+    }
+
     @ExceptionHandler(ApplicationException.class)
     public ResponseEntity<ApiErrorResponse> handleApplicationException(
             ApplicationException exception,

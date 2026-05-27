@@ -3,6 +3,7 @@ package com.ironcore.application.auth.usecase;
 import com.ironcore.application.auth.port.AccessTokenGenerator;
 import com.ironcore.application.auth.port.AccessTokenSubject;
 import com.ironcore.application.auth.port.GeneratedAccessToken;
+import com.ironcore.application.exception.InitialPasswordChangeRequiredException;
 import com.ironcore.application.exception.InvalidCredentialsException;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.user.service.PasswordHashingService;
@@ -22,6 +23,7 @@ import java.util.Optional;
 import static com.ironcore.application.auth.LoginTestFactory.command;
 import static com.ironcore.application.auth.LoginTestFactory.generatedAccessToken;
 import static com.ironcore.domain.user.UserTestFactory.activeUser;
+import static com.ironcore.domain.user.UserTestFactory.activeUserWithMustChangePasswordTrue;
 import static com.ironcore.domain.user.UserTestFactory.inactiveUser;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -142,6 +144,25 @@ class LoginUseCaseTest {
 
             verify(userRepository).findByEmail(command.email());
             verify(passwordHashingService, never()).matches(any(), any());
+            verify(accessTokenGenerator, never()).generate(any());
+        }
+
+        @Test
+        void shouldRequireInitialPasswordChangeWhenCredentialsAreValid() {
+            LoginCommand command = command();
+            User user = activeUserWithMustChangePasswordTrue();
+
+            when(userRepository.findByEmail(command.email()))
+                    .thenReturn(Optional.of(user));
+            when(passwordHashingService.matches(new RawPassword(command.rawPassword()), user.getPasswordHash()))
+                    .thenReturn(true);
+
+            assertThatExceptionOfType(InitialPasswordChangeRequiredException.class)
+                    .isThrownBy(() -> useCase.execute(command))
+                    .withMessage("Troca de senha inicial obrigatória.");
+
+            verify(userRepository).findByEmail(command.email());
+            verify(passwordHashingService).matches(new RawPassword(command.rawPassword()), user.getPasswordHash());
             verify(accessTokenGenerator, never()).generate(any());
         }
     }

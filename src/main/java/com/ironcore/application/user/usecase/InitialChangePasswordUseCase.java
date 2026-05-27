@@ -1,11 +1,10 @@
 package com.ironcore.application.user.usecase;
 
-import com.ironcore.application.auth.port.AccessTokenGenerator;
-import com.ironcore.application.auth.port.AccessTokenSubject;
-import com.ironcore.application.auth.port.GeneratedAccessToken;
+import com.ironcore.application.exception.InvalidCredentialsException;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.user.service.UserPasswordChangeService;
 import com.ironcore.domain.user.model.User;
+import com.ironcore.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,24 +14,23 @@ import org.springframework.transaction.annotation.Transactional;
 public class InitialChangePasswordUseCase {
 
     private final UserPasswordChangeService userPasswordChangeService;
-    private final AccessTokenGenerator accessTokenGenerator;
+    private final UserRepository userRepository;
 
     @Transactional
-    public InitialChangePasswordResult execute(ChangePasswordCommand command) {
-        User user = userPasswordChangeService.changePassword(command, currentUser -> {
-            if (!currentUser.mustChangePassword()) {
-                throw new OperationNotAllowedException("A troca inicial de senha não é mais obrigatória.");
-            }
-        });
+    public void execute(InitialChangePasswordCommand command) {
+        User user = userRepository.findByEmail(command.email())
+                .orElseThrow(() -> new InvalidCredentialsException("Credenciais inválidas."));
 
-        GeneratedAccessToken accessToken = accessTokenGenerator.generate(
-                new AccessTokenSubject(user.getId(), user.getEmail(), false)
-        );
-
-        return new InitialChangePasswordResult(
-                accessToken.value(),
-                accessToken.tokenType(),
-                accessToken.expiresAt()
+        userPasswordChangeService.changePassword(
+                user,
+                command.currentPassword(),
+                command.newPassword(),
+                command.confirmPassword(),
+                currentUser -> {
+                    if (!currentUser.mustChangePassword()) {
+                        throw new OperationNotAllowedException("A troca inicial de senha não é mais obrigatória.");
+                    }
+                }
         );
     }
 }
