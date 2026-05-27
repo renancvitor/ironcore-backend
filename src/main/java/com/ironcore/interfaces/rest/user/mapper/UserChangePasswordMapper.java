@@ -1,11 +1,12 @@
 package com.ironcore.interfaces.rest.user.mapper;
 
 import com.ironcore.application.user.usecase.ChangePasswordCommand;
-import com.ironcore.application.user.usecase.InitialChangePasswordResult;
+import com.ironcore.application.user.usecase.InitialChangePasswordCommand;
+import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.RawPassword;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
 import com.ironcore.interfaces.rest.user.dto.ChangePasswordRequest;
-import com.ironcore.interfaces.rest.user.dto.InitialChangePasswordResponse;
+import com.ironcore.interfaces.rest.user.dto.InitialChangePasswordRequest;
 
 public final class UserChangePasswordMapper {
 
@@ -24,13 +25,13 @@ public final class UserChangePasswordMapper {
         );
     }
 
-    public static InitialChangePasswordResponse toInitialChangePasswordResponse(
-            InitialChangePasswordResult result
-    ) {
-        return new InitialChangePasswordResponse(
-                result.accessToken(),
-                result.tokenType(),
-                result.expiresAt()
+    public static InitialChangePasswordCommand toInitialChangePasswordCommand(
+            InitialChangePasswordRequest request) {
+        return new InitialChangePasswordCommand(
+                new Email(request.email()),
+                new RawPassword(request.currentPassword()),
+                new RawPassword(request.newPassword()),
+                new RawPassword(request.confirmPassword())
         );
     }
 }
