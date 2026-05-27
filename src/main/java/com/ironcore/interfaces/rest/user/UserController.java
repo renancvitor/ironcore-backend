@@ -1,13 +1,12 @@
 package com.ironcore.interfaces.rest.user;
 
-import com.ironcore.application.user.usecase.ChangePasswordCommand;
-import com.ironcore.application.user.usecase.ChangePasswordUseCase;
-import com.ironcore.application.user.usecase.InitialChangePasswordCommand;
-import com.ironcore.application.user.usecase.InitialChangePasswordUseCase;
+import com.ironcore.application.user.usecase.*;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
 import com.ironcore.interfaces.rest.user.dto.ChangePasswordRequest;
 import com.ironcore.interfaces.rest.user.dto.InitialChangePasswordRequest;
+import com.ironcore.interfaces.rest.user.dto.UserResponse;
 import com.ironcore.interfaces.rest.user.mapper.UserChangePasswordMapper;
+import com.ironcore.interfaces.rest.user.mapper.UserRestMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +20,7 @@ public class UserController {
 
     private final ChangePasswordUseCase changePasswordUseCase;
     private final InitialChangePasswordUseCase initialChangePasswordUseCase;
+    private final GetAuthenticatedUserUseCase getAuthenticatedUserUseCase;
 
     @PostMapping("/me/change-password")
     public ResponseEntity<Void> changePassword(
@@ -41,5 +41,13 @@ public class UserController {
         initialChangePasswordUseCase.execute(command);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> getAuthenticatedUser(
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser
+    ) {
+        UserProfileResult result = getAuthenticatedUserUseCase.execute(authenticatedUser.userId());
+        return ResponseEntity.ok(UserRestMapper.toResponse(result));
     }
 }
