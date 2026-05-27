@@ -1,11 +1,11 @@
 package com.ironcore.application.user.usecase;
 
-import com.ironcore.application.auth.port.AccessTokenGenerator;
-import com.ironcore.application.auth.port.AccessTokenSubject;
-import com.ironcore.application.auth.port.GeneratedAccessToken;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.user.service.UserPasswordChangeService;
 import com.ironcore.domain.user.model.User;
+import com.ironcore.domain.user.repository.UserRepository;
+import com.ironcore.domain.user.valueobject.Email;
+import com.ironcore.domain.user.valueobject.RawPassword;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,12 +14,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.function.Consumer;
 
-import static com.ironcore.application.user.ChangePasswordTestFactory.command;
 import static com.ironcore.domain.user.UserTestFactory.*;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
@@ -34,7 +32,7 @@ class InitialChangePasswordUseCaseTest {
     private UserPasswordChangeService userPasswordChangeService;
 
     @Mock
-    private AccessTokenGenerator accessTokenGenerator;
+    private UserRepository userRepository;
 
     @InjectMocks
     private InitialChangePasswordUseCase initialChangePasswordUseCase;
@@ -43,36 +41,29 @@ class InitialChangePasswordUseCaseTest {
     class InitialPasswordChange {
 
         @Test
-        void shouldChangeInitialPasswordAndReturnNewAccessToken() {
-            ChangePasswordCommand command = command();
-            User user = activeUser();
-            GeneratedAccessToken generatedAccessToken = new GeneratedAccessToken(
-                    "new-access-token",
-                    "Bearer",
-                    LocalDateTime.of(2026, 5, 24, 10, 0)
-            );
+        void shouldChangeInitialPassword() {
+            InitialChangePasswordCommand command = command();
+            User user = activeUserWithMustChangePasswordTrue();
 
-            when(userPasswordChangeService.changePassword(eq(command), any()))
+            when(userRepository.findByEmail(command.email()))
+                    .thenReturn(Optional.of(user));
+            when(userPasswordChangeService.changePassword(
+                    eq(user),
+                    eq(command.currentPassword()),
+                    eq(command.newPassword()),
+                    eq(command.confirmPassword()),
+                    any()))
                     .thenReturn(user);
 
-            when(accessTokenGenerator.generate(new AccessTokenSubject(
-                    user.getId(),
-                    user.getEmail(),
-                    false
-            ))).thenReturn(generatedAccessToken);
+            initialChangePasswordUseCase.execute(command);
 
-            InitialChangePasswordResult result = initialChangePasswordUseCase.execute(command);
-
-            assertThat(result.accessToken()).isEqualTo("new-access-token");
-            assertThat(result.tokenType()).isEqualTo("Bearer");
-            assertThat(result.expiresAt()).isEqualTo(LocalDateTime.of(2026, 5, 24, 10, 0));
-
-            verify(userPasswordChangeService).changePassword(eq(command), any());
-            verify(accessTokenGenerator).generate(new AccessTokenSubject(
-                    user.getId(),
-                    user.getEmail(),
-                    false
-            ));
+            verify(userRepository).findByEmail(command.email());
+            verify(userPasswordChangeService).changePassword(
+                    eq(user),
+                    eq(command.currentPassword()),
+                    eq(command.newPassword()),
+                    eq(command.confirmPassword()),
+                    any());
         }
     }
 
@@ -82,24 +73,28 @@ class InitialChangePasswordUseCaseTest {
         @Test
         @SuppressWarnings("unchecked")
         void shouldRequirePendingInitialPasswordChange() {
-            ChangePasswordCommand command = command();
-            User user = activeUser();
-            GeneratedAccessToken generatedAccessToken = new GeneratedAccessToken(
-                    "new-access-token",
-                    "Bearer",
-                    LocalDateTime.of(2026, 5, 24, 10, 0)
-            );
+            InitialChangePasswordCommand command = command();
+            User user = activeUserWithMustChangePasswordTrue();
 
-            when(userPasswordChangeService.changePassword(eq(command), any()))
+            when(userRepository.findByEmail(command.email()))
+                    .thenReturn(Optional.of(user));
+            when(userPasswordChangeService.changePassword(
+                    eq(user),
+                    eq(command.currentPassword()),
+                    eq(command.newPassword()),
+                    eq(command.confirmPassword()),
+                    any()))
                     .thenReturn(user);
-
-            when(accessTokenGenerator.generate(any()))
-                    .thenReturn(generatedAccessToken);
 
             initialChangePasswordUseCase.execute(command);
 
             ArgumentCaptor<Consumer<User>> captor = ArgumentCaptor.forClass(Consumer.class);
-            verify(userPasswordChangeService).changePassword(eq(command), captor.capture());
+            verify(userPasswordChangeService).changePassword(
+                    eq(user),
+                    eq(command.currentPassword()),
+                    eq(command.newPassword()),
+                    eq(command.confirmPassword()),
+                    captor.capture());
 
             Consumer<User> beforePasswordChange = captor.getValue();
 
@@ -109,5 +104,14 @@ class InitialChangePasswordUseCaseTest {
                     .isThrownBy(() -> beforePasswordChange.accept(activeUser()))
                     .withMessage("A troca inicial de senha não é mais obrigatória.");
         }
+    }
+
+    private InitialChangePasswordCommand command() {
+        return new InitialChangePasswordCommand(
+                new Email("renan@example.com"),
+                new RawPassword("StrongOldPassword"),
+                new RawPassword("StrongNewPassword"),
+                new RawPassword("StrongNewPassword")
+        );
     }
 }
