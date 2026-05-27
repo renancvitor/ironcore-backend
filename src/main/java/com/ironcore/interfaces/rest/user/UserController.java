@@ -2,11 +2,11 @@ package com.ironcore.interfaces.rest.user;
 
 import com.ironcore.application.user.usecase.ChangePasswordCommand;
 import com.ironcore.application.user.usecase.ChangePasswordUseCase;
-import com.ironcore.application.user.usecase.InitialChangePasswordResult;
+import com.ironcore.application.user.usecase.InitialChangePasswordCommand;
 import com.ironcore.application.user.usecase.InitialChangePasswordUseCase;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
 import com.ironcore.interfaces.rest.user.dto.ChangePasswordRequest;
-import com.ironcore.interfaces.rest.user.dto.InitialChangePasswordResponse;
+import com.ironcore.interfaces.rest.user.dto.InitialChangePasswordRequest;
 import com.ironcore.interfaces.rest.user.mapper.UserChangePasswordMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,14 +33,13 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/me/change-initial-password")
-    public ResponseEntity<InitialChangePasswordResponse>  changeInitialPassword(
-            @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
-            @RequestBody @Valid ChangePasswordRequest request
+    @PostMapping("/change-initial-password")
+    public ResponseEntity<Void>  changeInitialPassword(
+            @RequestBody @Valid InitialChangePasswordRequest request
     ) {
-        ChangePasswordCommand command = UserChangePasswordMapper.toChangePasswordCommand(authenticatedUser, request);
-        InitialChangePasswordResult result = initialChangePasswordUseCase.execute(command);
+        InitialChangePasswordCommand command = UserChangePasswordMapper.toInitialChangePasswordCommand(request);
+        initialChangePasswordUseCase.execute(command);
 
-        return ResponseEntity.ok(UserChangePasswordMapper.toInitialChangePasswordResponse(result));
+        return ResponseEntity.noContent().build();
     }
 }
