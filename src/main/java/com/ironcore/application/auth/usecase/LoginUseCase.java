@@ -3,6 +3,7 @@ package com.ironcore.application.auth.usecase;
 import com.ironcore.application.auth.port.AccessTokenGenerator;
 import com.ironcore.application.auth.port.AccessTokenSubject;
 import com.ironcore.application.auth.port.GeneratedAccessToken;
+import com.ironcore.application.exception.InitialPasswordChangeRequiredException;
 import com.ironcore.application.exception.InvalidCredentialsException;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.user.service.PasswordHashingService;
@@ -34,6 +35,10 @@ public class LoginUseCase {
 
         if (!passwordHashingService.matches(rawPassword, user.getPasswordHash())) {
             throw new InvalidCredentialsException("Credenciais inválidas.");
+        }
+
+        if (user.mustChangePassword()) {
+            throw new InitialPasswordChangeRequiredException("Troca de senha inicial obrigatória.");
         }
 
         GeneratedAccessToken accessToken = accessTokenGenerator.generate(
