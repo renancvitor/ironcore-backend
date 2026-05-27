@@ -45,7 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UserControllerTest {
 
     private static final String USER_ENDPOINT = "/api/users/me/change-password";
-    private static final String INITIAL_CHANGE_PASSWORD_ENDPOINT = "/api/users/me/change-initial-password";
+    private static final String INITIAL_CHANGE_PASSWORD_ENDPOINT = "/api/users/change-initial-password";
 
     @Autowired
     private MockMvc mockMvc;
