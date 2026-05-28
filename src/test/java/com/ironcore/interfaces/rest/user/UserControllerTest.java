@@ -3,7 +3,10 @@ package com.ironcore.interfaces.rest.user;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ironcore.application.exception.InvalidCredentialsException;
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
-import com.ironcore.application.user.usecase.*;
+import com.ironcore.application.user.usecase.ChangePasswordCommand;
+import com.ironcore.application.user.usecase.ChangePasswordUseCase;
+import com.ironcore.application.user.usecase.InitialChangePasswordCommand;
+import com.ironcore.application.user.usecase.InitialChangePasswordUseCase;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.RawPassword;
@@ -29,8 +32,9 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -42,7 +46,6 @@ class UserControllerTest {
 
     private static final String USER_ENDPOINT = "/api/users/me/change-password";
     private static final String INITIAL_CHANGE_PASSWORD_ENDPOINT = "/api/users/change-initial-password";
-    private static final String USER_PROFILE_ENDPOINT = "/api/users/me";
 
     @Autowired
     private MockMvc mockMvc;
@@ -55,9 +58,6 @@ class UserControllerTest {
 
     @MockitoBean
     private InitialChangePasswordUseCase initialChangePasswordUseCase;
-
-    @MockitoBean
-    private GetAuthenticatedUserUseCase getAuthenticatedUserUseCase;
 
     @MockitoBean
     private ErrorLogPublisher errorLogPublisher;
@@ -151,31 +151,6 @@ class UserControllerTest {
                     )));
 
             verify(changePasswordUseCase, never()).execute(any());
-        }
-    }
-
-    @Nested
-    class SuccessfulGetAuthenticatedUser {
-
-        @Test
-        void shouldReturnAuthenticatedUser() throws Exception {
-            UserProfileResult result = new UserProfileResult(
-                    new UserId(1L),
-                    new Email("renan@example.com"),
-                    "Renan"
-            );
-
-            when(getAuthenticatedUserUseCase.execute(new UserId(1L))).thenReturn(result);
-
-            mockMvc.perform(get("/api/users/me")
-                    .with(authenticatedUser()))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.userId").value(1L))
-                    .andExpect(jsonPath("$.email").value("renan@example.com"))
-                    .andExpect(jsonPath("$.name").value("Renan"))
-                    .andExpect(jsonPath("$.passwordHash").doesNotExist());
-
-            verify(getAuthenticatedUserUseCase).execute(new UserId(1L));
         }
     }
 
