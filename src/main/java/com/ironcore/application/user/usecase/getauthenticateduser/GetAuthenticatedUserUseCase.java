@@ -1,4 +1,4 @@
-package com.ironcore.application.user.usecase;
+package com.ironcore.application.user.usecase.getauthenticateduser;
 
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
