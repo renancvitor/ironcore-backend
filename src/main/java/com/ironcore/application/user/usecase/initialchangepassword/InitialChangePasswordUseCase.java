@@ -1,4 +1,4 @@
-package com.ironcore.application.user.usecase;
+package com.ironcore.application.user.usecase.initialchangepassword;
 
 import com.ironcore.application.exception.InvalidCredentialsException;
 import com.ironcore.application.exception.OperationNotAllowedException;
