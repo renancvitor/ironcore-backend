@@ -2,6 +2,8 @@ package com.ironcore.application.user.usecase;
 
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.user.service.PasswordHashingService;
+import com.ironcore.application.user.usecase.bootstrap.BootstrapSingleUserCommand;
+import com.ironcore.application.user.usecase.bootstrap.BootstrapSingleUserUseCase;
 import com.ironcore.domain.user.enums.SexType;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;

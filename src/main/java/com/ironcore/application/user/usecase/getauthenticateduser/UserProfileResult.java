@@ -1,4 +1,4 @@
-package com.ironcore.application.user.usecase;
+package com.ironcore.application.user.usecase.getauthenticateduser;
 
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.UserId;

@@ -2,9 +2,7 @@ package com.ironcore.interfaces.rest.auth.mapper;
 
 import com.ironcore.application.auth.usecase.LoginCommand;
 import com.ironcore.application.auth.usecase.LoginResult;
-import com.ironcore.application.user.usecase.InitialChangePasswordCommand;
 import com.ironcore.domain.user.valueobject.Email;
-import com.ironcore.domain.user.valueobject.RawPassword;
 import com.ironcore.interfaces.rest.auth.dto.LoginRequest;
 import com.ironcore.interfaces.rest.auth.dto.LoginResponse;
 
