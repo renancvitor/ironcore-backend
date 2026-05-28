@@ -1,8 +1,6 @@
 package com.ironcore.application.user.usecase;
 
 import com.ironcore.application.user.service.UserPasswordChangeService;
-import com.ironcore.application.user.usecase.changepassword.ChangePasswordCommand;
-import com.ironcore.application.user.usecase.changepassword.ChangePasswordUseCase;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

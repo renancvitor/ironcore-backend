@@ -1,4 +1,4 @@
-package com.ironcore.application.user.usecase.bootstrap;
+package com.ironcore.application.user.usecase;
 
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.user.service.PasswordHashingService;

@@ -1,7 +1,7 @@
 package com.ironcore.infrastructure.bootstrap;
 
-import com.ironcore.application.user.usecase.bootstrap.BootstrapSingleUserCommand;
-import com.ironcore.application.user.usecase.bootstrap.BootstrapSingleUserUseCase;
+import com.ironcore.application.user.usecase.BootstrapSingleUserCommand;
+import com.ironcore.application.user.usecase.BootstrapSingleUserUseCase;
 import com.ironcore.domain.user.enums.SexType;
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.Sex;

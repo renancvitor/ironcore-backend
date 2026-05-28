@@ -4,7 +4,7 @@ import com.ironcore.application.exception.BusinessRuleViolationException;
 import com.ironcore.application.exception.InvalidCredentialsException;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
-import com.ironcore.application.user.usecase.changepassword.ChangePasswordCommand;
+import com.ironcore.application.user.usecase.ChangePasswordCommand;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.PasswordHash;

@@ -1,4 +1,4 @@
-package com.ironcore.application.user.usecase.changepassword;
+package com.ironcore.application.user.usecase;
 
 import com.ironcore.application.user.service.UserPasswordChangeService;
 import lombok.RequiredArgsConstructor;

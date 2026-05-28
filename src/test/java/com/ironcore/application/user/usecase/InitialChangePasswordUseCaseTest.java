@@ -2,8 +2,6 @@ package com.ironcore.application.user.usecase;
 
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.user.service.UserPasswordChangeService;
-import com.ironcore.application.user.usecase.initialchangepassword.InitialChangePasswordCommand;
-import com.ironcore.application.user.usecase.initialchangepassword.InitialChangePasswordUseCase;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.Email;

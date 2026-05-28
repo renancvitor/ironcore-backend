@@ -1,11 +1,6 @@
 package com.ironcore.interfaces.rest.user;
 
-import com.ironcore.application.user.usecase.changepassword.ChangePasswordCommand;
-import com.ironcore.application.user.usecase.changepassword.ChangePasswordUseCase;
-import com.ironcore.application.user.usecase.getauthenticateduser.GetAuthenticatedUserUseCase;
-import com.ironcore.application.user.usecase.getauthenticateduser.UserProfileResult;
-import com.ironcore.application.user.usecase.initialchangepassword.InitialChangePasswordCommand;
-import com.ironcore.application.user.usecase.initialchangepassword.InitialChangePasswordUseCase;
+import com.ironcore.application.user.usecase.*;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
 import com.ironcore.interfaces.rest.user.dto.ChangePasswordRequest;
 import com.ironcore.interfaces.rest.user.dto.InitialChangePasswordRequest;

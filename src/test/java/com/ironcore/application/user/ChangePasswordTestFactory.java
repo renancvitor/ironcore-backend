@@ -1,6 +1,6 @@
 package com.ironcore.application.user;
 
-import com.ironcore.application.user.usecase.changepassword.ChangePasswordCommand;
+import com.ironcore.application.user.usecase.ChangePasswordCommand;
 import com.ironcore.domain.user.valueobject.RawPassword;
 import com.ironcore.domain.user.valueobject.UserId;
 

@@ -2,8 +2,6 @@ package com.ironcore.application.user.usecase;
 
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
-import com.ironcore.application.user.usecase.getauthenticateduser.GetAuthenticatedUserUseCase;
-import com.ironcore.application.user.usecase.getauthenticateduser.UserProfileResult;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.Nested;

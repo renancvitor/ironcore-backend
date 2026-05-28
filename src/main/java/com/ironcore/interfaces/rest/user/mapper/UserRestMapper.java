@@ -1,6 +1,6 @@
 package com.ironcore.interfaces.rest.user.mapper;
 
-import com.ironcore.application.user.usecase.getauthenticateduser.UserProfileResult;
+import com.ironcore.application.user.usecase.UserProfileResult;
 import com.ironcore.interfaces.rest.user.dto.UserResponse;
 
 public final class UserRestMapper {
