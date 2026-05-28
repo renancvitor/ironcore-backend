@@ -1,7 +1,7 @@
 package com.ironcore.interfaces.rest.user.mapper;
 
-import com.ironcore.application.user.usecase.ChangePasswordCommand;
-import com.ironcore.application.user.usecase.InitialChangePasswordCommand;
+import com.ironcore.application.user.usecase.changepassword.ChangePasswordCommand;
+import com.ironcore.application.user.usecase.initialchangepassword.InitialChangePasswordCommand;
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.RawPassword;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
