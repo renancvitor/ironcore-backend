@@ -4,6 +4,7 @@ import com.ironcore.application.exception.BusinessRuleViolationException;
 import com.ironcore.application.exception.InvalidCredentialsException;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
+import com.ironcore.application.exception.UserInactiveException;
 import com.ironcore.application.user.usecase.changepassword.ChangePasswordCommand;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
@@ -36,7 +37,7 @@ public class UserPasswordChangeService {
             Consumer<User> beforeChangePassword
     ) {
         if (!user.isActive()) {
-            throw new OperationNotAllowedException("Usuário inativo.");
+            throw new UserInactiveException("Usuário inativo.");
         }
 
         beforeChangePassword.accept(user);
@@ -66,7 +67,7 @@ public class UserPasswordChangeService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
 
         if (!user.isActive()) {
-            throw new OperationNotAllowedException("Usuário inativo.");
+            throw new UserInactiveException("Usuário inativo.");
         }
 
         beforePasswordChange.accept(user);
