@@ -6,6 +6,9 @@ import com.ironcore.domain.exception.DomainException;
 import com.ironcore.domain.logging.error.enums.ErrorCodeType;
 import com.ironcore.infrastructure.exception.*;
 import com.ironcore.infrastructure.security.jwt.exception.JwtTokenException;
+import com.ironcore.infrastructure.security.jwt.exception.JwtTokenConfigurationException;
+import com.ironcore.infrastructure.security.jwt.exception.JwtTokenGenerationException;
+import com.ironcore.infrastructure.security.jwt.exception.JwtTokenValidationException;
 import com.ironcore.interfaces.rest.exception.factory.ApiErrorResponseFactory;
 import com.ironcore.interfaces.rest.exception.factory.FieldErrorResponseFactory;
 import com.ironcore.interfaces.rest.exception.model.ApiErrorResponse;
@@ -135,6 +138,28 @@ public class GlobalExceptionHandler {
 
         publishErrorLog(
                 ErrorCodeType.BUSINESS_RULE_VIOLATION,
+                exception,
+                request
+        );
+
+        ApiErrorResponse response = ApiErrorResponseFactory.create(
+                status,
+                exception.getMessage(),
+                request
+        );
+
+        return ResponseEntity.status(status).body(response);
+    }
+
+    @ExceptionHandler(UserInactiveException.class)
+    public ResponseEntity<ApiErrorResponse> handleUserInactiveException(
+            UserInactiveException exception,
+            HttpServletRequest request
+    ) {
+        HttpStatus status = HttpStatus.FORBIDDEN;
+
+        publishErrorLog(
+                ErrorCodeType.AUTHORIZATION_ERROR,
                 exception,
                 request
         );
@@ -495,8 +520,32 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(response);
     }
 
-    @ExceptionHandler(JwtTokenException.class)
-    public ResponseEntity<ApiErrorResponse> handlerJwtTokenException(
+    @ExceptionHandler(JwtTokenValidationException.class)
+    public ResponseEntity<ApiErrorResponse> handleJwtTokenValidationException(
+            JwtTokenValidationException exception,
+            HttpServletRequest request
+    ) {
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
+
+        publishErrorLog(
+                ErrorCodeType.AUTHENTICATION_ERROR,
+                exception,
+                request
+        );
+
+        ApiErrorResponse response = ApiErrorResponseFactory.create(
+                status,
+                "Token de autenticação inválido ou expirado.",
+                request
+        );
+
+        return ResponseEntity.status(status).body(response);
+    }
+
+    @ExceptionHandler({
+            JwtTokenConfigurationException.class,
+            JwtTokenGenerationException.class})
+    public ResponseEntity<ApiErrorResponse> handleInternalJwtTokenException(
             JwtTokenException exception,
             HttpServletRequest request
     ) {

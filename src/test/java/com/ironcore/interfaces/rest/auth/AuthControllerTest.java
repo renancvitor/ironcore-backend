@@ -4,11 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ironcore.application.auth.usecase.LoginCommand;
 import com.ironcore.application.auth.usecase.LoginResult;
 import com.ironcore.application.auth.usecase.LoginUseCase;
+import com.ironcore.application.exception.UserInactiveException;
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.UserId;
 import com.ironcore.infrastructure.security.jwt.JwtAccessTokenValidator;
+import com.ironcore.infrastructure.security.jwt.exception.JwtTokenConfigurationException;
+import com.ironcore.infrastructure.security.jwt.exception.JwtTokenValidationException;
 import com.ironcore.interfaces.rest.auth.dto.LoginRequest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -124,6 +127,60 @@ class AuthControllerTest {
                     .andExpect(jsonPath("$.fields[*].field", containsInAnyOrder("email", "password")));
 
             verify(loginUseCase, never()).execute(any());
+        }
+
+        @Test
+        void shouldReturnForbiddenWhenUserIsInactive() throws Exception {
+            LoginRequest request = new LoginRequest("renan@example.com", "StrongPass123@");
+            LoginCommand command = new LoginCommand(new Email("renan@example.com"), "StrongPass123@");
+
+            when(loginUseCase.execute(command))
+                    .thenThrow(new UserInactiveException("Usuário inativo."));
+
+            mockMvc.perform(post(LOGIN_ENDPOINT)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.status").value(403))
+                    .andExpect(jsonPath("$.error").value("Forbidden"))
+                    .andExpect(jsonPath("$.message").value("Usuário inativo."))
+                    .andExpect(jsonPath("$.path").value(LOGIN_ENDPOINT));
+        }
+
+        @Test
+        void shouldReturnUnauthorizedWhenJwtValidationFails() throws Exception {
+            LoginRequest request = new LoginRequest("renan@example.com", "StrongPass123@");
+            LoginCommand command = new LoginCommand(new Email("renan@example.com"), "StrongPass123@");
+
+            when(loginUseCase.execute(command))
+                    .thenThrow(new JwtTokenValidationException("JWT inválido ou expirado."));
+
+            mockMvc.perform(post(LOGIN_ENDPOINT)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.status").value(401))
+                    .andExpect(jsonPath("$.error").value("Unauthorized"))
+                    .andExpect(jsonPath("$.message").value("Token de autenticação inválido ou expirado."))
+                    .andExpect(jsonPath("$.path").value(LOGIN_ENDPOINT));
+        }
+
+        @Test
+        void shouldReturnInternalServerErrorWhenJwtConfigurationFails() throws Exception {
+            LoginRequest request = new LoginRequest("renan@example.com", "StrongPass123@");
+            LoginCommand command = new LoginCommand(new Email("renan@example.com"), "StrongPass123@");
+
+            when(loginUseCase.execute(command))
+                    .thenThrow(new JwtTokenConfigurationException("JWT secret não configurado."));
+
+            mockMvc.perform(post(LOGIN_ENDPOINT)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isInternalServerError())
+                    .andExpect(jsonPath("$.status").value(500))
+                    .andExpect(jsonPath("$.error").value("Internal Server Error"))
+                    .andExpect(jsonPath("$.message").value("Erro interno ao processar autenticação."))
+                    .andExpect(jsonPath("$.path").value(LOGIN_ENDPOINT));
         }
     }
 }

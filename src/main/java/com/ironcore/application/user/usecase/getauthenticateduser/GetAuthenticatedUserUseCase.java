@@ -1,7 +1,7 @@
 package com.ironcore.application.user.usecase.getauthenticateduser;
 
-import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
+import com.ironcore.application.exception.UserInactiveException;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.UserId;
@@ -19,7 +19,7 @@ public class GetAuthenticatedUserUseCase {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
 
         if (!user.isActive()) {
-            throw new OperationNotAllowedException("Usuário inativo.");
+            throw new UserInactiveException("Usuário inativo.");
         }
 
         return new UserProfileResult(

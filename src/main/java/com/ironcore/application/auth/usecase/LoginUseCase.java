@@ -5,7 +5,7 @@ import com.ironcore.application.auth.port.AccessTokenSubject;
 import com.ironcore.application.auth.port.GeneratedAccessToken;
 import com.ironcore.application.exception.InitialPasswordChangeRequiredException;
 import com.ironcore.application.exception.InvalidCredentialsException;
-import com.ironcore.application.exception.OperationNotAllowedException;
+import com.ironcore.application.exception.UserInactiveException;
 import com.ironcore.application.user.service.PasswordHashingService;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
@@ -30,7 +30,7 @@ public class LoginUseCase {
                 .orElseThrow(() -> new InvalidCredentialsException("Credenciais inválidas."));
 
         if (!user.isActive()) {
-            throw new OperationNotAllowedException("Usuário inativo.");
+            throw new UserInactiveException("Usuário inativo.");
         }
 
         if (!passwordHashingService.matches(rawPassword, user.getPasswordHash())) {
