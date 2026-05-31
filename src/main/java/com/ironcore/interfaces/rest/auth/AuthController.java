@@ -3,6 +3,7 @@ package com.ironcore.interfaces.rest.auth;
 import com.ironcore.application.auth.usecase.LoginCommand;
 import com.ironcore.application.auth.usecase.LoginResult;
 import com.ironcore.application.auth.usecase.LoginUseCase;
+import com.ironcore.application.auth.usecase.LogoutUseCase;
 import com.ironcore.interfaces.rest.auth.dto.LoginRequest;
 import com.ironcore.interfaces.rest.auth.dto.LoginResponse;
 import com.ironcore.interfaces.rest.auth.mapper.AuthRestMapper;
@@ -25,6 +26,7 @@ import java.time.LocalDateTime;
 public class AuthController {
 
     private final LoginUseCase loginUseCase;
+    private final LogoutUseCase logoutUseCase;
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
@@ -42,5 +44,20 @@ public class AuthController {
                 .build();
 
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).body(response);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout() {
+        logoutUseCase.execute();
+
+        ResponseCookie cookie = ResponseCookie.from("access_token", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .sameSite("None")
+                .build();
+
+        return ResponseEntity.noContent().header(HttpHeaders.SET_COOKIE, cookie.toString()).build();
     }
 }

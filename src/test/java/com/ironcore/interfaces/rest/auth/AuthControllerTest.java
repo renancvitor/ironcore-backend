@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ironcore.application.auth.usecase.LoginCommand;
 import com.ironcore.application.auth.usecase.LoginResult;
 import com.ironcore.application.auth.usecase.LoginUseCase;
+import com.ironcore.application.auth.usecase.LogoutUseCase;
 import com.ironcore.application.exception.UserInactiveException;
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
 import com.ironcore.domain.user.repository.UserRepository;
@@ -52,6 +53,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private LoginUseCase loginUseCase;
+
+    @MockitoBean
+    private LogoutUseCase logoutUseCase;
 
     @MockitoBean
     private ErrorLogPublisher errorLogPublisher;
@@ -181,6 +185,24 @@ class AuthControllerTest {
                     .andExpect(jsonPath("$.error").value("Internal Server Error"))
                     .andExpect(jsonPath("$.message").value("Erro interno ao processar autenticação."))
                     .andExpect(jsonPath("$.path").value(LOGIN_ENDPOINT));
+        }
+    }
+
+    @Nested
+    class Logout {
+
+        @Test
+        void shouldLogoutAndExpireAccessTokenCookie() throws Exception {
+            mockMvc.perform(post("/api/auth/logout"))
+                    .andExpect(status().isNoContent())
+                    .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("access_token=")))
+                    .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Max-Age=0")))
+                    .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Path=/")))
+                    .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Secure")))
+                    .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("HttpOnly")))
+                    .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("SameSite=None")));
+
+            verify(logoutUseCase).execute();
         }
     }
 }
