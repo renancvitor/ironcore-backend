@@ -1,6 +1,10 @@
 spring:
   application:
     name: ironcore-backend-test
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration
   datasource:
     url: jdbc:h2:mem:ironcore;DB_CLOSE_DELAY=-1
     driver-class-name: org.h2.Driver
@@ -14,4 +18,4 @@ spring:
 
 security:
   token:
-    secret: ${JWT_SECRET}
+    secret: integration-test-secret-with-enough-length

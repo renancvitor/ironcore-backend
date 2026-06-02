@@ -4,6 +4,7 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 .env
+.codex
 simple-ddd.md
 
 ### STS ###
@@ -33,4 +34,3 @@ build/
 
 ### VS Code ###
 .vscode/
-
