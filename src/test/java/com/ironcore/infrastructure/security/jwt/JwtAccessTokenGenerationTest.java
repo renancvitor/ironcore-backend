@@ -12,7 +12,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -25,11 +28,16 @@ class JwtAccessTokenGenerationTest {
 
     private JwtTokenProperties properties;
     private JwtAccessTokenGenerator generator;
+    private Clock clock;
 
     @BeforeEach
     void setUp() {
         properties = validProperties();
-        generator = new JwtAccessTokenGenerator(properties);
+        clock = Clock.fixed(
+                Instant.parse("2099-05-24T15:00:00Z"),
+                ZoneId.systemDefault()
+        );
+        generator = new JwtAccessTokenGenerator(properties, clock);
     }
 
     @Nested
@@ -46,7 +54,7 @@ class JwtAccessTokenGenerationTest {
 
             assertThat(result.value()).isNotBlank();
             assertThat(result.tokenType()).isEqualTo("Bearer");
-            assertThat(result.expiresAt()).isAfter(LocalDateTime.now());
+            assertThat(result.expiresAt()).isAfter(LocalDateTime.now(clock));
 
             assertThat(decodedJWT.getIssuer()).isEqualTo(ISSUER);
             assertThat(decodedJWT.getSubject()).isEqualTo("1");
@@ -62,7 +70,7 @@ class JwtAccessTokenGenerationTest {
         @Test
         void shouldFailWhenSecretIsNull() {
             properties.setSecret(null);
-            generator = new JwtAccessTokenGenerator(properties);
+            generator = new JwtAccessTokenGenerator(properties, clock);
 
             assertThatExceptionOfType(JwtTokenConfigurationException.class)
                     .isThrownBy(() -> generator.generate(subject()))
@@ -72,7 +80,7 @@ class JwtAccessTokenGenerationTest {
         @Test
         void shouldFailWhenSecretIsBlank() {
             properties.setSecret("");
-            generator = new JwtAccessTokenGenerator(properties);
+            generator = new JwtAccessTokenGenerator(properties, clock);
 
             assertThatExceptionOfType(JwtTokenConfigurationException.class)
                     .isThrownBy(() -> generator.generate(subject()))
