@@ -2,9 +2,9 @@
 
 ## Resumo
 
-`v0.1.0` é a primeira release de fundação técnica do IronCore Backend.
+`v0.1.0` representa o estado do IronCore Backend antes do fechamento do fluxo de users/auth/security.
 
-Ela estabelece a fundação inicial do backend, incluindo modelo de domínio, persistência relacional, migrations, logging, tratamento de exceptions, testes automatizados e CI.
+Ela estabelece a fundação técnica inicial do backend, incluindo modelo de domínio, persistência relacional, migrations, logging, tratamento de exceptions, testes automatizados e CI.
 
 Esta não é uma release de MVP nem uma release de API pública funcional.
 
@@ -46,6 +46,7 @@ Esta não é uma release de MVP nem uma release de API pública funcional.
 
 ## Não Incluído Nesta Release
 
+- Fluxos REST de users/auth/security.
 - Fluxos de MVP voltados ao usuário.
 - Integração com frontend Angular.
 - Documentação de API gerada por OpenAPI.
@@ -54,4 +55,4 @@ Esta não é uma release de MVP nem uma release de API pública funcional.
 - Integração com provedor LLM.
 - Fluxos de geração de treino ou logging de treino.
 
-<p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>
+<p align="right"><a href="../README.md">Voltar para releases</a></p>

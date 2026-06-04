@@ -2,11 +2,11 @@
 
 ## Status Atual
 
-**Status:** atual para a `v0.1.0`.
+**Status:** estado atual do repositório para persistência relacional.
 
-A camada de persistência funcional desta release é relacional e baseada em PostgreSQL, JPA/Hibernate e Flyway.
+A camada de persistência funcional do projeto é relacional e baseada em PostgreSQL, JPA/Hibernate e Flyway.
 
-MongoDB está presente como dependência e serviço local no Docker, mas não há repositories MongoDB, modelos documentais ou fluxos funcionais de domínio usando MongoDB na `v0.1.0`.
+MongoDB está presente como dependência e serviço local no Docker, mas não há repositories MongoDB, modelos documentais ou fluxos funcionais de domínio usando MongoDB no estado atual do repositório.
 
 ## Banco Relacional
 
@@ -30,7 +30,7 @@ A configuração base da aplicação habilita o Flyway e usa `hibernate.ddl-auto
 
 Alguns diagramas descrevem um modelo de dados planejado mais amplo, incluindo exercícios, ciclos de treino, dias de treino e atividades de treino. Essas tabelas são blueprint/escopo futuro e não são criadas pelas migrations atuais.
 
-Para a `v0.1.0`, somente as quatro tabelas listadas acima devem ser tratadas como estado de banco implementado.
+Somente as quatro tabelas listadas acima devem ser tratadas como estado de banco implementado. A tabela `user_body_metrics` existe no schema, mas ainda não representa um fluxo funcional completo exposto pela API.
 
 ## Serviços Locais
 
@@ -43,6 +43,6 @@ PostgreSQL é usado pela persistência funcional atual. MongoDB está preparado 
 
 ## Observação Sobre o Perfil de Produção
 
-`application-prod.yml` atualmente desabilita o Flyway. Isso deve ser revisado antes de um deploy real em produção. Para a release técnica de fundação `v0.1.0`, isso é uma limitação conhecida de configuração, não uma decisão validada de produção.
+`application-prod.yml` atualmente desabilita o Flyway. Isso deve ser revisado antes de um deploy real em produção. Essa é uma limitação conhecida de configuração, não uma decisão validada de produção.
 
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>

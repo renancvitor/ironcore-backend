@@ -2,11 +2,11 @@
 
 ## Status Atual
 
-**Status:** fundação técnica atual da `v0.1.0`.
+**Status:** fundação técnica do repositório, com baseline de autenticação single-user fechado na `v0.2.0`.
 
-O backend está organizado com uma estrutura pragmática inspirada em DDD. A release atual estabelece limites de packages, modelos de domínio, adapters de persistência, logging, tratamento de exceptions, testes e CI.
+O backend está organizado com uma estrutura pragmática inspirada em DDD. A base atual estabelece limites de packages, modelos de domínio, adapters de persistência, logging, tratamento de exceptions, autenticação single-user, testes e CI.
 
-Esta release não inclui controllers REST de negócio. O package `interfaces/rest` atualmente contém infraestrutura de tratamento de erros REST, não endpoints públicos de negócio.
+O repositório já inclui controllers REST mínimos para autenticação e usuário autenticado. O módulo de métricas corporais possui base de domínio e banco, mas ainda não possui fluxo REST funcional. Exercícios, treinos e IA permanecem planejados.
 
 ## Camadas
 
@@ -30,6 +30,10 @@ Coordena use cases e fluxos de aplicação.
 Exemplos atuais:
 
 - `BootstrapSingleUserUseCase`
+- `LoginUseCase`
+- `InitialChangePasswordUseCase`
+- `ChangePasswordUseCase`
+- `GetAuthenticatedUserUseCase`
 - `PasswordHashingService`
 - audit and error logging application services
 - application exceptions
@@ -47,6 +51,8 @@ Exemplos atuais:
 - domain-to-persistence mappers
 - Spring event publishers/listeners
 - password hashing implementation
+- JWT generation/validation
+- JWT authentication filter
 - single-user bootstrap runner
 - configuration properties
 
@@ -60,7 +66,7 @@ Status atual:
 
 - O tratamento global de exceptions REST existe.
 - Models e factories de resposta de erro da API existem.
-- Controllers REST de negócio ainda não estão implementados.
+- Controllers REST de autenticação e usuário autenticado existem.
 
 ## Direção das Dependências
 
@@ -73,10 +79,11 @@ infrastructure -> application/domain contracts
 
 O domínio não deve depender de Spring, JPA, HTTP, entidades de banco ou integrações externas.
 
-## Limitações Atuais
+## Recortes Atuais
 
-- Não há endpoints REST de negócio disponíveis na `v0.1.0`.
-- O fluxo de autenticação JWT ainda não está implementado.
+- A `v0.2.0` cobre o baseline single-user de autenticação e usuário autenticado.
+- Cadastro público, recuperação de senha, refresh token, blacklist JWT e roles ficam fora do modelo single-user do IronCore.
+- User body metrics possui base parcial implementada, mas ainda não possui fluxo funcional completo.
 - Swagger/OpenAPI ainda não está implementado.
 - MongoDB está disponível como dependência/serviço local, mas ainda não há módulo funcional de persistência documental.
 - Fluxos maiores de treino, catálogo de exercícios e IA estão planejados, não implementados.

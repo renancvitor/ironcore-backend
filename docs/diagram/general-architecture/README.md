@@ -1,6 +1,8 @@
 # Diagrama de Arquitetura Geral
 
-**Status:** Parcialmente implementado / blueprint planejado — Spring Boot e PostgreSQL fazem parte da `v0.1.0`; Angular, autenticação completa, orquestração de IA, integração com LLM e persistência documental funcional estão planejados.
+**Status:** Parcialmente implementado / blueprint planejado — Spring Boot, PostgreSQL e autenticação single-user fazem parte do estado atual do repositório.
+
+User body metrics possui base parcial de domínio e banco. Angular, orquestração de IA, integração com LLM e persistência documental funcional estão planejados.
 
 <p align="center">
     <img src="./General%20Architecture%20Diagram.png" alt="General Architecture Diagram" />

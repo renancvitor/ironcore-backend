@@ -4,26 +4,18 @@
 
 O módulo `userbodymetrics` representa medições físicas e cálculos de composição corporal de um usuário.
 
-Na `v0.1.0`, o model de domínio, value objects, calculadoras e tabela relacional estão presentes. Ainda não há endpoints REST nem recursos visuais de histórico/dashboard.
+No estado atual do repositório, este módulo possui base de domínio, value objects, calculadoras e tabela relacional. Ele ainda não possui fluxo REST funcional, use cases de aplicação ou repository/adapter completo para operações de métricas corporais.
 
 ## Escopo Atual
 
-Implementado:
+Base existente:
 
 - `UserBodyMetrics` domain model.
-- Value objects for body measurements and calculated values.
-- BMI calculation.
-- Navy body fat percentage calculation.
-- Fat mass calculation.
-- Lean mass calculation.
-- Relational persistence table.
-
-Não implementado:
-
-- REST endpoints for creating or querying metrics.
-- Dashboard or visual history.
-- Integration with workout sessions.
-- Repository adapter for `UserBodyMetrics` domain operations.
+- Value objects de medições corporais e valores calculados.
+- Calculadoras de BMI, percentual de gordura, massa gorda e massa magra.
+- Exception de domínio para métricas inválidas.
+- Tabela relacional `user_body_metrics`.
+- Entidade JPA `UserBodyMetricsEntity`.
 
 ## Conceitos de Domínio
 
@@ -62,6 +54,14 @@ Cálculos implementados:
 
 As calculadoras validam entradas obrigatórias e lançam `InvalidBodyMetricException` para valores inválidos ou ausentes.
 
+## Exceptions
+
+Exception de domínio atual:
+
+- `InvalidBodyMetricException`
+
+Ela representa valores inválidos, ausentes ou insuficientes para criação de medições e execução dos cálculos corporais.
+
 ## Persistência
 
 Tabela:
@@ -76,11 +76,13 @@ Classe de persistência atual:
 
 - `UserBodyMetricsEntity`
 
-Ainda não há repository/adapter completo de domínio para este módulo na `v0.1.0`.
+Essa tabela existe no schema relacional, mas ainda não há repository/adapter completo de domínio para operações de criação, atualização, exclusão ou consulta de medições corporais.
 
 ## Limitações Atuais
 
 - Nenhum endpoint REST de negócio expõe operações de body metrics.
+- Não há use cases de aplicação para criar, atualizar, excluir ou consultar medições corporais.
+- Não há repository/adapter completo de domínio para o módulo.
 - Não há histórico ou dashboard voltado ao usuário.
 - Os cálculos existem em services de domínio, mas ainda não há fluxo público de API usando esses cálculos.
 - O módulo não está integrado a recursos de workout/session.

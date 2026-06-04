@@ -1,6 +1,6 @@
 # Diagrama de Arquitetura Interna da Aplicação
 
-**Status:** Parcialmente implementado — a estrutura de packages em camadas existe na `v0.1.0`; controllers REST de negócio, contratos DTO públicos e fluxos completos de autenticação ainda não estão implementados.
+**Status:** Parcialmente implementado — a estrutura de packages em camadas existe; na `v0.2.0`, os controllers REST de auth/users e o baseline de autenticação single-user estão implementados.
 
 <p align="center">
     <img src="./Internal%20Architecture%20Diagram%20of%20the%20Application.png" alt="Internal Architecture Diagram of the Application" />
