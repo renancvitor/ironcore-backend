@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 
 
@@ -25,6 +26,7 @@ public class AuditLogPublisherService implements AuditLogPublisher {
 
     private final ApplicationEventPublisher publisher;
     private final ObjectMapper mapper;
+    private final Clock clock;
 
     @Override
     public void publish(
@@ -47,7 +49,7 @@ public class AuditLogPublisherService implements AuditLogPublisher {
                 targetId,
                 beforeStateJson,
                 afterStateJson,
-                LocalDateTime.now()
+                LocalDateTime.now(clock)
         );
 
         publisher.publishEvent(event);

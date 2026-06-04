@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
@@ -27,13 +28,14 @@ public class AuthController {
 
     private final LoginUseCase loginUseCase;
     private final LogoutUseCase logoutUseCase;
+    private final Clock clock;
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         LoginCommand command = AuthRestMapper.toCommand(request);
         LoginResult result = loginUseCase.execute(command);
         LoginResponse response = AuthRestMapper.toResponse(result);
-        Duration cookieMaxAge = Duration.between(LocalDateTime.now(), result.expiresAt());
+        Duration cookieMaxAge = Duration.between(LocalDateTime.now(clock), result.expiresAt());
 
         ResponseCookie cookie = ResponseCookie.from("access_token", result.accessToken())
                 .httpOnly(true)

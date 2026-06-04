@@ -10,9 +10,10 @@ import com.ironcore.infrastructure.security.jwt.exception.JwtTokenConfigurationE
 import com.ironcore.infrastructure.security.jwt.exception.JwtTokenGenerationException;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
+import java.time.temporal.ChronoUnit;
 
 @Service
 public class JwtAccessTokenGenerator implements AccessTokenGenerator {
@@ -20,11 +21,11 @@ public class JwtAccessTokenGenerator implements AccessTokenGenerator {
     private static final String TOKEN_TYPE = "Bearer";
 
     private final JwtTokenProperties properties;
-    private final ZoneId zoneId;
+    private final Clock clock;
 
-    public JwtAccessTokenGenerator(JwtTokenProperties properties) {
+    public JwtAccessTokenGenerator(JwtTokenProperties properties, Clock clock) {
         this.properties = properties;
-        this.zoneId = ZoneId.systemDefault();
+        this.clock = clock;
     }
 
     @Override
@@ -33,7 +34,8 @@ public class JwtAccessTokenGenerator implements AccessTokenGenerator {
             throw new JwtTokenConfigurationException("JWT secret não configurado.");
         }
 
-        LocalDateTime expiresAt = LocalDateTime.now(zoneId).plusMinutes(properties.getExpirationMinutes());
+        Instant expiresAtInstant = clock.instant().plus(properties.getExpirationMinutes(), ChronoUnit.MINUTES);
+        LocalDateTime expiresAt = LocalDateTime.ofInstant(expiresAtInstant, clock.getZone());
 
         try {
             String token = JWT.create()
@@ -41,7 +43,7 @@ public class JwtAccessTokenGenerator implements AccessTokenGenerator {
                 .withSubject(String.valueOf(subject.userId().value()))
                 .withClaim("email", subject.email().value())
                 .withClaim("mustChangePassword", subject.mustChangePassword())
-                .withExpiresAt(Date.from(expiresAt.atZone(zoneId).toInstant()))
+                .withExpiresAt(expiresAtInstant)
                 .sign(Algorithm.HMAC256(properties.getSecret()));
 
             return new GeneratedAccessToken(token, TOKEN_TYPE, expiresAt);
