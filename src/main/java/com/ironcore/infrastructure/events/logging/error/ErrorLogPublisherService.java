@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 
 @Service
@@ -18,6 +19,7 @@ public class ErrorLogPublisherService implements ErrorLogPublisher {
     private static final Logger log = LoggerFactory.getLogger(ErrorLogPublisherService.class);
 
     private final ApplicationEventPublisher publisher;
+    private final Clock clock;
 
     @Override
     public void publish(
@@ -37,7 +39,7 @@ public class ErrorLogPublisherService implements ErrorLogPublisher {
                 httpMethod,
                 userId,
                 correlationId,
-                LocalDateTime.now()
+                LocalDateTime.now(clock)
         );
 
         publisher.publishEvent(event);

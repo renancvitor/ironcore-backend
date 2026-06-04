@@ -10,6 +10,7 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 
 @Component
@@ -18,6 +19,7 @@ public class SingleUserBootstrapRunner implements ApplicationRunner {
 
     private final BootstrapSingleUserUseCase bootstrapSingleUserUseCase;
     private final SingleUserBootstrapProperties properties;
+    private final Clock clock;
 
     @Override
     public void run(ApplicationArguments arguments) {
@@ -30,7 +32,7 @@ public class SingleUserBootstrapRunner implements ApplicationRunner {
                 new Email(properties.email()),
                 properties.password(),
                 new Sex(properties.sex()),
-                LocalDateTime.now()
+                LocalDateTime.now(clock)
         );
 
         bootstrapSingleUserUseCase.execute(command);

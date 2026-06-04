@@ -6,9 +6,14 @@ import com.ironcore.domain.user.enums.SexType;
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.Sex;
 import com.ironcore.infrastructure.bootstrap.config.SingleUserBootstrapProperties;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
@@ -19,6 +24,16 @@ import static org.mockito.Mockito.verify;
 class SingleUserBootstrapRunnerTest {
 
     private final BootstrapSingleUserUseCase useCase = mock(BootstrapSingleUserUseCase.class);
+
+    private Clock clock;
+
+    @BeforeEach
+    void setUp() {
+        clock = Clock.fixed(
+                Instant.parse("2099-05-24T15:00:00Z"),
+                ZoneId.systemDefault()
+        );
+    }
 
     @Nested
     class DisabledBootstrap {
@@ -33,7 +48,7 @@ class SingleUserBootstrapRunnerTest {
                     null
             );
 
-            SingleUserBootstrapRunner runner = new SingleUserBootstrapRunner(useCase, properties);
+            SingleUserBootstrapRunner runner = new SingleUserBootstrapRunner(useCase, properties, clock);
 
             runner.run(null);
 
@@ -54,7 +69,7 @@ class SingleUserBootstrapRunnerTest {
                     SexType.MALE
             );
 
-            SingleUserBootstrapRunner runner = new SingleUserBootstrapRunner(useCase, properties);
+            SingleUserBootstrapRunner runner = new SingleUserBootstrapRunner(useCase, properties, clock);
 
             runner.run(null);
 
