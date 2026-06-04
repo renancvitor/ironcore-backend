@@ -59,7 +59,9 @@ Planejamento, tarefas e histórico de evolução disponíveis no GitHub Projects
 
 <h2 id="visao-geral-do-projeto" align="center">Visão Geral do Projeto</h2>
 
-<b>IronCore</b> é um backend em desenvolvimento com <b>[Spring Boot](https://spring.io/projects/spring-boot)</b>, planejado para evoluir como uma API REST para gerenciamento de histórico de treinos, evolução física, catálogo de exercícios e planejamento de ciclos de treino. Na release técnica <b>v0.1.0</b>, ainda não há endpoints REST de negócio consumíveis.
+<b>IronCore</b> é um backend em desenvolvimento com <b>[Spring Boot](https://spring.io/projects/spring-boot)</b>, planejado para evoluir como uma API REST para gerenciamento de histórico de treinos, evolução física, catálogo de exercícios e planejamento de ciclos de treino.
+
+A release <b>v0.2.0</b> consolidou o baseline de autenticação single-user.
 
 O projeto nasce como uma aplicação prática de backend com foco em arquitetura limpa, modelagem de domínio e evolução incremental. A proposta é permitir que o usuário registre medições corporais, organize treinos de musculação ou cárdio, acompanhe sessões executadas e, em uma etapa posterior, gere treinos manualmente ou com apoio de um agente de IA.
 
@@ -71,7 +73,7 @@ O desenvolvimento do projeto busca consolidar habilidades como:
 - ✅ Validações robustas com [Bean Validation](https://docs.spring.io/spring-framework/reference/core/validation/beanvalidation.html)
 - 🛠️ Tratamento de erros
 - 📖 Documentação automatizada com [Swagger (OpenAPI)](https://swagger.io/specification/) conforme os endpoints forem implementados
-- 🔒 Segurança com [JWT (JSON Web Token)](https://jwt.io/) como evolução planejada; a base atual possui configuração e hashing de senha
+- 🔒 Segurança com [JWT (JSON Web Token)](https://jwt.io/) aplicada ao baseline single-user
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
@@ -79,7 +81,7 @@ O desenvolvimento do projeto busca consolidar habilidades como:
 
 <h2 id="status-atual-do-projeto" align="center">Status Atual do Projeto</h2>
 
-O <b>IronCore</b> está em fase inicial de desenvolvimento. A release <b>v0.1.0</b> é uma release técnica de fundação: ela consolida base Spring Boot, domínio inicial, persistência, migrations, logging, testes e CI, mas ainda não entrega uma API pública funcional ou um MVP.
+O <b>IronCore</b> está em fase inicial de desenvolvimento. A release <b>v0.2.0</b> consolidou users/auth/security single-user.
 
 ### Já existe no projeto
 - Estrutura inicial do backend com Spring Boot.
@@ -90,23 +92,25 @@ O <b>IronCore</b> está em fase inicial de desenvolvimento. A release <b>v0.1.0<
 - Persistência relacional com PostgreSQL.
 - Logging persistido de auditoria e erro.
 - Bootstrap opcional de usuário único.
+- Login, logout e autenticação por JWT via cookie `access_token` na base single-user.
+- Troca obrigatória de senha inicial, troca normal de senha e consulta do usuário autenticado.
 - Testes automatizados e CI executando build/test.
 - Documentação visual com diagramas de domínio, arquitetura e fluxos principais.
 
 ### Parcialmente preparado
-- Spring Security está presente para suporte técnico e hashing de senha, mas ainda não há fluxo completo de autenticação/autorização.
-- Configuração de segredo JWT existe, mas JWT completo ainda não está implementado.
+- Spring Security e JWT cobrem o baseline single-user.
+- O domínio de user body metrics já possui base modelada, value objects, calculadoras e tabela relacional, mas ainda não possui fluxo REST funcional.
 - MongoDB sobe localmente via Docker Compose, mas ainda não há uso funcional de domínio/documentos.
 
 ### Planejado para as próximas etapas
-- Endpoints REST para usuários, métricas corporais, exercícios e treinos.
-- Autenticação e autorização com JWT.
+- Evolução funcional de métricas corporais, conforme refinamento das issues e do roadmap.
+- Fluxos REST para exercícios e treinos.
 - Swagger/OpenAPI conforme os endpoints forem criados.
 - Integração futura com frontend Angular.
 - Fluxo de geração de treino com apoio de IA.
 - Persistência documental para artefatos/contexto de IA, caso necessária.
 
-Notas da release: [v0.1.0 - Fundação técnica do backend](docs/releases/v0.1.0.md).
+Histórico de releases: [Releases](docs/releases/README.md).
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
@@ -152,7 +156,7 @@ Notas da release: [v0.1.0 - Fundação técnica do backend](docs/releases/v0.1.0
 
 O projeto utiliza o [Flyway](https://flywaydb.org/) para gerenciar as **migrations de banco de dados** no [PostgreSQL](https://www.postgresql.org/). Todas as alterações de estrutura no banco, como criação de tabelas e mudanças de schema, são versionadas e controladas. Isso garante consistência entre os ambientes de desenvolvimento e produção.
 
-Migrations existentes na release técnica v0.1.0:
+Migrations existentes no repositório:
 - `V1__create_table_users.sql`: cria a tabela `users`.
 - `V2__create_table_user_body_metrics.sql`: cria a tabela `user_body_metrics`.
 - `V3__create_table_audit_log.sql`: cria a tabela `audit_logs`.
@@ -168,7 +172,7 @@ Documentação detalhada: [Banco de Dados e Migrations](docs/database/README.md)
 
 O projeto possui uma estratégia específica para logs persistidos, separando registros de auditoria (`audit_logs`) e registros técnicos de erro (`error_logs`).
 
-Essa estrutura faz parte da fundação técnica da release v0.1.0.
+Essa estrutura faz parte da fundação técnica preservada do projeto.
 
 A documentação detalhada está disponível em [Estratégia de Logging](docs/logging/README.md).
 
@@ -186,12 +190,12 @@ A documentação detalhada está disponível em [Estratégia de Logging](docs/lo
 
 <h2 id="escopo-inicial--mvp" align="center">Escopo Inicial / MVP</h2>
 
-> Esta seção descreve o escopo planejado do MVP, não o conteúdo entregue na release técnica v0.1.0.
+> Esta seção descreve o escopo planejado do MVP, não apenas o conteúdo já entregue.
 
 O escopo inicial do <b>IronCore</b> foi inferido a partir da modelagem de banco, dos diagramas de arquitetura e dos fluxos principais documentados.
 
 ### Núcleo do MVP
-- Cadastro e autenticação de usuários.
+- Provisionamento e autenticação do usuário single-user.
 - Registro e consulta de medições corporais do usuário.
 - Catálogo de exercícios com classificação por grupo muscular, tipo de equipamento e tipo de atividade.
 - Cadastro de objetivos de treino.
@@ -215,12 +219,13 @@ O escopo inicial do <b>IronCore</b> foi inferido a partir da modelagem de banco,
 
 <h2 id="funcionalidades" align="center">Funcionalidades</h2>
 
-As funcionalidades abaixo representam o escopo funcional planejado para o projeto, não funcionalidades já disponíveis na release técnica v0.1.0. A implementação será feita de forma incremental conforme o backend evoluir.
+As funcionalidades abaixo representam o escopo funcional planejado para o projeto completo. A implementação será feita de forma incremental conforme o backend evoluir.
 
 ### Autenticação e Usuários
-- Cadastro de usuários.
+- Provisionamento de usuário único por bootstrap/configuração.
 - Login com autenticação baseada em JWT.
-- Atualização de dados cadastrais.
+- Troca obrigatória de senha inicial e troca normal de senha.
+- Consulta do usuário autenticado.
 - Proteção de rotas por usuário autenticado.
 
 ### Evolução Física
@@ -269,17 +274,17 @@ As funcionalidades abaixo representam o escopo funcional planejado para o projet
 
 <h3 id="api---swagger">🌐 <strong>API - Swagger</strong></h3>
 
-A documentação [Swagger/OpenAPI](https://swagger.io/specification/) será adicionada conforme os endpoints REST de negócio forem implementados. Como a release v0.1.0 ainda não possui endpoints de negócio consumíveis nem dependência Springdoc/OpenAPI configurada, esta seção permanece planejada.
+A documentação [Swagger/OpenAPI](https://swagger.io/specification/) será adicionada quando a dependência Springdoc/OpenAPI for configurada. A release `v0.2.0` já possui endpoints mínimos de autenticação e usuário autenticado, mas ainda não possui documentação OpenAPI gerada.
 
 <h3 id="documentacao-arquitetural">🗂️ <strong>Documentação Arquitetural</strong></h3>
 
-Os principais diagramas do projeto já estão disponíveis e funcionam como blueprint técnico da aplicação. Alguns diagramas representam planejamento futuro e não devem ser lidos como estado totalmente implementado na v0.1.0. Índice geral: [Diagrama](./docs/diagram/README.md).
+Os principais diagramas do projeto já estão disponíveis e funcionam como blueprint técnico da aplicação. Alguns diagramas representam planejamento futuro e não devem ser lidos como estado totalmente implementado. Índice geral: [Diagrama](./docs/diagram/README.md).
 
-- [Diagrama ER — Banco de Dados](./docs/diagram/er-sql/IronCoreER%20Diagram.md): descreve as entidades, campos, relacionamentos e valores controlados do domínio.
-- [Diagrama de Arquitetura Geral](./docs/diagram/general-architecture/General%20Architecture%20Diagram.md): apresenta a visão macro entre frontend, backend, persistência e camada de IA.
-- [Diagrama de Arquitetura Interna](./docs/diagram/internal-architecture/Internal%20Architecture%20Diagram%20of%20the%20Application.md): detalha a organização interna da API em camadas.
-- [Diagrama de Sequência — Geração de Treino](./docs/diagram/sequence-diagram/Sequence%20Diagram.md): mostra o fluxo planejado para geração de treino com apoio de IA.
-- [Diagrama de Sequência — Registro de Treino](./docs/diagram/sequence-log-diagram/Sequence%20Log%20Diagram.md): mostra o fluxo planejado para registro de uma sessão real de treino.
+- [Diagrama ER — Banco de Dados](./docs/diagram/er-sql/README.md): descreve as entidades, campos, relacionamentos e valores controlados do domínio.
+- [Diagrama de Arquitetura Geral](./docs/diagram/general-architecture/README.md): apresenta a visão macro entre frontend, backend, persistência e camada de IA.
+- [Diagrama de Arquitetura Interna](./docs/diagram/internal-architecture/README.md): detalha a organização interna da API em camadas.
+- [Diagrama de Sequência — Geração de Treino](./docs/diagram/sequence-diagram/README.md): mostra o fluxo planejado para geração de treino com apoio de IA.
+- [Diagrama de Sequência — Registro de Treino](./docs/diagram/sequence-log-diagram/README.md): mostra o fluxo planejado para registro de uma sessão real de treino.
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
@@ -305,7 +310,9 @@ Esse índice central reúne os principais documentos sobre arquitetura, banco de
 
 <h2 id="testes-automatizados" align="center"> Testes Automatizados</h2>
 
-O projeto já possui testes automatizados cobrindo partes do domínio, aplicação, infraestrutura e inicialização do contexto Spring.
+O projeto possui testes automatizados cobrindo domínio, aplicação, infraestrutura, interfaces REST, segurança e integração com contexto Spring.
+
+A suíte atual inclui testes unitários de models, value objects, use cases, services, mappers, JWT, filtros de segurança e cálculos de métricas corporais. Também há testes de integração para contexto Spring, autenticação/security e persistência com PostgreSQL via Testcontainers.
 
 Para executar a validação local:
 ```bash
@@ -314,13 +321,16 @@ Para executar a validação local:
 
 O CI do GitHub Actions também executa `./mvnw clean verify --batch-mode` em `push` e `pull_request` para a branch `main`.
 
+Documentação detalhada: [Testes Automatizados](docs/testing/README.md).
+
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
 ---
 
 <h2 id="testando-a-api-via-insomnia" align="center">Testando a API via Insomnia</h2>
 
-> Esta seção será atualizada quando os primeiros endpoints REST de negócio forem implementados. A release v0.1.0 ainda não possui API de negócio consumível para testes via Insomnia.
+> Esta seção será atualizada com uma coleção ou roteiro próprio quando os fluxos de API forem estabilizados.
+> A release `v0.2.0` já possui endpoints mínimos de autenticação e usuário autenticado.
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
@@ -335,7 +345,37 @@ O backend segue uma organização em camadas:
 - `infrastructure`: persistência, adapters, configuração, bootstrap, eventos e segurança técnica.
 - `interfaces`: entrada REST e tratamento global de erros.
 
-Documentação detalhada: [Documentação da Arquitetura](docs/architecture/README.md).
+```plaintext
+src/main/java/com/ironcore
+ ├── domain              # Modelos, value objects, domain services, exceptions e contratos
+ ├── application         # Use cases, services de aplicação, ports e eventos
+ ├── infrastructure      # Persistência, segurança, bootstrap, configurações e adapters técnicos
+ └── interfaces          # Controllers REST, DTOs, mappers REST e tratamento HTTP de erros
+
+src/main/resources
+ └── db/migration        # Migrations Flyway
+
+src/test/java/com/ironcore
+ ├── domain
+ ├── application
+ ├── infrastructure
+ └── interfaces
+
+docs
+ ├── architecture
+ ├── database
+ ├── diagram
+ ├── exceptions
+ ├── logging
+ ├── project-structure
+ ├── releases
+ ├── user-body-metrics
+ └── users
+```
+
+Documentação detalhada:
+- [Documentação da Arquitetura](docs/architecture/README.md)
+- [Estrutura Completa do Projeto](docs/project-structure/README.md)
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
@@ -391,7 +431,7 @@ SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
 ./mvnw clean verify --batch-mode
 ```
 
-8. Acesse a aplicação pela porta configurada (por padrão http://localhost:8080). A release v0.1.0 ainda não possui endpoints REST de negócio consumíveis.<br>
+8. Acesse a aplicação pela porta configurada (por padrão http://localhost:8080). A release `v0.2.0` possui endpoints mínimos de autenticação e usuário autenticado.<br>
 ⚠️ **Lembre-se de manter o Docker rodando enquanto estiver utilizando a aplicação.**
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
@@ -400,7 +440,7 @@ SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
 
 <h2 id="deploy" align="center">Deploy</h2>
 
-> Esta seção será implementada por completo conforme o projeto evoluir. Deploy ainda não faz parte da release técnica v0.1.0.
+> Esta seção será implementada por completo conforme o projeto evoluir. Deploy ainda não faz parte do estado atual do projeto.
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 

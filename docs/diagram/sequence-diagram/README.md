@@ -1,6 +1,6 @@
 # Diagrama de Sequência
 
-**Status:** Blueprint planejado — a geração de treinos com IA ainda não está implementada na `v0.1.0`.
+**Status:** Blueprint planejado — a geração de treinos com IA ainda não está implementada.
 
 <p align="center">
     <img src="./Sequence%20Diagram.png" alt="Sequence Diagram" />
