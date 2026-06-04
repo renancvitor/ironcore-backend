@@ -116,7 +116,7 @@ class AuthSecurityIntegrationTest {
     }
 
     @Nested
-    class ProtectedRoutes {
+    class ProtectedRouteAccess {
 
         @Test
         void shouldBlockProtectedRouteWhenAccessTokenCookieIsMissing() throws Exception {
@@ -137,6 +137,11 @@ class AuthSecurityIntegrationTest {
                     .andExpect(jsonPath("$.password").doesNotExist())
                     .andExpect(jsonPath("$.passwordHash").doesNotExist());
         }
+
+    }
+
+    @Nested
+    class JwtAuthentication {
 
         @Test
         void shouldPopulateAuthenticationContextThroughJwtFilterInIntegratedFlow() throws Exception {
