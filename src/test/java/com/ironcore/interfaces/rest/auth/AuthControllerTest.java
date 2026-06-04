@@ -14,9 +14,11 @@ import com.ironcore.infrastructure.security.jwt.JwtAccessTokenValidator;
 import com.ironcore.infrastructure.security.jwt.exception.JwtTokenConfigurationException;
 import com.ironcore.infrastructure.security.jwt.exception.JwtTokenValidationException;
 import com.ironcore.interfaces.rest.auth.dto.LoginRequest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -25,7 +27,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
@@ -52,6 +57,9 @@ class AuthControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
+    private Clock clock;
+
+    @MockitoBean
     private LoginUseCase loginUseCase;
 
     @MockitoBean
@@ -66,13 +74,24 @@ class AuthControllerTest {
     @MockitoBean
     private UserRepository userRepository;
 
+    @BeforeEach
+    void setUp() {
+        Clock fixedClock = Clock.fixed(
+                Instant.parse("2099-05-24T15:00:30Z"),
+                ZoneId.systemDefault()
+        );
+
+        when(clock.instant()).thenReturn(fixedClock.instant());
+        when(clock.getZone()).thenReturn(fixedClock.getZone());
+    }
+
     @Nested
     class Login {
 
         @Test
         void shouldReturnAuthenticationDataWhenCredentialsAreValid() throws Exception {
             LoginRequest request = new LoginRequest("renan@example.com", "StrongPass123@");
-            LocalDateTime expiresAt = LocalDateTime.of(2026, 5, 24, 15, 17, 30);
+            LocalDateTime expiresAt = LocalDateTime.now(clock).plusMinutes(60);
             LoginResult result = new LoginResult(
                     "access-token",
                     "Bearer",
