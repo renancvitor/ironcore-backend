@@ -59,21 +59,21 @@ class FatMassCalculatorTest {
         void shouldRequireBodyMetrics() {
             assertThatExceptionOfType(InvalidBodyMetricException.class)
                     .isThrownBy(() -> calculator.calculate((UserBodyMetrics) null))
-                    .withMessage("Medidas corporais não podem ser nulo");
+                    .withMessage("Medidas corporais são obrigatórias.");
         }
 
         @Test
         void shouldRequireWeight() {
             assertThatExceptionOfType(InvalidBodyMetricException.class)
                     .isThrownBy(() -> calculator.calculate(null, bodyFatPercentage(22.0)))
-                    .withMessage("Peso não pode ser nulo");
+                    .withMessage("Peso é obrigatório.");
         }
 
         @Test
         void shouldRequireBodyFatPercentage() {
             assertThatExceptionOfType(InvalidBodyMetricException.class)
                     .isThrownBy(() -> calculator.calculate(weightInKg(82.0), null))
-                    .withMessage("Percentual de gordura não pode ser nulo");
+                    .withMessage("Percentual de gordura é obrigatório.");
         }
     }
 }

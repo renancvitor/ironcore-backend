@@ -58,21 +58,21 @@ class BMICalculatorTest {
         void shouldRequireBodyMetrics() {
             assertThatExceptionOfType(InvalidBodyMetricException.class)
                     .isThrownBy(() -> calculator.calculate((UserBodyMetrics) null))
-                    .withMessage("Medidas corporais não podem ser nulo");
+                    .withMessage("Medidas corporais são obrigatórias.");
         }
 
         @Test
         void shouldRequireHeight() {
             assertThatExceptionOfType(InvalidBodyMetricException.class)
                     .isThrownBy(() -> calculator.calculate(null, weightInKg(81.0)))
-                    .withMessage("Altura não pode ser nulo");
+                    .withMessage("Altura é obrigatória.");
         }
 
         @Test
         void shouldRequireWeight() {
             assertThatExceptionOfType(InvalidBodyMetricException.class)
                     .isThrownBy(() -> calculator.calculate(heightInCm(180.0), null))
-                    .withMessage("Peso não pode ser nulo");
+                    .withMessage("Peso é obrigatório.");
         }
     }
 }

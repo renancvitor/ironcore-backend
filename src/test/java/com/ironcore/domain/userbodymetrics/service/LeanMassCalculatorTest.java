@@ -60,21 +60,21 @@ class LeanMassCalculatorTest {
         void shouldRequireBodyMetrics() {
             assertThatExceptionOfType(InvalidBodyMetricException.class)
                     .isThrownBy(() -> calculator.calculate((UserBodyMetrics) null))
-                    .withMessage("Medidas corporais não podem ser nulo");
+                    .withMessage("Medidas corporais são obrigatórias.");
         }
 
         @Test
         void shouldRequireWeight() {
             assertThatExceptionOfType(InvalidBodyMetricException.class)
                     .isThrownBy(() -> calculator.calculate(null, fatMass(18.04)))
-                    .withMessage("Peso não pode ser nulo");
+                    .withMessage("Peso é obrigatório.");
         }
 
         @Test
         void shouldRequireFatMass() {
             assertThatExceptionOfType(InvalidBodyMetricException.class)
                     .isThrownBy(() -> calculator.calculate(weightInKg(82.0), null))
-                    .withMessage("Massa gorda não pode ser nulo");
+                    .withMessage("Massa gorda é obrigatória.");
         }
     }
 }
