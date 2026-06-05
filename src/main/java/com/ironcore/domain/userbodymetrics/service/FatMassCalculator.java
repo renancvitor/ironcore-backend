@@ -9,13 +9,13 @@ import com.ironcore.domain.userbodymetrics.valueobject.FatMassKg;
 public class FatMassCalculator {
 
     public FatMassKg calculate(UserBodyMetrics metrics) {
-        requireNonNull(metrics, "Medidas corporais não podem ser nulo");
+        requireNonNull(metrics, "Medidas corporais são obrigatórias.");
         return calculate(metrics.getWeight(), metrics.getBodyFatPercentage());
     }
 
     public FatMassKg calculate(BodyWeightKg weight, BodyFatPercentage bodyFatPercentage) {
-        requireNonNull(weight, "Peso não pode ser nulo");
-        requireNonNull(bodyFatPercentage, "Percentual de gordura não pode ser nulo");
+        requireNonNull(weight, "Peso é obrigatório.");
+        requireNonNull(bodyFatPercentage, "Percentual de gordura é obrigatório.");
 
         double result = (weight.value() * bodyFatPercentage.value()) / 100;
 

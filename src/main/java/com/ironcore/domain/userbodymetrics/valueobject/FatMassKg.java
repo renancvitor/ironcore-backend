@@ -8,11 +8,11 @@ public record FatMassKg(Double value) {
 
     public FatMassKg {
         if (value == null) {
-            throw new InvalidBodyMetricException("Massa gorda não pode ser nulo");
+            throw new InvalidBodyMetricException("Massa gorda é obrigatória.");
         }
 
         if (!Double.isFinite(value) || value < 0 || value > MAX_EXPECTED_WEIGHT_KG) {
-            throw new InvalidBodyMetricException("Massa gorda deve ser entre 0 e 500.");
+            throw new InvalidBodyMetricException("Massa gorda deve estar entre 0 e 500.");
         }
     }
 }
