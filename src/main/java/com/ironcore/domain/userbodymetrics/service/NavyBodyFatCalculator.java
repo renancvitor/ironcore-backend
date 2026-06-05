@@ -13,29 +13,31 @@ public class NavyBodyFatCalculator {
     private static final double CENTIMETERS_PER_INCH = 2.54;
 
     public BodyFatPercentage calculate(UserBodyMetrics metrics) {
-        requireNonNull(metrics, "Medidas corporais não podem ser nulo");
-        requireNonNull(metrics.getUser(), "Usuário não pode ser nulo");
+        requireNonNull(metrics, "Medidas corporais são obrigatórias.");
+        requireNonNull(metrics.getUser(), "Usuário não pode ser nulo.");
         return calculate(metrics.getUser().getSex().type(), metrics);
     }
 
     public BodyFatPercentage calculate(SexType sex, UserBodyMetrics metrics) {
-        requireNonNull(metrics, "Medidas corporais não podem ser nulo");
+        requireNonNull(metrics, "Medidas corporais são obrigatórias.");
         return calculate(sex, metrics.getHeight(), metrics.getCircumferences());
     }
 
     public BodyFatPercentage calculate(SexType sex, BodyHeightCm height, BodyCircumferences circumferences) {
-        requireNonNull(sex, "Sexo não pode ser nulo");
-        requireNonNull(height, "Peso não pode ser nulo");
-        requireNonNull(circumferences, "Circunferências corporais não pode ser nulo");
+        requireNonNull(sex, "Sexo é obrigatório.");
+        requireNonNull(height, "Altura é obrigatória.");
+        requireNonNull(circumferences, "Circunferências corporais são obrigatórias.");
+
+        BodyCircumferenceCm waist = required(circumferences.waist(), "Circunferência da cintura é obrigatória.");
+        BodyCircumferenceCm neck = required(circumferences.neck(), "Circunferência do pescoço é obrigatória.");
 
         double heightIn = toInches(height.value());
-        double waistIn = toInches(required(circumferences.waist(), "Circunferência da cintura não pode ser nulo").value());
-        double neckIn = toInches(required(circumferences.neck(), "Circunferência do pescoço não pode ser nulo").value());
+        double waistIn = toInches(waist.value());
+        double neckIn = toInches(neck.value());
 
         double result = switch (sex) {
             case MALE -> calculateForMale(heightIn, waistIn, neckIn);
-            case FEMALE -> calculateForFemale(heightIn, waistIn, neckIn,
-                    toInches(required(circumferences.hip(), "Circunferência do quadril não pode ser nulo").value()));
+            case FEMALE -> calculateForFemale(heightIn, waistIn, neckIn, requiredHipIn(circumferences));
         };
 
         return new BodyFatPercentage(result);
@@ -44,7 +46,9 @@ public class NavyBodyFatCalculator {
     private double calculateForMale(double heightIn, double waistIn, double neckIn) {
         double circumferenceDifference = waistIn - neckIn;
         if (circumferenceDifference <= 0) {
-            throw new InvalidBodyMetricException("Circunferência da cintura deve ser maior do que a circunferência do pescoço");
+            throw new InvalidBodyMetricException(
+                    "Circunferência da cintura deve ser maior do que a circunferência do pescoço."
+            );
         }
 
         return 86.010 * Math.log10(circumferenceDifference)
@@ -55,7 +59,9 @@ public class NavyBodyFatCalculator {
     private double calculateForFemale(double heightIn, double waistIn, double neckIn, double hipIn) {
         double circumferenceValue = waistIn + hipIn - neckIn;
         if (circumferenceValue <= 0) {
-            throw new InvalidBodyMetricException("Circunferência da cintura somada à do quadril deve ser maior que a circunferência do pescoço");
+            throw new InvalidBodyMetricException(
+                    "Circunferência da cintura somada à do quadril deve ser maior que a circunferência do pescoço."
+            );
         }
 
         return 163.205 * Math.log10(circumferenceValue)
@@ -65,6 +71,11 @@ public class NavyBodyFatCalculator {
 
     private double toInches(double centimeters) {
         return centimeters / CENTIMETERS_PER_INCH;
+    }
+
+    private double requiredHipIn(BodyCircumferences circumferences) {
+        BodyCircumferenceCm hip = required(circumferences.hip(), "Circunferência do quadril é obrigatória.");
+        return toInches(hip.value());
     }
 
     private BodyCircumferenceCm required(BodyCircumferenceCm value, String message) {

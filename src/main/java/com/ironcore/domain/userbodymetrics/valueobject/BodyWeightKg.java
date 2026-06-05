@@ -8,11 +8,11 @@ public record BodyWeightKg(Double value) {
 
     public BodyWeightKg {
         if (value == null) {
-            throw new InvalidBodyMetricException("Peso é obrigatório");
+            throw new InvalidBodyMetricException("Peso é obrigatório.");
         }
 
         if (!Double.isFinite(value) || value <= 0 || value > MAX_EXPECTED_WEIGHT_KG) {
-            throw new InvalidBodyMetricException("Peso está fora do intervalo esperado");
+            throw new InvalidBodyMetricException("Peso deve estar entre 0 e 500.");
         }
     }
 }

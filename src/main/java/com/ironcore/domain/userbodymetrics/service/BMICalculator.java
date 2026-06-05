@@ -9,13 +9,13 @@ import com.ironcore.domain.userbodymetrics.valueobject.BodyWeightKg;
 public class BMICalculator {
 
     public BMI calculate(UserBodyMetrics metrics) {
-        requireNonNull(metrics, "Medidas corporais não podem ser nulo");
+        requireNonNull(metrics, "Medidas corporais são obrigatórias.");
         return calculate(metrics.getHeight(), metrics.getWeight());
     }
 
     public BMI calculate(BodyHeightCm height, BodyWeightKg weight) {
-        requireNonNull(height, "Altura não pode ser nulo");
-        requireNonNull(weight, "Peso não pode ser nulo");
+        requireNonNull(height, "Altura é obrigatória.");
+        requireNonNull(weight, "Peso é obrigatório.");
 
         double result = weight.value() / (height.inMeters() * height.inMeters());
 

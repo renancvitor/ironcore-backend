@@ -28,10 +28,10 @@ public class UserBodyMetrics {
                            BodyFatPercentage bodyFatPercentage, FatMassKg fatMassKg,
                            LeanMassKg leanMassKg, String notes) {
         this.id = id;
-        this.user = requireNonNull(user, "Usuário não pode ser nulo");
-        this.measuredAt = requireNonNull(measuredAt, "Data de medição não pode ser nulo");
-        this.weight = requireNonNull(weight, "Peso não pode ser nulo");
-        this.height = requireNonNull(height, "Altura não pode ser nulo");
+        this.user = requireNonNull(user, "Usuário não pode ser nulo.");
+        this.measuredAt = requireNonNull(measuredAt, "Data de medição é obrigatória.");
+        this.weight = requireNonNull(weight, "Peso é obrigatório.");
+        this.height = requireNonNull(height, "Altura é obrigatória.");
         this.circumferences = circumferences;
         this.bmi = bmi;
         this.bodyFatPercentage = bodyFatPercentage;
@@ -53,7 +53,7 @@ public class UserBodyMetrics {
     }
 
     public void setUser(User user) {
-        this.user = requireNonNull(user, "Usuário não pode ser nulo");
+        this.user = requireNonNull(user, "Usuário não pode ser nulo.");
     }
 
     public LocalDateTime getMeasuredAt() {
@@ -61,7 +61,7 @@ public class UserBodyMetrics {
     }
 
     public void setMeasuredAt(LocalDateTime measuredAt) {
-        this.measuredAt = requireNonNull(measuredAt, "Data de medição não pode ser nulo");
+        this.measuredAt = requireNonNull(measuredAt, "Data de medição é obrigatória.");
     }
 
     public BodyWeightKg getWeight() {
@@ -69,7 +69,7 @@ public class UserBodyMetrics {
     }
 
     public void setWeight(BodyWeightKg weight) {
-        this.weight = requireNonNull(weight, "Peso não pode ser nulo");
+        this.weight = requireNonNull(weight, "Peso é obrigatório.");
     }
 
     public BodyHeightCm getHeight() {
@@ -77,7 +77,7 @@ public class UserBodyMetrics {
     }
 
     public void setHeight(BodyHeightCm height) {
-        this.height = requireNonNull(height, "Altura não pode ser nulo");
+        this.height = requireNonNull(height, "Altura é obrigatória.");
     }
 
     public BodyCircumferences getCircumferences() {

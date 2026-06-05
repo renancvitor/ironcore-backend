@@ -8,11 +8,11 @@ public record BodyCircumferenceCm(Double value) {
 
     public BodyCircumferenceCm {
         if (value == null) {
-            throw new InvalidBodyMetricException("Circunferência corporal é obrigatória");
+            throw new InvalidBodyMetricException("Circunferência corporal é obrigatória.");
         }
 
         if (!Double.isFinite(value) || value <= 0 || value > MAX_EXPECTED_CIRCUMFERENCE_CM) {
-            throw new InvalidBodyMetricException("Circunferência corporal está fora do intervalo esperado");
+            throw new InvalidBodyMetricException("Circunferência corporal está fora do intervalo esperado.");
         }
     }
 }

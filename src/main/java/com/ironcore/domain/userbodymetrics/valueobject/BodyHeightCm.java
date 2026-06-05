@@ -8,11 +8,11 @@ public record BodyHeightCm(Double value) {
 
     public BodyHeightCm {
         if (value == null) {
-            throw new InvalidBodyMetricException("Altura é obrigatória");
+            throw new InvalidBodyMetricException("Altura é obrigatória.");
         }
 
         if (!Double.isFinite(value) || value <= 0 || value > MAX_EXPECTED_HEIGHT_CM) {
-            throw new InvalidBodyMetricException("Altura está fora do intervalo esperado");
+            throw new InvalidBodyMetricException("Altura está fora do intervalo esperado.");
         }
     }
 

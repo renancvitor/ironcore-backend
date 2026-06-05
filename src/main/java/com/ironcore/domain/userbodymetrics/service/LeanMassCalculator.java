@@ -9,13 +9,13 @@ import com.ironcore.domain.userbodymetrics.valueobject.LeanMassKg;
 public class LeanMassCalculator {
 
     public LeanMassKg calculate(UserBodyMetrics metrics) {
-        requireNonNull(metrics, "Medidas corporais não podem ser nulo");
+        requireNonNull(metrics, "Medidas corporais são obrigatórias.");
         return calculate(metrics.getWeight(), metrics.getFatMassKg());
     }
 
     public LeanMassKg calculate(BodyWeightKg weight, FatMassKg fatMass) {
-        requireNonNull(weight, "Peso não pode ser nulo");
-        requireNonNull(fatMass, "Massa gorda não pode ser nulo");
+        requireNonNull(weight, "Peso é obrigatório.");
+        requireNonNull(fatMass, "Massa gorda é obrigatória.");
 
         double result = weight.value() - fatMass.value();
 
