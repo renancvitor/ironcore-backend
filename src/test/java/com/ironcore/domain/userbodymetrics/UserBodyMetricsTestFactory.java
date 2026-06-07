@@ -1,17 +1,15 @@
 package com.ironcore.domain.userbodymetrics;
 
-import com.ironcore.domain.user.model.User;
+import com.ironcore.domain.user.valueobject.UserId;
 import com.ironcore.domain.userbodymetrics.valueobject.*;
-
-import static com.ironcore.domain.user.UserTestFactory.userWithoutId;
 
 public final class UserBodyMetricsTestFactory {
 
     private UserBodyMetricsTestFactory() {
     }
 
-    public static User validUser() {
-        return userWithoutId();
+    public static UserId userId() {
+        return new UserId(1L);
     }
 
     public static BodyHeightCm heightInCm(double value) {

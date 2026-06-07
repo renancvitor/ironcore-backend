@@ -12,12 +12,6 @@ public class NavyBodyFatCalculator {
 
     private static final double CENTIMETERS_PER_INCH = 2.54;
 
-    public BodyFatPercentage calculate(UserBodyMetrics metrics) {
-        requireNonNull(metrics, "Medidas corporais são obrigatórias.");
-        requireNonNull(metrics.getUser(), "Usuário não pode ser nulo.");
-        return calculate(metrics.getUser().getSex().type(), metrics);
-    }
-
     public BodyFatPercentage calculate(SexType sex, UserBodyMetrics metrics) {
         requireNonNull(metrics, "Medidas corporais são obrigatórias.");
         return calculate(sex, metrics.getHeight(), metrics.getCircumferences());

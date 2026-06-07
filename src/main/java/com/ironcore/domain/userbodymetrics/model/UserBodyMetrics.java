@@ -1,15 +1,17 @@
 package com.ironcore.domain.userbodymetrics.model;
 
-import com.ironcore.domain.user.model.User;
+import com.ironcore.domain.user.valueobject.UserId;
 import com.ironcore.domain.userbodymetrics.exception.InvalidBodyMetricException;
 import com.ironcore.domain.userbodymetrics.valueobject.*;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
+@Getter
 public class UserBodyMetrics {
 
-    private UserBodyMetricsId id;
-    private User user;
+    private final UserBodyMetricsId id;
+    private final UserId userId;
     private LocalDateTime measuredAt;
     private BodyWeightKg weight;
     private BodyHeightCm height;
@@ -18,17 +20,97 @@ public class UserBodyMetrics {
     private BodyFatPercentage bodyFatPercentage;
     private FatMassKg fatMassKg;
     private LeanMassKg leanMassKg;
+    private LocalDateTime updatedAt;
     private String notes;
 
-    public UserBodyMetrics() {
-    }
-
-    public UserBodyMetrics(UserBodyMetricsId id, User user, LocalDateTime measuredAt, BodyWeightKg weight,
+    public UserBodyMetrics(UserBodyMetricsId id, UserId userId, LocalDateTime measuredAt, BodyWeightKg weight,
                            BodyHeightCm height, BodyCircumferences circumferences, BMI bmi,
                            BodyFatPercentage bodyFatPercentage, FatMassKg fatMassKg,
-                           LeanMassKg leanMassKg, String notes) {
+                           LeanMassKg leanMassKg, LocalDateTime updatedAt, String notes) {
         this.id = id;
-        this.user = requireNonNull(user, "Usuário não pode ser nulo.");
+        this.userId = requireNonNull(userId, "Usuário não pode ser nulo.");
+        this.measuredAt = requireNonNull(measuredAt, "Data de medição é obrigatória.");
+        this.weight = requireNonNull(weight, "Peso é obrigatório.");
+        this.height = requireNonNull(height, "Altura é obrigatória.");
+        this.circumferences = circumferences;
+        this.bmi = bmi;
+        this.bodyFatPercentage = bodyFatPercentage;
+        this.fatMassKg = fatMassKg;
+        this.leanMassKg = leanMassKg;
+        this.updatedAt = updatedAt;
+        this.notes = notes;
+    }
+
+    public static UserBodyMetrics register(
+            UserId userId,
+            LocalDateTime measuredAt,
+            BodyWeightKg weight,
+            BodyHeightCm height,
+            BodyCircumferences circumferences,
+            BMI bmi,
+            BodyFatPercentage bodyFatPercentage,
+            FatMassKg fatMassKg,
+            LeanMassKg leanMassKg,
+            String notes
+    ) {
+        return new UserBodyMetrics(
+                null,
+                userId,
+                measuredAt,
+                weight,
+                height,
+                circumferences,
+                bmi,
+                bodyFatPercentage,
+                fatMassKg,
+                leanMassKg,
+                null,
+                notes
+        );
+    }
+
+    public static UserBodyMetrics restore(
+            UserBodyMetricsId id,
+            UserId userId,
+            LocalDateTime measuredAt,
+            BodyWeightKg weight,
+            BodyHeightCm height,
+            BodyCircumferences circumferences,
+            BMI bmi,
+            BodyFatPercentage bodyFatPercentage,
+            FatMassKg fatMassKg,
+            LeanMassKg leanMassKg,
+            LocalDateTime updatedAt,
+            String notes
+    ) {
+        return new UserBodyMetrics(
+                id,
+                userId,
+                measuredAt,
+                weight,
+                height,
+                circumferences,
+                bmi,
+                bodyFatPercentage,
+                fatMassKg,
+                leanMassKg,
+                updatedAt,
+                notes
+        );
+    }
+
+    public void updateMeasurements(
+            LocalDateTime measuredAt,
+            BodyWeightKg weight,
+            BodyHeightCm height,
+            BodyCircumferences circumferences,
+            BMI bmi,
+            BodyFatPercentage bodyFatPercentage,
+            FatMassKg fatMassKg,
+            LeanMassKg leanMassKg,
+            String notes,
+            LocalDateTime updatedAt
+    ) {
         this.measuredAt = requireNonNull(measuredAt, "Data de medição é obrigatória.");
         this.weight = requireNonNull(weight, "Peso é obrigatório.");
         this.height = requireNonNull(height, "Altura é obrigatória.");
@@ -38,94 +120,11 @@ public class UserBodyMetrics {
         this.fatMassKg = fatMassKg;
         this.leanMassKg = leanMassKg;
         this.notes = notes;
+        markUpdatedAt(updatedAt);
     }
 
-    public UserBodyMetricsId getId() {
-        return id;
-    }
-
-    public void setId(UserBodyMetricsId id) {
-        this.id = id;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = requireNonNull(user, "Usuário não pode ser nulo.");
-    }
-
-    public LocalDateTime getMeasuredAt() {
-        return measuredAt;
-    }
-
-    public void setMeasuredAt(LocalDateTime measuredAt) {
-        this.measuredAt = requireNonNull(measuredAt, "Data de medição é obrigatória.");
-    }
-
-    public BodyWeightKg getWeight() {
-        return weight;
-    }
-
-    public void setWeight(BodyWeightKg weight) {
-        this.weight = requireNonNull(weight, "Peso é obrigatório.");
-    }
-
-    public BodyHeightCm getHeight() {
-        return height;
-    }
-
-    public void setHeight(BodyHeightCm height) {
-        this.height = requireNonNull(height, "Altura é obrigatória.");
-    }
-
-    public BodyCircumferences getCircumferences() {
-        return circumferences;
-    }
-
-    public void setCircumferences(BodyCircumferences circumferences) {
-        this.circumferences = circumferences;
-    }
-
-    public BodyFatPercentage getBodyFatPercentage() {
-        return bodyFatPercentage;
-    }
-
-    public void setBodyFatPercentage(BodyFatPercentage bodyFatPercentage) {
-        this.bodyFatPercentage = bodyFatPercentage;
-    }
-
-    public BMI getBmi() {
-        return bmi;
-    }
-
-    public void setBmi(BMI bmi) {
-        this.bmi = bmi;
-    }
-
-    public FatMassKg getFatMassKg() {
-        return fatMassKg;
-    }
-
-    public void setFatMassKg(FatMassKg fatMassKg) {
-        this.fatMassKg = fatMassKg;
-    }
-
-    public LeanMassKg getLeanMassKg() {
-        return leanMassKg;
-    }
-
-    public void setLeanMassKg(LeanMassKg leanMassKg) {
-        this.leanMassKg = leanMassKg;
-    }
-
-    public String getNotes() {
-        return notes;
-    }
-
-    public void setNotes(String notes) {
-        this.notes = notes;
+    private void markUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = requireNonNull(updatedAt, "Data de atualização é obrigatória.");
     }
 
     private <T> T requireNonNull(T value, String message) {
