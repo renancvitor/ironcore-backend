@@ -17,6 +17,7 @@ CREATE TABLE user_body_metrics(
     body_fat_percentage DOUBLE PRECISION,
     fat_mass_kg DOUBLE PRECISION,
     lean_mass_kg DOUBLE PRECISION,
+    updated_at TIMESTAMP,
     notes TEXT,
 
     CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

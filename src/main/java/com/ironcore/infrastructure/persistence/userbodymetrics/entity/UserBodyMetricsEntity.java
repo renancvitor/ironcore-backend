@@ -82,6 +82,9 @@ public class UserBodyMetricsEntity {
     @Column(name = "lean_mass_kg")
     private Double leanMassKg;
 
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     @Column(columnDefinition = "TEXT")
     private String notes;
 }
