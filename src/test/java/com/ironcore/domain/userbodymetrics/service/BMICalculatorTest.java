@@ -1,7 +1,7 @@
 package com.ironcore.domain.userbodymetrics.service;
 
 import static com.ironcore.domain.userbodymetrics.UserBodyMetricsTestFactory.heightInCm;
-import static com.ironcore.domain.userbodymetrics.UserBodyMetricsTestFactory.validUser;
+import static com.ironcore.domain.userbodymetrics.UserBodyMetricsTestFactory.userId;
 import static com.ironcore.domain.userbodymetrics.UserBodyMetricsTestFactory.weightInKg;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -34,10 +34,11 @@ class BMICalculatorTest {
         void shouldCalculateBmiFromBodyMetrics() {
             UserBodyMetrics metrics = new UserBodyMetrics(
                     null,
-                    validUser(),
+                    userId(),
                     LocalDateTime.now(),
                     weightInKg(72.0),
                     heightInCm(180.0),
+                    null,
                     null,
                     null,
                     null,
