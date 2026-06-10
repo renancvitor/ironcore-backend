@@ -1,7 +1,10 @@
 package com.ironcore.domain.userbodymetrics;
 
 import com.ironcore.domain.user.valueobject.UserId;
+import com.ironcore.domain.userbodymetrics.model.UserBodyMetrics;
 import com.ironcore.domain.userbodymetrics.valueobject.*;
+
+import java.time.LocalDateTime;
 
 public final class UserBodyMetricsTestFactory {
 
@@ -51,5 +54,22 @@ public final class UserBodyMetricsTestFactory {
 
     public static FatMassKg fatMass(double value) {
         return new FatMassKg(value);
+    }
+
+    public static UserBodyMetrics restoreBodyMetrics() {
+        return UserBodyMetrics.restore(
+                new UserBodyMetricsId(1L),
+                userId(),
+                LocalDateTime.of(2026, 5, 10, 10, 0),
+                weightInKg(80.0),
+                heightInCm(180.0),
+                navyCircumferences(40.0, 85.0),
+                new BMI(24.69),
+                bodyFatPercentage(18.0),
+                fatMass(14.4),
+                new LeanMassKg(65.6),
+                LocalDateTime.of(2026, 5, 10, 11, 0),
+                "Medição restaurada para teste."
+        );
     }
 }
