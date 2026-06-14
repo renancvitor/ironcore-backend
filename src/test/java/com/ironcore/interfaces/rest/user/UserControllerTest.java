@@ -13,7 +13,6 @@ import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.RawPassword;
 import com.ironcore.domain.user.valueobject.UserId;
-import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
 import com.ironcore.infrastructure.security.jwt.JwtAccessTokenValidator;
 import com.ironcore.interfaces.rest.user.dto.ChangePasswordRequest;
 import com.ironcore.interfaces.rest.user.dto.InitialChangePasswordRequest;
@@ -23,16 +22,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
-
-import java.util.List;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static com.ironcore.interfaces.rest.support.security.AuthenticatedUserRequestPostProcessorFactory.authenticatedUser;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -217,24 +211,5 @@ class UserControllerTest {
 
             verify(changePasswordUseCase).execute(command);
         }
-    }
-
-    private RequestPostProcessor authenticatedUser() {
-        return mockRequest -> {
-            AuthenticatedUser authenticatedUser = new AuthenticatedUser(
-                    new UserId(1L),
-                    new Email("renan@example.com"),
-                    false
-            );
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    authenticatedUser,
-                    null,
-                    List.of()
-            );
-            SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-            securityContext.setAuthentication(authentication);
-            SecurityContextHolder.setContext(securityContext);
-            return mockRequest;
-        };
     }
 }
