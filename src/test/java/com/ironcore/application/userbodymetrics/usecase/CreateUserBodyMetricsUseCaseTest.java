@@ -3,9 +3,14 @@ package com.ironcore.application.userbodymetrics.usecase;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
+import com.ironcore.application.logging.audit.payload.LoggableData;
+import com.ironcore.application.logging.audit.port.AuditLogPublisher;
 import com.ironcore.application.userbodymetrics.CreateUserBodyMetricsCommand;
 import com.ironcore.application.userbodymetrics.CreateUserBodyMetricsResult;
 import com.ironcore.application.userbodymetrics.CreateUserBodyMetricsUseCase;
+import com.ironcore.application.userbodymetrics.UserBodyMetricsAuditData;
+import com.ironcore.domain.logging.audit.enums.AuditActionType;
+import com.ironcore.domain.logging.audit.enums.AuditTargetType;
 import com.ironcore.domain.user.enums.SexType;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
@@ -44,6 +49,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.within;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -72,6 +79,9 @@ class CreateUserBodyMetricsUseCaseTest {
     @Mock
     private Clock clock;
 
+    @Mock
+    private AuditLogPublisher auditLogPublisher;
+
     @InjectMocks
     private CreateUserBodyMetricsUseCase createUserBodyMetricsUseCase;
 
@@ -92,6 +102,7 @@ class CreateUserBodyMetricsUseCaseTest {
             CreateUserBodyMetricsResult result = createUserBodyMetricsUseCase.execute(command);
 
             ArgumentCaptor<UserBodyMetrics> userBodyMetricsCaptor = ArgumentCaptor.forClass(UserBodyMetrics.class);
+            ArgumentCaptor<LoggableData> auditAfterStateCaptor = ArgumentCaptor.forClass(LoggableData.class);
 
             verify(userRepository).findById(command.userId());
             verify(bmiCalculator).calculate(command.height(), command.weight());
@@ -99,8 +110,18 @@ class CreateUserBodyMetricsUseCaseTest {
             verify(fatMassCalculator, never()).calculate(any(), any());
             verify(leanMassCalculator, never()).calculate(any(), any());
             verify(userBodyMetricsRepository).save(userBodyMetricsCaptor.capture());
+            verify(auditLogPublisher).publish(
+                    eq(AuditActionType.CREATE),
+                    eq(user.getId().value()),
+                    eq(user.getEmail().value()),
+                    eq(AuditTargetType.USER_BODY_METRICS),
+                    eq(1L),
+                    isNull(),
+                    auditAfterStateCaptor.capture()
+            );
 
             UserBodyMetrics savedUserBodyMetrics = userBodyMetricsCaptor.getValue();
+            UserBodyMetricsAuditData auditAfterState = (UserBodyMetricsAuditData) auditAfterStateCaptor.getValue();
 
             assertThat(savedUserBodyMetrics.getUserId()).isEqualTo(command.userId());
             assertThat(savedUserBodyMetrics.getMeasuredAt()).isEqualTo(measuredAt);
@@ -117,6 +138,17 @@ class CreateUserBodyMetricsUseCaseTest {
             assertThat(result.userId()).isEqualTo(command.userId());
             assertThat(result.measuredAt()).isEqualTo(measuredAt);
             assertThat(result.bmi()).isEqualTo(savedUserBodyMetrics.getBmi());
+
+            assertThat(auditAfterState.id()).isEqualTo(1L);
+            assertThat(auditAfterState.userId()).isEqualTo(command.userId().value());
+            assertThat(auditAfterState.measuredAt()).isEqualTo(measuredAt);
+            assertThat(auditAfterState.weightKg()).isEqualTo(command.weight().value());
+            assertThat(auditAfterState.heightCm()).isEqualTo(command.height().value());
+            assertThat(auditAfterState.bmi()).isCloseTo(expectedBmi, within(0.0001));
+            assertThat(auditAfterState.bodyFatPercentage()).isNull();
+            assertThat(auditAfterState.fatMassKg()).isNull();
+            assertThat(auditAfterState.leanMassKg()).isNull();
+            assertThat(auditAfterState.notes()).isEqualTo(command.notes());
         }
 
         @Test
@@ -141,6 +173,15 @@ class CreateUserBodyMetricsUseCaseTest {
 
             verify(fatMassCalculator).calculate(command.weight(), savedUserBodyMetrics.getBodyFatPercentage());
             verify(leanMassCalculator).calculate(command.weight(), savedUserBodyMetrics.getFatMassKg());
+            verify(auditLogPublisher).publish(
+                    eq(AuditActionType.CREATE),
+                    eq(user.getId().value()),
+                    eq(user.getEmail().value()),
+                    eq(AuditTargetType.USER_BODY_METRICS),
+                    eq(1L),
+                    isNull(),
+                    any(UserBodyMetricsAuditData.class)
+            );
 
             assertThat(savedUserBodyMetrics.getBodyFatPercentage()).isNotNull();
             assertThat(savedUserBodyMetrics.getFatMassKg()).isNotNull();
@@ -169,6 +210,15 @@ class CreateUserBodyMetricsUseCaseTest {
 
             verify(fatMassCalculator).calculate(command.weight(), savedUserBodyMetrics.getBodyFatPercentage());
             verify(leanMassCalculator).calculate(command.weight(), savedUserBodyMetrics.getFatMassKg());
+            verify(auditLogPublisher).publish(
+                    eq(AuditActionType.CREATE),
+                    eq(user.getId().value()),
+                    eq(user.getEmail().value()),
+                    eq(AuditTargetType.USER_BODY_METRICS),
+                    eq(1L),
+                    isNull(),
+                    any(UserBodyMetricsAuditData.class)
+            );
 
             assertThat(savedUserBodyMetrics.getBodyFatPercentage()).isNotNull();
             assertThat(savedUserBodyMetrics.getFatMassKg()).isNotNull();
@@ -200,6 +250,15 @@ class CreateUserBodyMetricsUseCaseTest {
             assertThat(savedUserBodyMetrics.getBodyFatPercentage()).isNull();
             assertThat(savedUserBodyMetrics.getFatMassKg()).isNull();
             assertThat(savedUserBodyMetrics.getLeanMassKg()).isNull();
+            verify(auditLogPublisher).publish(
+                    eq(AuditActionType.CREATE),
+                    eq(user.getId().value()),
+                    eq(user.getEmail().value()),
+                    eq(AuditTargetType.USER_BODY_METRICS),
+                    eq(1L),
+                    isNull(),
+                    any(UserBodyMetricsAuditData.class)
+            );
         }
 
         @Test
@@ -227,6 +286,15 @@ class CreateUserBodyMetricsUseCaseTest {
             assertThat(savedUserBodyMetrics.getBodyFatPercentage()).isNull();
             assertThat(savedUserBodyMetrics.getFatMassKg()).isNull();
             assertThat(savedUserBodyMetrics.getLeanMassKg()).isNull();
+            verify(auditLogPublisher).publish(
+                    eq(AuditActionType.CREATE),
+                    eq(user.getId().value()),
+                    eq(user.getEmail().value()),
+                    eq(AuditTargetType.USER_BODY_METRICS),
+                    eq(1L),
+                    isNull(),
+                    any(UserBodyMetricsAuditData.class)
+            );
         }
     }
 
@@ -249,6 +317,7 @@ class CreateUserBodyMetricsUseCaseTest {
             verify(navyBodyFatCalculator, never()).calculate(any(), any(), any());
             verify(fatMassCalculator, never()).calculate(any(), any());
             verify(leanMassCalculator, never()).calculate(any(), any());
+            verify(auditLogPublisher, never()).publish(any(), any(), any(), any(), any(), any(), any());
         }
 
         @Test
@@ -268,6 +337,7 @@ class CreateUserBodyMetricsUseCaseTest {
             verify(navyBodyFatCalculator, never()).calculate(any(), any(), any());
             verify(fatMassCalculator, never()).calculate(any(), any());
             verify(leanMassCalculator, never()).calculate(any(), any());
+            verify(auditLogPublisher, never()).publish(any(), any(), any(), any(), any(), any(), any());
         }
     }
 
@@ -291,6 +361,7 @@ class CreateUserBodyMetricsUseCaseTest {
             verify(navyBodyFatCalculator, never()).calculate(any(), any(), any());
             verify(fatMassCalculator, never()).calculate(any(), any());
             verify(leanMassCalculator, never()).calculate(any(), any());
+            verify(auditLogPublisher, never()).publish(any(), any(), any(), any(), any(), any(), any());
         }
 
         @Test
@@ -310,6 +381,7 @@ class CreateUserBodyMetricsUseCaseTest {
             verify(navyBodyFatCalculator, never()).calculate(any(), any(), any());
             verify(fatMassCalculator, never()).calculate(any(), any());
             verify(leanMassCalculator, never()).calculate(any(), any());
+            verify(auditLogPublisher, never()).publish(any(), any(), any(), any(), any(), any(), any());
         }
     }
 
