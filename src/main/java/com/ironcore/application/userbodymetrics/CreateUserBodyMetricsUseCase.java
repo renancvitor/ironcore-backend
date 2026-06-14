@@ -3,6 +3,9 @@ package com.ironcore.application.userbodymetrics;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
+import com.ironcore.application.logging.audit.port.AuditLogPublisher;
+import com.ironcore.domain.logging.audit.enums.AuditActionType;
+import com.ironcore.domain.logging.audit.enums.AuditTargetType;
 import com.ironcore.domain.user.enums.SexType;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
@@ -31,6 +34,7 @@ public class CreateUserBodyMetricsUseCase {
     private final FatMassCalculator fatMassCalculator;
     private final LeanMassCalculator leanMassCalculator;
     private final Clock clock;
+    private final AuditLogPublisher publisher;
 
     @Transactional
     public CreateUserBodyMetricsResult execute(CreateUserBodyMetricsCommand command) {
@@ -81,6 +85,16 @@ public class CreateUserBodyMetricsUseCase {
         );
 
         UserBodyMetrics savedUserBodyMetrics = userBodyMetricsRepository.save(newUserBodyMetrics);
+
+        publisher.publish(
+                AuditActionType.CREATE,
+                user.getId().value(),
+                user.getEmail().value(),
+                AuditTargetType.USER_BODY_METRICS,
+                savedUserBodyMetrics.getId().value(),
+                null,
+                UserBodyMetricsAuditData.from(savedUserBodyMetrics)
+        );
 
         return new CreateUserBodyMetricsResult(
                 savedUserBodyMetrics.getId(),
