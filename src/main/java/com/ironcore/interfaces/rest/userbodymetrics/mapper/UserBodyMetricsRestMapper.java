@@ -1,7 +1,7 @@
 package com.ironcore.interfaces.rest.userbodymetrics.mapper;
 
-import com.ironcore.application.userbodymetrics.CreateUserBodyMetricsCommand;
-import com.ironcore.application.userbodymetrics.CreateUserBodyMetricsResult;
+import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsCommand;
+import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsResult;
 import com.ironcore.domain.userbodymetrics.valueobject.BodyCircumferenceCm;
 import com.ironcore.domain.userbodymetrics.valueobject.BodyCircumferences;
 import com.ironcore.domain.userbodymetrics.valueobject.BodyHeightCm;

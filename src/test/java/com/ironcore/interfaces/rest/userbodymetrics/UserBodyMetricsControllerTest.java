@@ -2,8 +2,8 @@ package com.ironcore.interfaces.rest.userbodymetrics;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
-import com.ironcore.application.userbodymetrics.CreateUserBodyMetricsCommand;
-import com.ironcore.application.userbodymetrics.CreateUserBodyMetricsResult;
+import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsCommand;
+import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsResult;
 import com.ironcore.application.userbodymetrics.CreateUserBodyMetricsUseCase;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.UserId;

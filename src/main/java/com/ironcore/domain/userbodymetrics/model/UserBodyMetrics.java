@@ -12,7 +12,7 @@ public class UserBodyMetrics {
 
     private final UserBodyMetricsId id;
     private final UserId userId;
-    private LocalDateTime measuredAt;
+    private final LocalDateTime measuredAt;
     private BodyWeightKg weight;
     private BodyHeightCm height;
     private BodyCircumferences circumferences;
@@ -100,7 +100,6 @@ public class UserBodyMetrics {
     }
 
     public void updateMeasurements(
-            LocalDateTime measuredAt,
             BodyWeightKg weight,
             BodyHeightCm height,
             BodyCircumferences circumferences,
@@ -111,7 +110,6 @@ public class UserBodyMetrics {
             String notes,
             LocalDateTime updatedAt
     ) {
-        this.measuredAt = requireNonNull(measuredAt, "Data de medição é obrigatória.");
         this.weight = requireNonNull(weight, "Peso é obrigatório.");
         this.height = requireNonNull(height, "Altura é obrigatória.");
         this.circumferences = circumferences;

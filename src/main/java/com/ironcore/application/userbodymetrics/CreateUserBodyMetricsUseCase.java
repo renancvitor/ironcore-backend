@@ -4,9 +4,11 @@ import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
 import com.ironcore.application.logging.audit.port.AuditLogPublisher;
+import com.ironcore.application.userbodymetrics.component.BodyFatPercentageCalculator;
+import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsCommand;
+import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsResult;
 import com.ironcore.domain.logging.audit.enums.AuditActionType;
 import com.ironcore.domain.logging.audit.enums.AuditTargetType;
-import com.ironcore.domain.user.enums.SexType;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.userbodymetrics.model.UserBodyMetrics;
@@ -14,7 +16,6 @@ import com.ironcore.domain.userbodymetrics.repository.UserBodyMetricsRepository;
 import com.ironcore.domain.userbodymetrics.service.BMICalculator;
 import com.ironcore.domain.userbodymetrics.service.FatMassCalculator;
 import com.ironcore.domain.userbodymetrics.service.LeanMassCalculator;
-import com.ironcore.domain.userbodymetrics.service.NavyBodyFatCalculator;
 import com.ironcore.domain.userbodymetrics.valueobject.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,7 +31,7 @@ public class CreateUserBodyMetricsUseCase {
     private final UserRepository userRepository;
     private final UserBodyMetricsRepository userBodyMetricsRepository;
     private final BMICalculator bmiCalculator;
-    private final NavyBodyFatCalculator navyBodyFatCalculator;
+    private final BodyFatPercentageCalculator bodyFatPercentageCalculator;
     private final FatMassCalculator fatMassCalculator;
     private final LeanMassCalculator leanMassCalculator;
     private final Clock clock;
@@ -53,7 +54,7 @@ public class CreateUserBodyMetricsUseCase {
 
         BMI bmi = bmiCalculator.calculate(command.height(), command.weight());
 
-        BodyFatPercentage bodyFatPercentage = calculateBodyFatPercentage(
+        BodyFatPercentage bodyFatPercentage = bodyFatPercentageCalculator.calculate(
                 user,
                 command.height(),
                 circumferences
@@ -109,30 +110,5 @@ public class CreateUserBodyMetricsUseCase {
                 savedUserBodyMetrics.getLeanMassKg(),
                 savedUserBodyMetrics.getNotes()
         );
-    }
-
-    private BodyFatPercentage calculateBodyFatPercentage(
-            User user,
-            BodyHeightCm height,
-            BodyCircumferences circumferences
-    ) {
-        if (circumferences == null) {
-            return null;
-        }
-
-        if (user.getSex().type() == SexType.MALE
-                && circumferences.neck() != null
-                && circumferences.waist() != null) {
-            return navyBodyFatCalculator.calculate(user.getSex().type(), height, circumferences);
-        }
-
-        if (user.getSex().type() == SexType.FEMALE
-                && circumferences.neck() != null
-                && circumferences.waist() != null
-                && circumferences.hip() != null) {
-            return navyBodyFatCalculator.calculate(user.getSex().type(), height, circumferences);
-        }
-
-        return null;
     }
 }

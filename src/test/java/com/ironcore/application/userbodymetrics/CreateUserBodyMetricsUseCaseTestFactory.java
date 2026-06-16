@@ -1,5 +1,6 @@
 package com.ironcore.application.userbodymetrics;
 
+import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsCommand;
 import com.ironcore.domain.user.valueobject.UserId;
 import com.ironcore.domain.userbodymetrics.valueobject.BodyCircumferenceCm;
 import com.ironcore.domain.userbodymetrics.valueobject.BodyCircumferences;
