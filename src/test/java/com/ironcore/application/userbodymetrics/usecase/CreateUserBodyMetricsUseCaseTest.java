@@ -5,9 +5,10 @@ import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
 import com.ironcore.application.logging.audit.payload.LoggableData;
 import com.ironcore.application.logging.audit.port.AuditLogPublisher;
+import com.ironcore.application.userbodymetrics.component.BodyFatPercentageCalculator;
 import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsCommand;
 import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsResult;
-import com.ironcore.application.userbodymetrics.CreateUserBodyMetricsUseCase;
+import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsUseCase;
 import com.ironcore.application.userbodymetrics.UserBodyMetricsAuditData;
 import com.ironcore.domain.logging.audit.enums.AuditActionType;
 import com.ironcore.domain.logging.audit.enums.AuditTargetType;
@@ -22,11 +23,11 @@ import com.ironcore.domain.userbodymetrics.service.FatMassCalculator;
 import com.ironcore.domain.userbodymetrics.service.LeanMassCalculator;
 import com.ironcore.domain.userbodymetrics.service.NavyBodyFatCalculator;
 import com.ironcore.domain.userbodymetrics.valueobject.UserBodyMetricsId;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -70,6 +71,8 @@ class CreateUserBodyMetricsUseCaseTest {
     @Spy
     private NavyBodyFatCalculator navyBodyFatCalculator = new NavyBodyFatCalculator();
 
+    private BodyFatPercentageCalculator bodyFatPercentageCalculator;
+
     @Spy
     private FatMassCalculator fatMassCalculator = new FatMassCalculator();
 
@@ -82,8 +85,22 @@ class CreateUserBodyMetricsUseCaseTest {
     @Mock
     private AuditLogPublisher auditLogPublisher;
 
-    @InjectMocks
     private CreateUserBodyMetricsUseCase createUserBodyMetricsUseCase;
+
+    @BeforeEach
+    void setUp() {
+        bodyFatPercentageCalculator = new BodyFatPercentageCalculator(navyBodyFatCalculator);
+        createUserBodyMetricsUseCase = new CreateUserBodyMetricsUseCase(
+                userRepository,
+                userBodyMetricsRepository,
+                bmiCalculator,
+                bodyFatPercentageCalculator,
+                fatMassCalculator,
+                leanMassCalculator,
+                clock,
+                auditLogPublisher
+        );
+    }
 
     @Nested
     class SuccessfulCreation {
