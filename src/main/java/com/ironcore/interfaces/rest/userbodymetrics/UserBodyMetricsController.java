@@ -4,8 +4,8 @@ import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsComm
 import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsResult;
 import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsUseCase;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
-import com.ironcore.interfaces.rest.userbodymetrics.dto.CreateUserBodyMetricsRequest;
-import com.ironcore.interfaces.rest.userbodymetrics.dto.CreateUserBodyMetricsResponse;
+import com.ironcore.interfaces.rest.userbodymetrics.dto.create.CreateUserBodyMetricsRequest;
+import com.ironcore.interfaces.rest.userbodymetrics.dto.create.CreateUserBodyMetricsResponse;
 import com.ironcore.interfaces.rest.userbodymetrics.mapper.UserBodyMetricsRestMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

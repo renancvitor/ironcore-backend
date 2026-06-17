@@ -11,7 +11,7 @@ import com.ironcore.domain.userbodymetrics.repository.UserBodyMetricsRepository;
 import com.ironcore.domain.userbodymetrics.valueobject.*;
 import com.ironcore.infrastructure.security.jwt.JwtAccessTokenValidator;
 import com.ironcore.interfaces.rest.userbodymetrics.dto.BodyCircumferencesRequest;
-import com.ironcore.interfaces.rest.userbodymetrics.dto.CreateUserBodyMetricsRequest;
+import com.ironcore.interfaces.rest.userbodymetrics.dto.create.CreateUserBodyMetricsRequest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

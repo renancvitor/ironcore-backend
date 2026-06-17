@@ -9,8 +9,8 @@ import com.ironcore.domain.userbodymetrics.valueobject.BodyWeightKg;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
 import com.ironcore.interfaces.rest.userbodymetrics.dto.BodyCircumferencesRequest;
 import com.ironcore.interfaces.rest.userbodymetrics.dto.BodyCircumferencesResponse;
-import com.ironcore.interfaces.rest.userbodymetrics.dto.CreateUserBodyMetricsRequest;
-import com.ironcore.interfaces.rest.userbodymetrics.dto.CreateUserBodyMetricsResponse;
+import com.ironcore.interfaces.rest.userbodymetrics.dto.create.CreateUserBodyMetricsRequest;
+import com.ironcore.interfaces.rest.userbodymetrics.dto.create.CreateUserBodyMetricsResponse;
 
 public final class UserBodyMetricsRestMapper {
 
