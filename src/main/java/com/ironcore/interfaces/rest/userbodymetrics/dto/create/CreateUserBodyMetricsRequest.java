@@ -1,5 +1,6 @@
-package com.ironcore.interfaces.rest.userbodymetrics.dto;
+package com.ironcore.interfaces.rest.userbodymetrics.dto.create;
 
+import com.ironcore.interfaces.rest.userbodymetrics.dto.BodyCircumferencesRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;

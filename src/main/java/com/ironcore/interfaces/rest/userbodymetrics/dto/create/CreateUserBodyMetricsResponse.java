@@ -1,4 +1,6 @@
-package com.ironcore.interfaces.rest.userbodymetrics.dto;
+package com.ironcore.interfaces.rest.userbodymetrics.dto.create;
+
+import com.ironcore.interfaces.rest.userbodymetrics.dto.BodyCircumferencesResponse;
 
 import java.time.LocalDateTime;
 

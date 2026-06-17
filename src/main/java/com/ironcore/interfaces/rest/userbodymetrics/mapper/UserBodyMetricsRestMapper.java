@@ -2,15 +2,16 @@ package com.ironcore.interfaces.rest.userbodymetrics.mapper;
 
 import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsCommand;
 import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsResult;
-import com.ironcore.domain.userbodymetrics.valueobject.BodyCircumferenceCm;
-import com.ironcore.domain.userbodymetrics.valueobject.BodyCircumferences;
-import com.ironcore.domain.userbodymetrics.valueobject.BodyHeightCm;
-import com.ironcore.domain.userbodymetrics.valueobject.BodyWeightKg;
+import com.ironcore.application.userbodymetrics.update.UpdateUserBodyMetricsCommand;
+import com.ironcore.application.userbodymetrics.update.UpdateUserBodyMetricsResult;
+import com.ironcore.domain.userbodymetrics.valueobject.*;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
 import com.ironcore.interfaces.rest.userbodymetrics.dto.BodyCircumferencesRequest;
 import com.ironcore.interfaces.rest.userbodymetrics.dto.BodyCircumferencesResponse;
-import com.ironcore.interfaces.rest.userbodymetrics.dto.CreateUserBodyMetricsRequest;
-import com.ironcore.interfaces.rest.userbodymetrics.dto.CreateUserBodyMetricsResponse;
+import com.ironcore.interfaces.rest.userbodymetrics.dto.create.CreateUserBodyMetricsRequest;
+import com.ironcore.interfaces.rest.userbodymetrics.dto.create.CreateUserBodyMetricsResponse;
+import com.ironcore.interfaces.rest.userbodymetrics.dto.update.UpdateUserBodyMetricsRequest;
+import com.ironcore.interfaces.rest.userbodymetrics.dto.update.UpdateUserBodyMetricsResponse;
 
 public final class UserBodyMetricsRestMapper {
 
@@ -43,6 +44,38 @@ public final class UserBodyMetricsRestMapper {
                 result.fatMassKg() == null ? null : result.fatMassKg().value(),
                 result.leanMassKg() == null ? null : result.leanMassKg().value(),
                 result.notes()
+        );
+    }
+
+    public static UpdateUserBodyMetricsCommand toCommand(
+            AuthenticatedUser authenticatedUser,
+            Long bodyMetricsId,
+            UpdateUserBodyMetricsRequest request
+    ) {
+        return new UpdateUserBodyMetricsCommand(
+                new UserBodyMetricsId(bodyMetricsId),
+                authenticatedUser.userId(),
+                new BodyWeightKg(request.weightKg()),
+                new BodyHeightCm(request.heightCm()),
+                toBodyCircumferences(request.circumferences()),
+                request.notes()
+        );
+    }
+
+    public static UpdateUserBodyMetricsResponse toResponse(UpdateUserBodyMetricsResult result) {
+        return new UpdateUserBodyMetricsResponse(
+                result.id().value(),
+                result.userId().value(),
+                result.measuredAt(),
+                result.weight().value(),
+                result.height().value(),
+                toBodyCircumferencesResponse(result.circumferences()),
+                result.bmi().value(),
+                result.bodyFatPercentage() == null ? null : result.bodyFatPercentage().value(),
+                result.fatMassKg() == null ? null : result.fatMassKg().value(),
+                result.leanMassKg() == null ? null : result.leanMassKg().value(),
+                result.notes(),
+                result.updatedAt()
         );
     }
 

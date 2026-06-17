@@ -2,16 +2,17 @@ package com.ironcore.interfaces.rest.userbodymetrics;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
-import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsCommand;
-import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsResult;
 import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsUseCase;
+import com.ironcore.application.userbodymetrics.update.UpdateUserBodyMetricsCommand;
+import com.ironcore.application.userbodymetrics.update.UpdateUserBodyMetricsResult;
+import com.ironcore.application.userbodymetrics.update.UpdateUserBodyMetricsUseCase;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.UserId;
 import com.ironcore.domain.userbodymetrics.repository.UserBodyMetricsRepository;
 import com.ironcore.domain.userbodymetrics.valueobject.*;
 import com.ironcore.infrastructure.security.jwt.JwtAccessTokenValidator;
 import com.ironcore.interfaces.rest.userbodymetrics.dto.BodyCircumferencesRequest;
-import com.ironcore.interfaces.rest.userbodymetrics.dto.CreateUserBodyMetricsRequest;
+import com.ironcore.interfaces.rest.userbodymetrics.dto.update.UpdateUserBodyMetricsRequest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,23 +25,28 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDateTime;
 
 import static com.ironcore.interfaces.rest.support.security.AuthenticatedUserRequestPostProcessorFactory.authenticatedUser;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.hamcrest.Matchers.containsInAnyOrder;
 
 @WebMvcTest(UserBodyMetricsController.class)
 @AutoConfigureMockMvc(addFilters = false)
-public class UserBodyMetricsControllerTest {
+public class UpdateUserBodyMetricsControllerTest {
 
-    private static final String BODY_METRICS_ENDPOINT = "/api/users/me/body-metrics";
+    private static final String BODY_METRICS_BASE_ENDPOINT = "/api/users/me/body-metrics";
+    private static final String BODY_METRICS_ENDPOINT = BODY_METRICS_BASE_ENDPOINT + "/{id}";
+    private static final Long BODY_METRICS_ID = 1L;
 
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockitoBean
+    private UpdateUserBodyMetricsUseCase updateUserBodyMetricsUseCase;
 
     @MockitoBean
     private CreateUserBodyMetricsUseCase createUserBodyMetricsUseCase;
@@ -58,10 +64,10 @@ public class UserBodyMetricsControllerTest {
     private UserRepository userRepository;
 
     @Nested
-    class SuccessfulCreation {
+    class SuccessfulUpdate {
 
         @Test
-        void shouldCreateUserBodyMetricsWithCircumferences() throws Exception {
+        void shouldUpdateUserBodyMetricsWithCircumferences() throws Exception {
             BodyCircumferencesRequest circumferencesRequest = new BodyCircumferencesRequest(
                     39.0,
                     104.0,
@@ -73,7 +79,7 @@ public class UserBodyMetricsControllerTest {
                     55.0,
                     36.0
             );
-            CreateUserBodyMetricsRequest request = new CreateUserBodyMetricsRequest(
+            UpdateUserBodyMetricsRequest request = new UpdateUserBodyMetricsRequest(
                     65.0,
                     167.0,
                     circumferencesRequest,
@@ -91,14 +97,15 @@ public class UserBodyMetricsControllerTest {
                     new BodyCircumferenceCm(55.0),
                     new BodyCircumferenceCm(36.0)
             );
-            CreateUserBodyMetricsCommand command = new CreateUserBodyMetricsCommand(
+            UpdateUserBodyMetricsCommand command = new UpdateUserBodyMetricsCommand(
+                    new UserBodyMetricsId(1L),
                     new UserId(1L),
                     new BodyWeightKg(65.0),
                     new BodyHeightCm(167.0),
                     circumferences,
                     "TEXT"
             );
-            CreateUserBodyMetricsResult result = new CreateUserBodyMetricsResult(
+            UpdateUserBodyMetricsResult result = new UpdateUserBodyMetricsResult(
                     new UserBodyMetricsId(1L),
                     new UserId(1L),
                     LocalDateTime.of(2026, 6, 14, 10, 0),
@@ -109,16 +116,17 @@ public class UserBodyMetricsControllerTest {
                     new BodyFatPercentage(12.5),
                     new FatMassKg(56.9),
                     new LeanMassKg(8.1),
-                    "TEXT"
+                    "TEXT",
+                    LocalDateTime.of(2026, 6, 15, 10, 0)
             );
 
-            when(createUserBodyMetricsUseCase.execute(command)).thenReturn(result);
+            when(updateUserBodyMetricsUseCase.execute(command)).thenReturn(result);
 
-            mockMvc.perform(post(BODY_METRICS_ENDPOINT)
+            mockMvc.perform(put(BODY_METRICS_ENDPOINT, BODY_METRICS_ID)
                             .with(authenticatedUser())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isCreated())
+                    .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(1L))
                     .andExpect(jsonPath("$.userId").value(1L))
                     .andExpect(jsonPath("$.weightKg").value(65.0))
@@ -136,15 +144,16 @@ public class UserBodyMetricsControllerTest {
                     .andExpect(jsonPath("$.bodyFatPercentage").value(12.5))
                     .andExpect(jsonPath("$.fatMass").value(56.9))
                     .andExpect(jsonPath("$.leanMass").value(8.1))
-                    .andExpect(jsonPath("$.notes").value("TEXT"));
+                    .andExpect(jsonPath("$.notes").value("TEXT"))
+                    .andExpect(jsonPath("$.updatedAt").value("2026-06-15T10:00:00"));
 
-            verify(createUserBodyMetricsUseCase).execute(command);
+            verify(updateUserBodyMetricsUseCase).execute(command);
         }
 
         @Test
-        void shouldCreateUserBodyMetricsWithoutCircumferences() throws Exception {
+        void shouldUpdateUserBodyMetricsWithoutCircumferences() throws Exception {
             BodyCircumferencesRequest circumferencesRequest = null;
-            CreateUserBodyMetricsRequest request = new CreateUserBodyMetricsRequest(
+            UpdateUserBodyMetricsRequest request = new UpdateUserBodyMetricsRequest(
                     65.0,
                     167.0,
                     circumferencesRequest,
@@ -152,14 +161,15 @@ public class UserBodyMetricsControllerTest {
             );
 
             BodyCircumferences circumferences = null;
-            CreateUserBodyMetricsCommand command = new CreateUserBodyMetricsCommand(
+            UpdateUserBodyMetricsCommand command = new UpdateUserBodyMetricsCommand(
+                    new UserBodyMetricsId(1L),
                     new UserId(1L),
                     new BodyWeightKg(65.0),
                     new BodyHeightCm(167.0),
                     circumferences,
                     "TEXT"
             );
-            CreateUserBodyMetricsResult result = new CreateUserBodyMetricsResult(
+            UpdateUserBodyMetricsResult result = new UpdateUserBodyMetricsResult(
                     new UserBodyMetricsId(1L),
                     new UserId(1L),
                     LocalDateTime.of(2026, 6, 14, 10, 0),
@@ -170,16 +180,17 @@ public class UserBodyMetricsControllerTest {
                     null,
                     null,
                     null,
-                    "TEXT"
+                    "TEXT",
+                    LocalDateTime.of(2026, 6, 15, 10, 0)
             );
 
-            when(createUserBodyMetricsUseCase.execute(command)).thenReturn(result);
+            when(updateUserBodyMetricsUseCase.execute(command)).thenReturn(result);
 
-            mockMvc.perform(post(BODY_METRICS_ENDPOINT)
+            mockMvc.perform(put(BODY_METRICS_ENDPOINT, BODY_METRICS_ID)
                             .with(authenticatedUser())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isCreated())
+                    .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(1L))
                     .andExpect(jsonPath("$.userId").value(1L))
                     .andExpect(jsonPath("$.weightKg").value(65.0))
@@ -187,7 +198,7 @@ public class UserBodyMetricsControllerTest {
                     .andExpect(jsonPath("$.bmi").value(23.31))
                     .andExpect(jsonPath("$.notes").value("TEXT"));
 
-            verify(createUserBodyMetricsUseCase).execute(command);
+            verify(updateUserBodyMetricsUseCase).execute(command);
         }
     }
 
@@ -197,62 +208,65 @@ public class UserBodyMetricsControllerTest {
         @Test
         void shouldFailWhenWeightIsEmpty() throws Exception {
             BodyCircumferencesRequest circumferencesRequest = null;
-            CreateUserBodyMetricsRequest request = new CreateUserBodyMetricsRequest(
+            UpdateUserBodyMetricsRequest request = new UpdateUserBodyMetricsRequest(
                     null,
                     167.0,
                     circumferencesRequest,
                     "TEXT"
             );
 
-            mockMvc.perform(post(BODY_METRICS_ENDPOINT)
+            mockMvc.perform(put(BODY_METRICS_ENDPOINT, BODY_METRICS_ID)
                             .with(authenticatedUser())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.status").value(400))
                     .andExpect(jsonPath("$.error").value("Bad Request"))
-                    .andExpect(jsonPath("$.message").value("Erro de validação nos campos de requisição"))
-                    .andExpect(jsonPath("$.path").value(BODY_METRICS_ENDPOINT))
+                    .andExpect(jsonPath("$.message")
+                            .value("Erro de validação nos campos de requisição"))
+                    .andExpect(jsonPath("$.path")
+                            .value(BODY_METRICS_BASE_ENDPOINT + "/" + BODY_METRICS_ID))
                     .andExpect(jsonPath("$.fields").isArray())
                     .andExpect(jsonPath("$.fields[*].field", containsInAnyOrder(
                             "weightKg"
                     )));
 
-            verify(createUserBodyMetricsUseCase, never()).execute(any());
-
+            verify(updateUserBodyMetricsUseCase, never()).execute(any());
         }
 
         @Test
-        void shouldFailWhenHeightIsEmpty() throws Exception {
+        void shouldFailWhenHeightCmIsEmpty() throws Exception {
             BodyCircumferencesRequest circumferencesRequest = null;
-            CreateUserBodyMetricsRequest request = new CreateUserBodyMetricsRequest(
-                    67.0,
+            UpdateUserBodyMetricsRequest request = new UpdateUserBodyMetricsRequest(
+                    65.0,
                     null,
                     circumferencesRequest,
                     "TEXT"
             );
 
-            mockMvc.perform(post(BODY_METRICS_ENDPOINT)
+            mockMvc.perform(put(BODY_METRICS_ENDPOINT, 1L)
                             .with(authenticatedUser())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.status").value(400))
                     .andExpect(jsonPath("$.error").value("Bad Request"))
-                    .andExpect(jsonPath("$.message").value("Erro de validação nos campos de requisição"))
-                    .andExpect(jsonPath("$.path").value(BODY_METRICS_ENDPOINT))
+                    .andExpect(jsonPath("$.message")
+                            .value("Erro de validação nos campos de requisição"))
+                    .andExpect(jsonPath("$.path")
+                            .value(BODY_METRICS_BASE_ENDPOINT +  "/" + BODY_METRICS_ID))
                     .andExpect(jsonPath("$.fields").isArray())
                     .andExpect(jsonPath("$.fields[*].field", containsInAnyOrder(
                             "heightCm"
                     )));
 
-            verify(createUserBodyMetricsUseCase, never()).execute(any());
+            verify(updateUserBodyMetricsUseCase, never()).execute(any());
         }
 
         @Test
         void shouldFailWhenWeightOrHeightIsZeroOrNegative() throws Exception {
             BodyCircumferencesRequest circumferencesRequest = new BodyCircumferencesRequest(
-                    -.0,
+                    -0.0,
                     -104.0,
                     -118.0,
                     0.0,
@@ -262,14 +276,14 @@ public class UserBodyMetricsControllerTest {
                     -55.0,
                     0.0
             );
-            CreateUserBodyMetricsRequest request = new CreateUserBodyMetricsRequest(
+            UpdateUserBodyMetricsRequest request = new UpdateUserBodyMetricsRequest(
                     0.0,
                     -167.0,
                     circumferencesRequest,
                     "TEXT"
             );
 
-            mockMvc.perform(post(BODY_METRICS_ENDPOINT)
+            mockMvc.perform(put(BODY_METRICS_ENDPOINT, BODY_METRICS_ID)
                             .with(authenticatedUser())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
@@ -277,7 +291,8 @@ public class UserBodyMetricsControllerTest {
                     .andExpect(jsonPath("$.status").value(400))
                     .andExpect(jsonPath("$.error").value("Bad Request"))
                     .andExpect(jsonPath("$.message").value("Erro de validação nos campos de requisição"))
-                    .andExpect(jsonPath("$.path").value(BODY_METRICS_ENDPOINT))
+                    .andExpect(jsonPath("$.path")
+                            .value(BODY_METRICS_BASE_ENDPOINT + "/" + BODY_METRICS_ID))
                     .andExpect(jsonPath("$.fields").isArray())
                     .andExpect(jsonPath("$.fields[*].field", containsInAnyOrder(
                             "weightKg",
@@ -293,7 +308,7 @@ public class UserBodyMetricsControllerTest {
                             "circumferences.calfCm"
                     )));
 
-            verify(createUserBodyMetricsUseCase, never()).execute(any());
+            verify(updateUserBodyMetricsUseCase, never()).execute(any());
         }
     }
 }
