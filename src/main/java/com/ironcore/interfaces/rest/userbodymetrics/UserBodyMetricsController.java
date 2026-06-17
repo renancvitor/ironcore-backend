@@ -21,13 +21,13 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/users")
+@RequestMapping("/api/users/me/body-metrics")
 public class UserBodyMetricsController {
 
     private final CreateUserBodyMetricsUseCase createUserBodyMetricsUseCase;
     private final UpdateUserBodyMetricsUseCase updateUserBodyMetricsUseCase;
 
-    @PostMapping("/me/body-metrics")
+    @PostMapping
     public ResponseEntity<CreateUserBodyMetricsResponse> create(
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
             @Valid @RequestBody CreateUserBodyMetricsRequest request
@@ -39,7 +39,7 @@ public class UserBodyMetricsController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PutMapping("/me/body-metrics/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<UpdateUserBodyMetricsResponse> update(
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
             @PathVariable Long id,
