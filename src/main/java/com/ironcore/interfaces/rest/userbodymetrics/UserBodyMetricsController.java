@@ -1,8 +1,8 @@
 package com.ironcore.interfaces.rest.userbodymetrics;
 
-import com.ironcore.application.userbodymetrics.CreateUserBodyMetricsCommand;
-import com.ironcore.application.userbodymetrics.CreateUserBodyMetricsResult;
-import com.ironcore.application.userbodymetrics.CreateUserBodyMetricsUseCase;
+import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsCommand;
+import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsResult;
+import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsUseCase;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
 import com.ironcore.interfaces.rest.userbodymetrics.dto.CreateUserBodyMetricsRequest;
 import com.ironcore.interfaces.rest.userbodymetrics.dto.CreateUserBodyMetricsResponse;

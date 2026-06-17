@@ -1,20 +1,25 @@
 package com.ironcore.application.userbodymetrics;
 
-import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsCommand;
+import com.ironcore.application.userbodymetrics.update.UpdateUserBodyMetricsCommand;
 import com.ironcore.domain.user.valueobject.UserId;
 import com.ironcore.domain.userbodymetrics.valueobject.BodyCircumferenceCm;
 import com.ironcore.domain.userbodymetrics.valueobject.BodyCircumferences;
 import com.ironcore.domain.userbodymetrics.valueobject.BodyHeightCm;
 import com.ironcore.domain.userbodymetrics.valueobject.BodyWeightKg;
+import com.ironcore.domain.userbodymetrics.valueobject.UserBodyMetricsId;
 
-public final class CreateUserBodyMetricsUseCaseTestFactory {
+public final class UpdateUserBodyMetricsUseCaseTestFactory {
 
-    private CreateUserBodyMetricsUseCaseTestFactory() {
+    private static final UserBodyMetricsId USER_BODY_METRICS_ID = new UserBodyMetricsId(1L);
+    private static final UserId USER_ID = new UserId(1L);
+
+    private UpdateUserBodyMetricsUseCaseTestFactory() {
     }
 
-    public static CreateUserBodyMetricsCommand commandWithoutCircumferences() {
-        return new CreateUserBodyMetricsCommand(
-                new UserId(1L),
+    public static UpdateUserBodyMetricsCommand commandWithoutCircumferences() {
+        return new UpdateUserBodyMetricsCommand(
+                USER_BODY_METRICS_ID,
+                USER_ID,
                 new BodyWeightKg(65.0),
                 new BodyHeightCm(167.0),
                 null,
@@ -22,9 +27,10 @@ public final class CreateUserBodyMetricsUseCaseTestFactory {
         );
     }
 
-    public static CreateUserBodyMetricsCommand commandWithCircumferences() {
-        return new CreateUserBodyMetricsCommand(
-                new UserId(1L),
+    public static UpdateUserBodyMetricsCommand commandWithCircumferences() {
+        return new UpdateUserBodyMetricsCommand(
+                USER_BODY_METRICS_ID,
+                USER_ID,
                 new BodyWeightKg(65.0),
                 new BodyHeightCm(167.0),
                 new BodyCircumferences(
@@ -42,9 +48,10 @@ public final class CreateUserBodyMetricsUseCaseTestFactory {
         );
     }
 
-    public static CreateUserBodyMetricsCommand commandWithMaleRequiredCircumferences() {
-        return new CreateUserBodyMetricsCommand(
-                new UserId(1L),
+    public static UpdateUserBodyMetricsCommand commandWithMaleRequiredCircumferences() {
+        return new UpdateUserBodyMetricsCommand(
+                USER_BODY_METRICS_ID,
+                USER_ID,
                 new BodyWeightKg(65.0),
                 new BodyHeightCm(167.0),
                 new BodyCircumferences(
@@ -62,9 +69,10 @@ public final class CreateUserBodyMetricsUseCaseTestFactory {
         );
     }
 
-    public static CreateUserBodyMetricsCommand commandWithFemaleRequiredCircumferences() {
-        return new CreateUserBodyMetricsCommand(
-                new UserId(1L),
+    public static UpdateUserBodyMetricsCommand commandWithFemaleRequiredCircumferences() {
+        return new UpdateUserBodyMetricsCommand(
+                USER_BODY_METRICS_ID,
+                USER_ID,
                 new BodyWeightKg(65.0),
                 new BodyHeightCm(167.0),
                 new BodyCircumferences(
@@ -82,9 +90,10 @@ public final class CreateUserBodyMetricsUseCaseTestFactory {
         );
     }
 
-    public static CreateUserBodyMetricsCommand commandWithInsufficientMaleCircumferences() {
-        return new CreateUserBodyMetricsCommand(
-                new UserId(1L),
+    public static UpdateUserBodyMetricsCommand commandWithInsufficientMaleCircumferences() {
+        return new UpdateUserBodyMetricsCommand(
+                USER_BODY_METRICS_ID,
+                USER_ID,
                 new BodyWeightKg(65.0),
                 new BodyHeightCm(167.0),
                 new BodyCircumferences(
@@ -102,9 +111,10 @@ public final class CreateUserBodyMetricsUseCaseTestFactory {
         );
     }
 
-    public static CreateUserBodyMetricsCommand commandWithInsufficientFemaleCircumferences() {
-        return new CreateUserBodyMetricsCommand(
-                new UserId(1L),
+    public static UpdateUserBodyMetricsCommand commandWithInsufficientFemaleCircumferences() {
+        return new UpdateUserBodyMetricsCommand(
+                USER_BODY_METRICS_ID,
+                USER_ID,
                 new BodyWeightKg(65.0),
                 new BodyHeightCm(167.0),
                 new BodyCircumferences(
@@ -122,9 +132,10 @@ public final class CreateUserBodyMetricsUseCaseTestFactory {
         );
     }
 
-    public static CreateUserBodyMetricsCommand commandWithoutWeight() {
-        return new CreateUserBodyMetricsCommand(
-                new UserId(1L),
+    public static UpdateUserBodyMetricsCommand commandWithoutWeight() {
+        return new UpdateUserBodyMetricsCommand(
+                USER_BODY_METRICS_ID,
+                USER_ID,
                 null,
                 new BodyHeightCm(167.0),
                 null,
@@ -132,9 +143,10 @@ public final class CreateUserBodyMetricsUseCaseTestFactory {
         );
     }
 
-    public static CreateUserBodyMetricsCommand commandWithoutHeight() {
-        return new CreateUserBodyMetricsCommand(
-                new UserId(1L),
+    public static UpdateUserBodyMetricsCommand commandWithoutHeight() {
+        return new UpdateUserBodyMetricsCommand(
+                USER_BODY_METRICS_ID,
+                USER_ID,
                 new BodyWeightKg(65.0),
                 null,
                 null,

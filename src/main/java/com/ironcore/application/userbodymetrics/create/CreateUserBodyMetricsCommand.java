@@ -1,4 +1,4 @@
-package com.ironcore.application.userbodymetrics;
+package com.ironcore.application.userbodymetrics.create;
 
 import com.ironcore.domain.user.valueobject.UserId;
 import com.ironcore.domain.userbodymetrics.valueobject.*;
