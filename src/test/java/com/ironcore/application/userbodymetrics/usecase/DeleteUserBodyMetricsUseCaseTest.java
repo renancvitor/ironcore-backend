@@ -5,6 +5,7 @@ import com.ironcore.application.exception.UserInactiveException;
 import com.ironcore.application.logging.audit.payload.LoggableData;
 import com.ironcore.application.logging.audit.port.AuditLogPublisher;
 import com.ironcore.application.userbodymetrics.UserBodyMetricsAuditData;
+import com.ironcore.application.userbodymetrics.delete.DeleteUserBodyMetricsCommand;
 import com.ironcore.application.userbodymetrics.delete.DeleteUserBodyMetricsUseCase;
 import com.ironcore.domain.logging.audit.enums.AuditActionType;
 import com.ironcore.domain.logging.audit.enums.AuditTargetType;
@@ -64,6 +65,7 @@ public class DeleteUserBodyMetricsUseCaseTest {
         void shouldDeleteUserBodyMetrics() {
             User user = activeUser();
             UserBodyMetricsId userBodyMetricsId = new UserBodyMetricsId(1L);
+            DeleteUserBodyMetricsCommand command = new DeleteUserBodyMetricsCommand(userBodyMetricsId, user.getId());
             UserBodyMetrics bodyMetrics = new UserBodyMetrics(
                     userBodyMetricsId,
                     new UserId(1L),
@@ -85,7 +87,7 @@ public class DeleteUserBodyMetricsUseCaseTest {
 
             ArgumentCaptor<LoggableData> auditBeforeCaptor = ArgumentCaptor.forClass(LoggableData.class);
 
-            deleteUserBodyMetricsUseCase.execute(userBodyMetricsId, user.getId());
+            deleteUserBodyMetricsUseCase.execute(command);
 
             verify(userRepository).findById(user.getId());
             verify(userBodyMetricsRepository).findByIdAndUserId(userBodyMetricsId, user.getId());
@@ -119,11 +121,12 @@ public class DeleteUserBodyMetricsUseCaseTest {
         void shouldFailWhenUserDoesNotExist() {
             User user = activeUser();
             UserBodyMetricsId userBodyMetricsId = new UserBodyMetricsId(1L);
+            DeleteUserBodyMetricsCommand command = new DeleteUserBodyMetricsCommand(userBodyMetricsId, user.getId());
 
             when(userRepository.findById(user.getId())).thenReturn(Optional.empty());
 
             assertThatExceptionOfType(ResourceNotFoundException.class)
-                    .isThrownBy(() -> deleteUserBodyMetricsUseCase.execute(userBodyMetricsId, user.getId()))
+                    .isThrownBy(() -> deleteUserBodyMetricsUseCase.execute(command))
                     .withMessage("Usuário não encontrado.");
 
             verify(userRepository).findById(user.getId());
@@ -135,11 +138,12 @@ public class DeleteUserBodyMetricsUseCaseTest {
         void shouldFailWhenUserIsInactive() {
             User user = inactiveUser();
             UserBodyMetricsId userBodyMetricsId = new UserBodyMetricsId(1L);
+            DeleteUserBodyMetricsCommand command = new DeleteUserBodyMetricsCommand(userBodyMetricsId, user.getId());
 
             when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
 
             assertThatExceptionOfType(UserInactiveException.class)
-                    .isThrownBy(() -> deleteUserBodyMetricsUseCase.execute(userBodyMetricsId, user.getId()))
+                    .isThrownBy(() -> deleteUserBodyMetricsUseCase.execute(command))
                     .withMessage("Usuário inativo.");
 
             verify(userRepository).findById(user.getId());
@@ -155,13 +159,14 @@ public class DeleteUserBodyMetricsUseCaseTest {
         void shouldFailWhenBodyMetricsDoesNotExistForUser() {
             User user = activeUser();
             UserBodyMetricsId userBodyMetricsId = new UserBodyMetricsId(1L);
+            DeleteUserBodyMetricsCommand command = new DeleteUserBodyMetricsCommand(userBodyMetricsId, user.getId());
 
             when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
             when(userBodyMetricsRepository.findByIdAndUserId(userBodyMetricsId, user.getId()))
                     .thenReturn(Optional.empty());
 
             assertThatExceptionOfType(ResourceNotFoundException.class)
-                    .isThrownBy(() -> deleteUserBodyMetricsUseCase.execute(userBodyMetricsId, user.getId()))
+                    .isThrownBy(() -> deleteUserBodyMetricsUseCase.execute(command))
                     .withMessage("Métricas corporais não encontradas.");
 
             verify(userRepository).findById(user.getId());

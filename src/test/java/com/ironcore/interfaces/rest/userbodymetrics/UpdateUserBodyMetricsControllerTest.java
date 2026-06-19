@@ -3,6 +3,7 @@ package com.ironcore.interfaces.rest.userbodymetrics;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
 import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsUseCase;
+import com.ironcore.application.userbodymetrics.delete.DeleteUserBodyMetricsUseCase;
 import com.ironcore.application.userbodymetrics.update.UpdateUserBodyMetricsCommand;
 import com.ironcore.application.userbodymetrics.update.UpdateUserBodyMetricsResult;
 import com.ironcore.application.userbodymetrics.update.UpdateUserBodyMetricsUseCase;
@@ -50,6 +51,9 @@ public class UpdateUserBodyMetricsControllerTest {
 
     @MockitoBean
     private CreateUserBodyMetricsUseCase createUserBodyMetricsUseCase;
+
+    @MockitoBean
+    private DeleteUserBodyMetricsUseCase deleteUserBodyMetricsUseCase;
 
     @MockitoBean
     private ErrorLogPublisher errorLogPublisher;

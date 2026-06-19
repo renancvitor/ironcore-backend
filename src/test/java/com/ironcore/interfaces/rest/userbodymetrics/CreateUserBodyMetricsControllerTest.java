@@ -5,6 +5,7 @@ import com.ironcore.application.logging.error.port.ErrorLogPublisher;
 import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsCommand;
 import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsResult;
 import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsUseCase;
+import com.ironcore.application.userbodymetrics.delete.DeleteUserBodyMetricsUseCase;
 import com.ironcore.application.userbodymetrics.update.UpdateUserBodyMetricsUseCase;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.UserId;
@@ -48,6 +49,9 @@ public class CreateUserBodyMetricsControllerTest {
 
     @MockitoBean
     private UpdateUserBodyMetricsUseCase updateUserBodyMetricsUseCase;
+
+    @MockitoBean
+    private DeleteUserBodyMetricsUseCase deleteUserBodyMetricsUseCase;
 
     @MockitoBean
     private ErrorLogPublisher errorLogPublisher;
