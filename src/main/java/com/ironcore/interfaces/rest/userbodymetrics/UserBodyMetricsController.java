@@ -3,6 +3,8 @@ package com.ironcore.interfaces.rest.userbodymetrics;
 import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsCommand;
 import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsResult;
 import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsUseCase;
+import com.ironcore.application.userbodymetrics.delete.DeleteUserBodyMetricsCommand;
+import com.ironcore.application.userbodymetrics.delete.DeleteUserBodyMetricsUseCase;
 import com.ironcore.application.userbodymetrics.update.UpdateUserBodyMetricsCommand;
 import com.ironcore.application.userbodymetrics.update.UpdateUserBodyMetricsResult;
 import com.ironcore.application.userbodymetrics.update.UpdateUserBodyMetricsUseCase;
@@ -26,6 +28,7 @@ public class UserBodyMetricsController {
 
     private final CreateUserBodyMetricsUseCase createUserBodyMetricsUseCase;
     private final UpdateUserBodyMetricsUseCase updateUserBodyMetricsUseCase;
+    private final DeleteUserBodyMetricsUseCase deleteUserBodyMetricsUseCase;
 
     @PostMapping
     public ResponseEntity<CreateUserBodyMetricsResponse> create(
@@ -50,5 +53,16 @@ public class UserBodyMetricsController {
         UpdateUserBodyMetricsResponse response = UserBodyMetricsRestMapper.toResponse(result);
 
         return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
+            @PathVariable Long id
+    ) {
+        DeleteUserBodyMetricsCommand command = UserBodyMetricsRestMapper.toDelete(authenticatedUser, id);
+        deleteUserBodyMetricsUseCase.execute(command);
+
+        return ResponseEntity.noContent().build();
     }
 }
