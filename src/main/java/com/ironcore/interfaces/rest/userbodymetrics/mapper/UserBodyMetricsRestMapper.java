@@ -2,6 +2,7 @@ package com.ironcore.interfaces.rest.userbodymetrics.mapper;
 
 import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsCommand;
 import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsResult;
+import com.ironcore.application.userbodymetrics.delete.DeleteUserBodyMetricsCommand;
 import com.ironcore.application.userbodymetrics.update.UpdateUserBodyMetricsCommand;
 import com.ironcore.application.userbodymetrics.update.UpdateUserBodyMetricsResult;
 import com.ironcore.domain.userbodymetrics.valueobject.*;
@@ -76,6 +77,13 @@ public final class UserBodyMetricsRestMapper {
                 result.leanMassKg() == null ? null : result.leanMassKg().value(),
                 result.notes(),
                 result.updatedAt()
+        );
+    }
+
+    public static DeleteUserBodyMetricsCommand toDelete(AuthenticatedUser authenticatedUser, Long id) {
+        return new DeleteUserBodyMetricsCommand(
+                new UserBodyMetricsId(id),
+                authenticatedUser.userId()
         );
     }
 

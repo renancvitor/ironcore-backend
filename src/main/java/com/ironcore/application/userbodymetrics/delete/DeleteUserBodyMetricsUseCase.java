@@ -8,10 +8,8 @@ import com.ironcore.domain.logging.audit.enums.AuditActionType;
 import com.ironcore.domain.logging.audit.enums.AuditTargetType;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
-import com.ironcore.domain.user.valueobject.UserId;
 import com.ironcore.domain.userbodymetrics.model.UserBodyMetrics;
 import com.ironcore.domain.userbodymetrics.repository.UserBodyMetricsRepository;
-import com.ironcore.domain.userbodymetrics.valueobject.UserBodyMetricsId;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,8 +23,8 @@ public class DeleteUserBodyMetricsUseCase {
     private final AuditLogPublisher publisher;
 
     @Transactional
-    public void execute(UserBodyMetricsId userBodyMetricsId, UserId userId) {
-        User user = userRepository.findById(userId)
+    public void execute(DeleteUserBodyMetricsCommand command) {
+        User user = userRepository.findById(command.userId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
 
         if (!user.isActive()) {
@@ -34,12 +32,12 @@ public class DeleteUserBodyMetricsUseCase {
         }
 
         UserBodyMetrics userBodyMetrics = userBodyMetricsRepository
-                .findByIdAndUserId(userBodyMetricsId, userId)
+                .findByIdAndUserId(command.userBodyMetricsId(), command.userId())
                 .orElseThrow(() -> new ResourceNotFoundException("Métricas corporais não encontradas."));
 
         UserBodyMetricsAuditData beforeState = UserBodyMetricsAuditData.from(userBodyMetrics);
 
-        userBodyMetricsRepository.deleteById(userBodyMetricsId);
+        userBodyMetricsRepository.deleteById(command.userBodyMetricsId());
 
         publisher.publish(
                 AuditActionType.DELETE,
