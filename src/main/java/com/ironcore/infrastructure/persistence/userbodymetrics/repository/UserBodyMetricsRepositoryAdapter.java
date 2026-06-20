@@ -13,7 +13,6 @@ import com.ironcore.infrastructure.persistence.userbodymetrics.mapper.UserBodyMe
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -119,32 +118,6 @@ public class UserBodyMetricsRepositoryAdapter  implements UserBodyMetricsReposit
 
         try {
             return entity.map(UserBodyMetricsMapper::toDomain);
-        } catch (RuntimeException exception) {
-            throw new DataMappingException(
-                    "Falha ao converter métricas corporais encontradas para domínio.",
-                    exception
-            );
-        }
-    }
-
-    @Override
-    public List<UserBodyMetrics> findByUserIdOrderByMeasuredAtDesc(UserId userId) {
-        List<UserBodyMetricsEntity> entity;
-        try {
-            Long userIdValue = Objects.requireNonNull(
-                    userId.value(),
-                    "Id do usuário não pode ser nulo."
-            );
-            entity = userBodyMetricsJpaRepository.findByUser_IdOrderByMeasuredAtDesc(userIdValue);
-        } catch (RuntimeException exception) {
-            throw new PersistenceException(
-                    "Falha ao buscar registros pelo usuário com data de medição descendente.",
-                    exception
-            );
-        }
-
-        try {
-            return entity.stream().map(UserBodyMetricsMapper::toDomain).toList();
         } catch (RuntimeException exception) {
             throw new DataMappingException(
                     "Falha ao converter métricas corporais encontradas para domínio.",
