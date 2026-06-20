@@ -17,7 +17,5 @@ public interface UserBodyMetricsRepository {
 
     Optional<UserBodyMetrics> findLatestByUserId(UserId userId);
 
-    List<UserBodyMetrics> findByUserIdOrderByMeasuredAtDesc(UserId userId);
-
     void deleteById(UserBodyMetricsId userBodyMetricsId);
 }

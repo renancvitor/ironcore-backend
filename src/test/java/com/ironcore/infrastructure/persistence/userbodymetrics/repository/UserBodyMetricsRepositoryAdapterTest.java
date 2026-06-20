@@ -205,41 +205,6 @@ class UserBodyMetricsRepositoryAdapterTest {
     }
 
     @Nested
-    class FindByUserIdOrderByMeasuredAtDesc {
-
-        @Test
-        void shouldFindUserBodyMetricsByUserIdOrderedByMeasuredAtDesc() {
-            when(userBodyMetricsJpaRepository.findByUser_IdOrderByMeasuredAtDesc(1L))
-                    .thenReturn(List.of(createUserBodyMetricsEntity()));
-
-            List<UserBodyMetrics> result = adapter.findByUserIdOrderByMeasuredAtDesc(new UserId(1L));
-
-            assertThat(result).hasSize(1);
-            assertThat(result.getFirst().getUserId()).isEqualTo(new UserId(1L));
-        }
-
-        @Test
-        void shouldReturnEmptyListWhenUserDoesNotHaveBodyMetrics() {
-            when(userBodyMetricsJpaRepository.findByUser_IdOrderByMeasuredAtDesc(99L)).thenReturn(List.of());
-
-            List<UserBodyMetrics> result = adapter.findByUserIdOrderByMeasuredAtDesc(new UserId(99L));
-
-            assertThat(result).isEmpty();
-        }
-
-        @Test
-        void shouldWrapRepositoryFailure() {
-            when(userBodyMetricsJpaRepository.findByUser_IdOrderByMeasuredAtDesc(1L))
-                    .thenThrow(new RuntimeException("database unavailable"));
-            UserId userId = new UserId(1L);
-
-            assertThatExceptionOfType(PersistenceException.class)
-                    .isThrownBy(() -> adapter.findByUserIdOrderByMeasuredAtDesc(userId))
-                    .withMessage("Falha ao buscar registros pelo usuário com data de medição descendente.");
-        }
-    }
-
-    @Nested
     class DeleteById {
 
         @Test
