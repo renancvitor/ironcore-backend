@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
 import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsUseCase;
 import com.ironcore.application.userbodymetrics.delete.DeleteUserBodyMetricsUseCase;
+import com.ironcore.application.userbodymetrics.get.GetUserBodyMetricsUseCase;
+import com.ironcore.application.userbodymetrics.latest.GetLatestUserBodyMetricsUseCase;
+import com.ironcore.application.userbodymetrics.list.ListUserBodyMetricsUseCase;
 import com.ironcore.application.userbodymetrics.update.UpdateUserBodyMetricsCommand;
 import com.ironcore.application.userbodymetrics.update.UpdateUserBodyMetricsResult;
 import com.ironcore.application.userbodymetrics.update.UpdateUserBodyMetricsUseCase;
@@ -54,6 +57,15 @@ public class UpdateUserBodyMetricsControllerTest {
 
     @MockitoBean
     private DeleteUserBodyMetricsUseCase deleteUserBodyMetricsUseCase;
+
+    @MockitoBean
+    private ListUserBodyMetricsUseCase listUserBodyMetricsUseCase;
+
+    @MockitoBean
+    private GetUserBodyMetricsUseCase getUserBodyMetricsUseCase;
+
+    @MockitoBean
+    private GetLatestUserBodyMetricsUseCase getLatestUserBodyMetricsUseCase;
 
     @MockitoBean
     private ErrorLogPublisher errorLogPublisher;
