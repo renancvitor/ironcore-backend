@@ -5,6 +5,7 @@ import com.ironcore.application.exception.UserInactiveException;
 import com.ironcore.application.shared.pagination.PageQuery;
 import com.ironcore.application.shared.pagination.PageResult;
 import com.ironcore.application.userbodymetrics.list.*;
+import com.ironcore.application.userbodymetrics.port.ListUserBodyMetricsQueryPort;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.UserId;
