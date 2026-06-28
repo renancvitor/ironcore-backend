@@ -1,7 +1,6 @@
 package com.ironcore.application.userbodymetrics.progress;
 
 import com.ironcore.application.exception.BusinessRuleViolationException;
-import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
 import com.ironcore.application.userbodymetrics.port.BodyMetricsProgressQueryPort;
@@ -13,8 +12,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.YearMonth;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -36,13 +39,7 @@ public class GetBodyMetricsProgressChartUseCase {
             throw new BusinessRuleViolationException("Tipo do gráfico é obrigatório.");
         }
 
-        if (command.startDate() == null || command.endDate() == null) {
-            throw new BusinessRuleViolationException("As datas são obrigatórias.");
-        }
-
-        if (command.startDate().isAfter(command.endDate())) {
-            throw new OperationNotAllowedException("Data inicial não pode ser maior do que data final.");
-        }
+        BodyMetricsProgressPeriodValidator.validate(command.startDate(), command.endDate());
 
         LocalDate startDate = command.startDate();
         LocalDate endDate = command.endDate();
@@ -58,16 +55,27 @@ public class GetBodyMetricsProgressChartUseCase {
         List<BodyMetricsProgressSeriesResult> series = Arrays.stream(BodyMetricsProgressMetric.values())
                 .filter(metric -> metric.belongsToChart(chartType))
                 .map(metric -> {
-                    List<BodyMetricsProgressPointResult> points = progress.stream()
+                    Map<YearMonth, List<ChartPoint>> pointsByMonth = progress.stream()
                             .map(projection -> new ChartPoint(
-                                    projection.measuredAt().toLocalDate().toString(),
+                                    YearMonth.from(projection.measuredAt()),
                                     metric.extractValue(projection)
                             ))
                             .filter(point -> point.value() != null && point.value() > 0.0)
-                            .map(point -> new BodyMetricsProgressPointResult(
-                                    point.period(),
-                                    point.value()
-                            ))
+                            .collect(Collectors.groupingBy(
+                                    ChartPoint::period,
+                                    LinkedHashMap::new,
+                                    Collectors.toList()
+                            ));
+
+                    List<BodyMetricsProgressPointResult> points = pointsByMonth.entrySet().stream()
+                            .map(entry -> {
+                                ChartPoint lastPointOfMonth = entry.getValue().getLast();
+
+                                return new BodyMetricsProgressPointResult(
+                                        entry.getKey().toString(),
+                                        lastPointOfMonth.value()
+                                );
+                            })
                             .toList();
 
                     return new BodyMetricsProgressSeriesResult(
@@ -77,6 +85,7 @@ public class GetBodyMetricsProgressChartUseCase {
                             points
                     );
                 })
+                .filter(seriesResult -> !seriesResult.points().isEmpty())
                 .toList();
 
         return new GetBodyMetricsProgressChartResult(
@@ -88,7 +97,7 @@ public class GetBodyMetricsProgressChartUseCase {
     }
 
     private record ChartPoint(
-            String period,
+            YearMonth period,
             Double value
     ) {}
 }
