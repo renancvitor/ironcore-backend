@@ -1,7 +1,5 @@
 package com.ironcore.application.userbodymetrics.progress;
 
-import com.ironcore.application.exception.BusinessRuleViolationException;
-import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
 import com.ironcore.application.userbodymetrics.port.BodyMetricsProgressQueryPort;
@@ -33,13 +31,7 @@ public class GetBodyMetricsProgressChangesUseCase {
             throw new UserInactiveException("Usuário inativo.");
         }
 
-        if (command.startDate() == null || command.endDate() == null) {
-            throw new BusinessRuleViolationException("As datas são obrigatórias.");
-        }
-
-        if (command.startDate().isAfter(command.endDate())) {
-            throw new OperationNotAllowedException("Data inicial não pode ser maior do que data final.");
-        }
+        BodyMetricsProgressPeriodValidator.validate(command.startDate(), command.endDate());
 
         LocalDate startDate = command.startDate();
         LocalDate endDate = command.endDate();

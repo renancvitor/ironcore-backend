@@ -12,7 +12,7 @@ public enum BodyMetricsProgressMetric {
 
     BODY_FAT_PERCENTAGE("Gordura corporal", "%", BODY_FAT, true, BodyMetricsProgressProjection::bodyFatPercentage),
 
-    BMI("IMC", "", null, false, BodyMetricsProgressProjection::bmi),
+    BMI("IMC", "", null, true, BodyMetricsProgressProjection::bmi),
 
     NECK_CM("Pescoço", "cm", CIRCUMFERENCES, true, BodyMetricsProgressProjection::neckCm),
     CHEST_CM("Peitoral", "cm", CIRCUMFERENCES, true, BodyMetricsProgressProjection::chestCm),
