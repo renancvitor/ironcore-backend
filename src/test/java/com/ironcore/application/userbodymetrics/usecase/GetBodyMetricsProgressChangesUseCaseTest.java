@@ -138,6 +138,45 @@ class GetBodyMetricsProgressChangesUseCaseTest {
             assertThat(result.changes()).hasSize(1);
             assertThat(result.changes().getFirst().metric()).isEqualTo(BodyMetricsProgressMetric.WEIGHT_KG);
         }
+
+        @Test
+        void shouldReturnBmiChangeWhenThereAreAtLeastTwoValidPoints() {
+            User user = activeUser();
+            LocalDate startDate = LocalDate.of(2026, 6, 1);
+            LocalDate endDate = LocalDate.of(2026, 6, 30);
+            BodyMetricsProgressChangesCommand command = new BodyMetricsProgressChangesCommand(
+                    user.getId(),
+                    startDate,
+                    endDate
+            );
+
+            List<BodyMetricsProgressProjection> progress = List.of(
+                    progressProjectionWithBmi(LocalDateTime.of(2026, 6, 1, 10, 0), 25.0),
+                    progressProjectionWithBmi(LocalDateTime.of(2026, 6, 30, 10, 0), 24.0)
+            );
+
+            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            when(queryPort.findProgressData(
+                    command.userId(),
+                    startDate.atStartOfDay(),
+                    endDate.atTime(LocalTime.MAX)
+            )).thenReturn(progress);
+
+            GetBodyMetricsProgressChangesResult result = getBodyMetricsProgressChangesUseCase.execute(command);
+
+            assertThat(result.changes()).hasSize(1);
+
+            BodyMetricsProgressChangeResult bmiChange = result.changes().getFirst();
+            assertThat(bmiChange.metric()).isEqualTo(BodyMetricsProgressMetric.BMI);
+            assertThat(bmiChange.label()).isEqualTo("IMC");
+            assertThat(bmiChange.unit()).isEmpty();
+            assertThat(bmiChange.firstDate()).isEqualTo(LocalDate.of(2026, 6, 1));
+            assertThat(bmiChange.firstValue()).isEqualTo(25.0);
+            assertThat(bmiChange.lastDate()).isEqualTo(LocalDate.of(2026, 6, 30));
+            assertThat(bmiChange.lastValue()).isEqualTo(24.0);
+            assertThat(bmiChange.absoluteChange()).isEqualTo(-1.0);
+            assertThat(bmiChange.percentageChange()).isCloseTo(-4.0, within(0.0001));
+        }
     }
 
     @Nested
@@ -221,6 +260,25 @@ class GetBodyMetricsProgressChangesUseCaseTest {
             verify(userRepository).findById(command.userId());
             verifyNoInteractions(queryPort);
         }
+
+        @Test
+        void shouldFailWhenPeriodExceedsTwelveMonths() {
+            User user = activeUser();
+            BodyMetricsProgressChangesCommand command = new BodyMetricsProgressChangesCommand(
+                    user.getId(),
+                    LocalDate.of(2025, 1, 1),
+                    LocalDate.of(2026, 1, 1)
+            );
+
+            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+
+            assertThatExceptionOfType(OperationNotAllowedException.class)
+                    .isThrownBy(() -> getBodyMetricsProgressChangesUseCase.execute(command))
+                    .withMessage("Período máximo permitido é de 12 meses.");
+
+            verify(userRepository).findById(command.userId());
+            verifyNoInteractions(queryPort);
+        }
     }
 
     private static BodyMetricsProgressProjection progressProjection(
@@ -236,6 +294,29 @@ class GetBodyMetricsProgressChangesUseCaseTest {
                 leanMassKg,
                 null,
                 null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+    }
+
+    private static BodyMetricsProgressProjection progressProjectionWithBmi(
+            LocalDateTime measuredAt,
+            Double bmi
+    ) {
+        return new BodyMetricsProgressProjection(
+                measuredAt,
+                null,
+                null,
+                null,
+                null,
+                bmi,
                 null,
                 null,
                 null,

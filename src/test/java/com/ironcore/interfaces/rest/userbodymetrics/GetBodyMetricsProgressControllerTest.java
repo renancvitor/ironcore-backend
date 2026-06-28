@@ -103,8 +103,7 @@ class GetBodyMetricsProgressControllerTest {
                             "Peso",
                             "kg",
                             List.of(
-                                    new BodyMetricsProgressPointResult("2026-06-01", 80.0),
-                                    new BodyMetricsProgressPointResult("2026-06-27", 78.0)
+                                    new BodyMetricsProgressPointResult("2026-06", 78.0)
                             )
                     ))
             );
@@ -124,11 +123,9 @@ class GetBodyMetricsProgressControllerTest {
                     .andExpect(jsonPath("$.series[0].metric").value("WEIGHT_KG"))
                     .andExpect(jsonPath("$.series[0].label").value("Peso"))
                     .andExpect(jsonPath("$.series[0].unit").value("kg"))
-                    .andExpect(jsonPath("$.series[0].points.length()").value(2))
-                    .andExpect(jsonPath("$.series[0].points[0].period").value("2026-06-01"))
-                    .andExpect(jsonPath("$.series[0].points[0].value").value(80.0))
-                    .andExpect(jsonPath("$.series[0].points[1].period").value("2026-06-27"))
-                    .andExpect(jsonPath("$.series[0].points[1].value").value(78.0));
+                    .andExpect(jsonPath("$.series[0].points.length()").value(1))
+                    .andExpect(jsonPath("$.series[0].points[0].period").value("2026-06"))
+                    .andExpect(jsonPath("$.series[0].points[0].value").value(78.0));
 
             verify(getBodyMetricsProgressChartUseCase).execute(command);
         }

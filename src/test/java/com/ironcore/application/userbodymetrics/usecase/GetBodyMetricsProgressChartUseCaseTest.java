@@ -44,10 +44,10 @@ class GetBodyMetricsProgressChartUseCaseTest {
     class SuccessfulGetChart {
 
         @Test
-        void shouldReturnBodyCompositionChartSeries() {
+        void shouldReturnBodyCompositionChartSeriesGroupedByMonthWithLastValidValue() {
             User user = activeUser();
-            LocalDate startDate = LocalDate.of(2026, 6, 1);
-            LocalDate endDate = LocalDate.of(2026, 6, 30);
+            LocalDate startDate = LocalDate.of(2026, 1, 1);
+            LocalDate endDate = LocalDate.of(2026, 3, 31);
             BodyMetricsProgressChartCommand command = new BodyMetricsProgressChartCommand(
                     user.getId(),
                     BodyMetricsProgressChartType.BODY_COMPOSITION,
@@ -56,9 +56,10 @@ class GetBodyMetricsProgressChartUseCaseTest {
             );
 
             List<BodyMetricsProgressProjection> progress = List.of(
-                    progressProjection(LocalDateTime.of(2026, 6, 1, 10, 0), 80.0, 20.0, 60.0),
-                    progressProjection(LocalDateTime.of(2026, 6, 15, 10, 0), 0.0, null, 61.0),
-                    progressProjection(LocalDateTime.of(2026, 6, 30, 10, 0), 78.0, 18.0, 60.0)
+                    progressProjection(LocalDateTime.of(2026, 1, 5, 10, 0), 80.0, 20.0, 60.0),
+                    progressProjection(LocalDateTime.of(2026, 1, 20, 10, 0), 79.0, 19.0, 61.0),
+                    progressProjection(LocalDateTime.of(2026, 2, 10, 10, 0), 0.0, null, -1.0),
+                    progressProjection(LocalDateTime.of(2026, 3, 15, 10, 0), 77.0, 18.0, 62.0)
             );
 
             when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
@@ -87,22 +88,33 @@ class GetBodyMetricsProgressChartUseCaseTest {
             assertThat(weightSeries.label()).isEqualTo("Peso");
             assertThat(weightSeries.unit()).isEqualTo("kg");
             assertThat(weightSeries.points()).hasSize(2);
-            assertThat(weightSeries.points().getFirst().period()).isEqualTo("2026-06-01");
-            assertThat(weightSeries.points().getFirst().value()).isEqualTo(80.0);
-            assertThat(weightSeries.points().getLast().period()).isEqualTo("2026-06-30");
-            assertThat(weightSeries.points().getLast().value()).isEqualTo(78.0);
+            assertThat(weightSeries.points().getFirst().period()).isEqualTo("2026-01");
+            assertThat(weightSeries.points().getFirst().value()).isEqualTo(79.0);
+            assertThat(weightSeries.points().getLast().period()).isEqualTo("2026-03");
+            assertThat(weightSeries.points().getLast().value()).isEqualTo(77.0);
+            assertThat(weightSeries.points())
+                    .extracting(BodyMetricsProgressPointResult::period)
+                    .doesNotContain("2026-02");
 
             BodyMetricsProgressSeriesResult fatMassSeries = result.series().get(1);
             assertThat(fatMassSeries.metric()).isEqualTo(BodyMetricsProgressMetric.FAT_MASS_KG);
             assertThat(fatMassSeries.points()).hasSize(2);
+            assertThat(fatMassSeries.points().getFirst().period()).isEqualTo("2026-01");
+            assertThat(fatMassSeries.points().getFirst().value()).isEqualTo(19.0);
+            assertThat(fatMassSeries.points().getLast().period()).isEqualTo("2026-03");
+            assertThat(fatMassSeries.points().getLast().value()).isEqualTo(18.0);
 
             BodyMetricsProgressSeriesResult leanMassSeries = result.series().getLast();
             assertThat(leanMassSeries.metric()).isEqualTo(BodyMetricsProgressMetric.LEAN_MASS_KG);
-            assertThat(leanMassSeries.points()).hasSize(3);
+            assertThat(leanMassSeries.points()).hasSize(2);
+            assertThat(leanMassSeries.points().getFirst().period()).isEqualTo("2026-01");
+            assertThat(leanMassSeries.points().getFirst().value()).isEqualTo(61.0);
+            assertThat(leanMassSeries.points().getLast().period()).isEqualTo("2026-03");
+            assertThat(leanMassSeries.points().getLast().value()).isEqualTo(62.0);
         }
 
         @Test
-        void shouldReturnSeriesWithEmptyPointsWhenUserHasNoProgressData() {
+        void shouldNotReturnEmptySeriesWhenUserHasNoProgressData() {
             User user = activeUser();
             LocalDate startDate = LocalDate.of(2026, 6, 1);
             LocalDate endDate = LocalDate.of(2026, 6, 30);
@@ -130,9 +142,43 @@ class GetBodyMetricsProgressChartUseCaseTest {
             );
 
             assertThat(result.chartType()).isEqualTo(BodyMetricsProgressChartType.BODY_FAT);
+            assertThat(result.series()).isEmpty();
+        }
+
+        @Test
+        void shouldReturnOnlyMetricsThatBelongToChartType() {
+            User user = activeUser();
+            LocalDate startDate = LocalDate.of(2026, 6, 1);
+            LocalDate endDate = LocalDate.of(2026, 6, 30);
+            BodyMetricsProgressChartCommand command = new BodyMetricsProgressChartCommand(
+                    user.getId(),
+                    BodyMetricsProgressChartType.BODY_FAT,
+                    startDate,
+                    endDate
+            );
+
+            List<BodyMetricsProgressProjection> progress = List.of(
+                    progressProjectionWithBodyFatAndBmi(
+                            LocalDateTime.of(2026, 6, 1, 10, 0),
+                            15.0,
+                            25.0
+                    )
+            );
+
+            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            when(queryPort.findProgressData(
+                    command.userId(),
+                    startDate.atStartOfDay(),
+                    endDate.atTime(LocalTime.MAX)
+            )).thenReturn(progress);
+
+            GetBodyMetricsProgressChartResult result = getBodyMetricsProgressChartUseCase.execute(command);
+
             assertThat(result.series()).hasSize(1);
             assertThat(result.series().getFirst().metric()).isEqualTo(BodyMetricsProgressMetric.BODY_FAT_PERCENTAGE);
-            assertThat(result.series().getFirst().points()).isEmpty();
+            assertThat(result.series().getFirst().points()).hasSize(1);
+            assertThat(result.series().getFirst().points().getFirst().period()).isEqualTo("2026-06");
+            assertThat(result.series().getFirst().points().getFirst().value()).isEqualTo(15.0);
         }
     }
 
@@ -241,6 +287,26 @@ class GetBodyMetricsProgressChartUseCaseTest {
             verify(userRepository).findById(command.userId());
             verifyNoInteractions(queryPort);
         }
+
+        @Test
+        void shouldFailWhenPeriodExceedsTwelveMonths() {
+            User user = activeUser();
+            BodyMetricsProgressChartCommand command = new BodyMetricsProgressChartCommand(
+                    user.getId(),
+                    BodyMetricsProgressChartType.BODY_COMPOSITION,
+                    LocalDate.of(2025, 1, 1),
+                    LocalDate.of(2026, 1, 1)
+            );
+
+            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+
+            assertThatExceptionOfType(OperationNotAllowedException.class)
+                    .isThrownBy(() -> getBodyMetricsProgressChartUseCase.execute(command))
+                    .withMessage("Período máximo permitido é de 12 meses.");
+
+            verify(userRepository).findById(command.userId());
+            verifyNoInteractions(queryPort);
+        }
     }
 
     private static BodyMetricsProgressProjection progressProjection(
@@ -256,6 +322,30 @@ class GetBodyMetricsProgressChartUseCaseTest {
                 leanMassKg,
                 null,
                 null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+    }
+
+    private static BodyMetricsProgressProjection progressProjectionWithBodyFatAndBmi(
+            LocalDateTime measuredAt,
+            Double bodyFatPercentage,
+            Double bmi
+    ) {
+        return new BodyMetricsProgressProjection(
+                measuredAt,
+                null,
+                null,
+                null,
+                bodyFatPercentage,
+                bmi,
                 null,
                 null,
                 null,

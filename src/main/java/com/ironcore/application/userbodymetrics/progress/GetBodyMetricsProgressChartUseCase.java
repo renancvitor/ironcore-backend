@@ -66,7 +66,7 @@ public class GetBodyMetricsProgressChartUseCase {
                                     LinkedHashMap::new,
                                     Collectors.toList()
                             ));
-                    
+
                     List<BodyMetricsProgressPointResult> points = pointsByMonth.entrySet().stream()
                             .map(entry -> {
                                 ChartPoint lastPointOfMonth = entry.getValue().getLast();
