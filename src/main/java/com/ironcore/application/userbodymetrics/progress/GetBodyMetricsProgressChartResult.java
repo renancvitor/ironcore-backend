@@ -6,7 +6,7 @@ import java.util.List;
 public record GetBodyMetricsProgressChartResult(
         LocalDate startDate,
         LocalDate endDate,
-        BodyMetricsProgressChartType type,
+        BodyMetricsProgressChartType chartType,
         List<BodyMetricsProgressSeriesResult> series
 ) {
 }

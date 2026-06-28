@@ -11,6 +11,7 @@ import com.ironcore.application.userbodymetrics.latest.GetLatestUserBodyMetricsR
 import com.ironcore.application.userbodymetrics.list.ListUserBodyMetricsCommand;
 import com.ironcore.application.userbodymetrics.list.ListUserBodyMetricsItemResult;
 import com.ironcore.application.userbodymetrics.list.ListUserBodyMetricsResult;
+import com.ironcore.application.userbodymetrics.progress.*;
 import com.ironcore.application.userbodymetrics.update.UpdateUserBodyMetricsCommand;
 import com.ironcore.application.userbodymetrics.update.UpdateUserBodyMetricsResult;
 import com.ironcore.domain.userbodymetrics.valueobject.*;
@@ -23,6 +24,7 @@ import com.ironcore.interfaces.rest.userbodymetrics.dto.get.GetUserBodyMetricsRe
 import com.ironcore.interfaces.rest.userbodymetrics.dto.latest.GetLatestUserBodyMetricsResponse;
 import com.ironcore.interfaces.rest.userbodymetrics.dto.list.ListUserBodyMetricsItemResponse;
 import com.ironcore.interfaces.rest.userbodymetrics.dto.list.ListUserBodyMetricsResponse;
+import com.ironcore.interfaces.rest.userbodymetrics.dto.progress.*;
 import com.ironcore.interfaces.rest.userbodymetrics.dto.update.UpdateUserBodyMetricsRequest;
 import com.ironcore.interfaces.rest.userbodymetrics.dto.update.UpdateUserBodyMetricsResponse;
 
@@ -175,6 +177,51 @@ public final class UserBodyMetricsRestMapper {
         );
     }
 
+    public static BodyMetricsProgressChartCommand toProgressChartCommand(
+            AuthenticatedUser authenticatedUser,
+            BodyMetricsProgressChartType chartType,
+            BodyMetricsProgressChartRequest request
+    ) {
+        return new BodyMetricsProgressChartCommand(
+                authenticatedUser.userId(),
+                chartType,
+                request.startDate(),
+                request.endDate()
+        );
+    }
+
+    public static GetBodyMetricsProgressChartResponse toResponse(GetBodyMetricsProgressChartResult result) {
+        return new GetBodyMetricsProgressChartResponse(
+                result.startDate(),
+                result.endDate(),
+                result.chartType(),
+                result.series().stream()
+                        .map(UserBodyMetricsRestMapper::toProgressSeriesResponse)
+                        .toList()
+        );
+    }
+
+    public static BodyMetricsProgressChangesCommand toProgressChangesCommand(
+            AuthenticatedUser authenticatedUser,
+            BodyMetricsProgressChangesRequest request
+    ) {
+        return new BodyMetricsProgressChangesCommand(
+                authenticatedUser.userId(),
+                request.startDate(),
+                request.endDate()
+        );
+    }
+
+    public static GetBodyMetricsProgressChangeResponse toResponse(GetBodyMetricsProgressChangeResult result) {
+        return new GetBodyMetricsProgressChangeResponse(
+                result.startDate(),
+                result.endDate(),
+                result.changes().stream()
+                        .map(UserBodyMetricsRestMapper::toProgressChangeResponse)
+                        .toList()
+        );
+    }
+
     private static BodyCircumferences toBodyCircumferences(BodyCircumferencesRequest request) {
         if (request == null) {
             return null;
@@ -228,6 +275,44 @@ public final class UserBodyMetricsRestMapper {
                 item.weightKg().value(),
                 item.heightCm().value(),
                 item.notes()
+        );
+    }
+
+    private static BodyMetricsProgressSeriesResponse toProgressSeriesResponse(
+            BodyMetricsProgressSeriesResult result
+    ) {
+        return new BodyMetricsProgressSeriesResponse(
+                result.metric(),
+                result.label(),
+                result.unit(),
+                result.points().stream()
+                        .map(UserBodyMetricsRestMapper::toProgressPointResponse)
+                        .toList()
+        );
+    }
+
+    private static BodyMetricsProgressPointResponse toProgressPointResponse(
+            BodyMetricsProgressPointResult result
+    ) {
+        return new BodyMetricsProgressPointResponse(
+                result.period(),
+                result.value()
+        );
+    }
+
+    private static BodyMetricsProgressChangeResponse toProgressChangeResponse(
+            BodyMetricsProgressChangeResult result
+    ) {
+        return new BodyMetricsProgressChangeResponse(
+                result.metric(),
+                result.label(),
+                result.unit(),
+                result.firstDate(),
+                result.firstValue(),
+                result.lastDate(),
+                result.lastValue(),
+                result.absoluteChange(),
+                result.percentageChange()
         );
     }
 }
