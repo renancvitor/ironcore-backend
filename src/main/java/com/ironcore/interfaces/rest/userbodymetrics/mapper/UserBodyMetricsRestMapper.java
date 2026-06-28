@@ -190,8 +190,8 @@ public final class UserBodyMetricsRestMapper {
         );
     }
 
-    public static GetBodyMetricsProgressChartResponse toResponse(GetBodyMetricsProgressChartResult result) {
-        return new GetBodyMetricsProgressChartResponse(
+    public static BodyMetricsProgressChartResponse toResponse(GetBodyMetricsProgressChartResult result) {
+        return new BodyMetricsProgressChartResponse(
                 result.startDate(),
                 result.endDate(),
                 result.chartType(),
@@ -212,8 +212,8 @@ public final class UserBodyMetricsRestMapper {
         );
     }
 
-    public static GetBodyMetricsProgressChangeResponse toResponse(GetBodyMetricsProgressChangeResult result) {
-        return new GetBodyMetricsProgressChangeResponse(
+    public static BodyMetricsProgressChangesResponse toResponse(GetBodyMetricsProgressChangesResult result) {
+        return new BodyMetricsProgressChangesResponse(
                 result.startDate(),
                 result.endDate(),
                 result.changes().stream()

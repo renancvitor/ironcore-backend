@@ -19,13 +19,13 @@ import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
-public class GetBodyMetricsProgressChangeUseCase {
+public class GetBodyMetricsProgressChangesUseCase {
 
     private final UserRepository userRepository;
     private final BodyMetricsProgressQueryPort queryPort;
 
     @Transactional(readOnly = true)
-    public GetBodyMetricsProgressChangeResult execute(BodyMetricsProgressChangesCommand command) {
+    public GetBodyMetricsProgressChangesResult execute(BodyMetricsProgressChangesCommand command) {
         User user = userRepository.findById(command.userId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
 
@@ -86,7 +86,7 @@ public class GetBodyMetricsProgressChangeUseCase {
                 .filter(Objects::nonNull)
                 .toList();
 
-        return new GetBodyMetricsProgressChangeResult(
+        return new GetBodyMetricsProgressChangesResult(
                 startDate,
                 endDate,
                 changes

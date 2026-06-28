@@ -5,7 +5,7 @@ import com.ironcore.application.userbodymetrics.progress.BodyMetricsProgressChar
 import java.time.LocalDate;
 import java.util.List;
 
-public record GetBodyMetricsProgressChartResponse(
+public record BodyMetricsProgressChartResponse(
         LocalDate startDate,
         LocalDate endDate,
         BodyMetricsProgressChartType chartType,

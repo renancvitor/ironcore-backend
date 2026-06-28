@@ -26,8 +26,8 @@ import com.ironcore.interfaces.rest.userbodymetrics.dto.latest.GetLatestUserBody
 import com.ironcore.interfaces.rest.userbodymetrics.dto.list.ListUserBodyMetricsResponse;
 import com.ironcore.interfaces.rest.userbodymetrics.dto.progress.BodyMetricsProgressChangesRequest;
 import com.ironcore.interfaces.rest.userbodymetrics.dto.progress.BodyMetricsProgressChartRequest;
-import com.ironcore.interfaces.rest.userbodymetrics.dto.progress.GetBodyMetricsProgressChangeResponse;
-import com.ironcore.interfaces.rest.userbodymetrics.dto.progress.GetBodyMetricsProgressChartResponse;
+import com.ironcore.interfaces.rest.userbodymetrics.dto.progress.BodyMetricsProgressChangesResponse;
+import com.ironcore.interfaces.rest.userbodymetrics.dto.progress.BodyMetricsProgressChartResponse;
 import com.ironcore.interfaces.rest.userbodymetrics.dto.update.UpdateUserBodyMetricsRequest;
 import com.ironcore.interfaces.rest.userbodymetrics.dto.update.UpdateUserBodyMetricsResponse;
 import com.ironcore.interfaces.rest.userbodymetrics.mapper.UserBodyMetricsRestMapper;
@@ -54,7 +54,7 @@ public class UserBodyMetricsController {
     private final GetUserBodyMetricsUseCase getUserBodyMetricsUseCase;
     private final GetLatestUserBodyMetricsUseCase getLatestUserBodyMetricsUseCase;
     private final GetBodyMetricsProgressChartUseCase getBodyMetricsProgressChartUseCase;
-    private final GetBodyMetricsProgressChangeUseCase getBodyMetricsProgressChangeUseCase;
+    private final GetBodyMetricsProgressChangesUseCase getBodyMetricsProgressChangesUseCase;
 
     @PostMapping
     public ResponseEntity<CreateUserBodyMetricsResponse> create(
@@ -135,7 +135,7 @@ public class UserBodyMetricsController {
     }
 
     @GetMapping("/progress/body-composition")
-    public ResponseEntity<GetBodyMetricsProgressChartResponse> getBodyComposition(
+    public ResponseEntity<BodyMetricsProgressChartResponse> getBodyComposition(
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
             @Valid @ModelAttribute BodyMetricsProgressChartRequest request
     ) {
@@ -145,13 +145,13 @@ public class UserBodyMetricsController {
                 request
         );
         GetBodyMetricsProgressChartResult result = getBodyMetricsProgressChartUseCase.execute(command);
-        GetBodyMetricsProgressChartResponse response = UserBodyMetricsRestMapper.toResponse(result);
+        BodyMetricsProgressChartResponse response = UserBodyMetricsRestMapper.toResponse(result);
 
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/progress/circumferences")
-    public ResponseEntity<GetBodyMetricsProgressChartResponse> getBodyCircumferences(
+    public ResponseEntity<BodyMetricsProgressChartResponse> getCircumferences(
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
             @Valid @ModelAttribute BodyMetricsProgressChartRequest request
     ) {
@@ -161,13 +161,13 @@ public class UserBodyMetricsController {
                 request
         );
         GetBodyMetricsProgressChartResult result = getBodyMetricsProgressChartUseCase.execute(command);
-        GetBodyMetricsProgressChartResponse response = UserBodyMetricsRestMapper.toResponse(result);
+        BodyMetricsProgressChartResponse response = UserBodyMetricsRestMapper.toResponse(result);
 
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/progress/body-fat")
-    public ResponseEntity<GetBodyMetricsProgressChartResponse> getBodyFat(
+    public ResponseEntity<BodyMetricsProgressChartResponse> getBodyFat(
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
             @Valid @ModelAttribute BodyMetricsProgressChartRequest request
     ) {
@@ -177,13 +177,13 @@ public class UserBodyMetricsController {
                 request
         );
         GetBodyMetricsProgressChartResult result = getBodyMetricsProgressChartUseCase.execute(command);
-        GetBodyMetricsProgressChartResponse response = UserBodyMetricsRestMapper.toResponse(result);
+        BodyMetricsProgressChartResponse response = UserBodyMetricsRestMapper.toResponse(result);
 
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/progress/changes")
-    public ResponseEntity<GetBodyMetricsProgressChangeResponse> getBodyChanges(
+    public ResponseEntity<BodyMetricsProgressChangesResponse> getChanges(
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
             @Valid @ModelAttribute BodyMetricsProgressChangesRequest request
     ) {
@@ -191,8 +191,8 @@ public class UserBodyMetricsController {
                 authenticatedUser,
                 request
         );
-        GetBodyMetricsProgressChangeResult result = getBodyMetricsProgressChangeUseCase.execute(command);
-        GetBodyMetricsProgressChangeResponse response = UserBodyMetricsRestMapper.toResponse(result);
+        GetBodyMetricsProgressChangesResult result = getBodyMetricsProgressChangesUseCase.execute(command);
+        BodyMetricsProgressChangesResponse response = UserBodyMetricsRestMapper.toResponse(result);
 
         return ResponseEntity.ok(response);
     }
