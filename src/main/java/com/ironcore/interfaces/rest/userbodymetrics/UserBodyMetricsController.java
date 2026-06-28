@@ -14,6 +14,7 @@ import com.ironcore.application.userbodymetrics.latest.GetLatestUserBodyMetricsU
 import com.ironcore.application.userbodymetrics.list.ListUserBodyMetricsCommand;
 import com.ironcore.application.userbodymetrics.list.ListUserBodyMetricsResult;
 import com.ironcore.application.userbodymetrics.list.ListUserBodyMetricsUseCase;
+import com.ironcore.application.userbodymetrics.progress.*;
 import com.ironcore.application.userbodymetrics.update.UpdateUserBodyMetricsCommand;
 import com.ironcore.application.userbodymetrics.update.UpdateUserBodyMetricsResult;
 import com.ironcore.application.userbodymetrics.update.UpdateUserBodyMetricsUseCase;
@@ -23,6 +24,10 @@ import com.ironcore.interfaces.rest.userbodymetrics.dto.create.CreateUserBodyMet
 import com.ironcore.interfaces.rest.userbodymetrics.dto.get.GetUserBodyMetricsResponse;
 import com.ironcore.interfaces.rest.userbodymetrics.dto.latest.GetLatestUserBodyMetricsResponse;
 import com.ironcore.interfaces.rest.userbodymetrics.dto.list.ListUserBodyMetricsResponse;
+import com.ironcore.interfaces.rest.userbodymetrics.dto.progress.BodyMetricsProgressChangesRequest;
+import com.ironcore.interfaces.rest.userbodymetrics.dto.progress.BodyMetricsProgressChartRequest;
+import com.ironcore.interfaces.rest.userbodymetrics.dto.progress.BodyMetricsProgressChangesResponse;
+import com.ironcore.interfaces.rest.userbodymetrics.dto.progress.BodyMetricsProgressChartResponse;
 import com.ironcore.interfaces.rest.userbodymetrics.dto.update.UpdateUserBodyMetricsRequest;
 import com.ironcore.interfaces.rest.userbodymetrics.dto.update.UpdateUserBodyMetricsResponse;
 import com.ironcore.interfaces.rest.userbodymetrics.mapper.UserBodyMetricsRestMapper;
@@ -48,6 +53,8 @@ public class UserBodyMetricsController {
     private final ListUserBodyMetricsUseCase listUserBodyMetricsUseCase;
     private final GetUserBodyMetricsUseCase getUserBodyMetricsUseCase;
     private final GetLatestUserBodyMetricsUseCase getLatestUserBodyMetricsUseCase;
+    private final GetBodyMetricsProgressChartUseCase getBodyMetricsProgressChartUseCase;
+    private final GetBodyMetricsProgressChangesUseCase getBodyMetricsProgressChangesUseCase;
 
     @PostMapping
     public ResponseEntity<CreateUserBodyMetricsResponse> create(
@@ -123,6 +130,69 @@ public class UserBodyMetricsController {
         GetLatestUserBodyMetricsCommand command = UserBodyMetricsRestMapper.toGetLatestCommand(authenticatedUser);
         GetLatestUserBodyMetricsResult result = getLatestUserBodyMetricsUseCase.execute(command);
         GetLatestUserBodyMetricsResponse response = UserBodyMetricsRestMapper.toResponse(result);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/progress/body-composition")
+    public ResponseEntity<BodyMetricsProgressChartResponse> getBodyComposition(
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
+            @Valid @ModelAttribute BodyMetricsProgressChartRequest request
+    ) {
+        BodyMetricsProgressChartCommand command = UserBodyMetricsRestMapper.toProgressChartCommand(
+                authenticatedUser,
+                BodyMetricsProgressChartType.BODY_COMPOSITION,
+                request
+        );
+        GetBodyMetricsProgressChartResult result = getBodyMetricsProgressChartUseCase.execute(command);
+        BodyMetricsProgressChartResponse response = UserBodyMetricsRestMapper.toResponse(result);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/progress/circumferences")
+    public ResponseEntity<BodyMetricsProgressChartResponse> getCircumferences(
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
+            @Valid @ModelAttribute BodyMetricsProgressChartRequest request
+    ) {
+        BodyMetricsProgressChartCommand command = UserBodyMetricsRestMapper.toProgressChartCommand(
+                authenticatedUser,
+                BodyMetricsProgressChartType.CIRCUMFERENCES,
+                request
+        );
+        GetBodyMetricsProgressChartResult result = getBodyMetricsProgressChartUseCase.execute(command);
+        BodyMetricsProgressChartResponse response = UserBodyMetricsRestMapper.toResponse(result);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/progress/body-fat")
+    public ResponseEntity<BodyMetricsProgressChartResponse> getBodyFat(
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
+            @Valid @ModelAttribute BodyMetricsProgressChartRequest request
+    ) {
+        BodyMetricsProgressChartCommand command = UserBodyMetricsRestMapper.toProgressChartCommand(
+                authenticatedUser,
+                BodyMetricsProgressChartType.BODY_FAT,
+                request
+        );
+        GetBodyMetricsProgressChartResult result = getBodyMetricsProgressChartUseCase.execute(command);
+        BodyMetricsProgressChartResponse response = UserBodyMetricsRestMapper.toResponse(result);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/progress/changes")
+    public ResponseEntity<BodyMetricsProgressChangesResponse> getChanges(
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
+            @Valid @ModelAttribute BodyMetricsProgressChangesRequest request
+    ) {
+        BodyMetricsProgressChangesCommand command = UserBodyMetricsRestMapper.toProgressChangesCommand(
+                authenticatedUser,
+                request
+        );
+        GetBodyMetricsProgressChangesResult result = getBodyMetricsProgressChangesUseCase.execute(command);
+        BodyMetricsProgressChangesResponse response = UserBodyMetricsRestMapper.toResponse(result);
 
         return ResponseEntity.ok(response);
     }

@@ -8,6 +8,8 @@ import com.ironcore.application.userbodymetrics.delete.DeleteUserBodyMetricsUseC
 import com.ironcore.application.userbodymetrics.get.GetUserBodyMetricsUseCase;
 import com.ironcore.application.userbodymetrics.latest.GetLatestUserBodyMetricsUseCase;
 import com.ironcore.application.userbodymetrics.list.ListUserBodyMetricsUseCase;
+import com.ironcore.application.userbodymetrics.progress.GetBodyMetricsProgressChangesUseCase;
+import com.ironcore.application.userbodymetrics.progress.GetBodyMetricsProgressChartUseCase;
 import com.ironcore.application.userbodymetrics.update.UpdateUserBodyMetricsUseCase;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.UserId;
@@ -54,6 +56,12 @@ public class DeleteUserBodyMetricsControllerTest {
 
     @MockitoBean
     private GetLatestUserBodyMetricsUseCase getLatestUserBodyMetricsUseCase;
+
+    @MockitoBean
+    private GetBodyMetricsProgressChartUseCase getBodyMetricsProgressChartUseCase;
+
+    @MockitoBean
+    private GetBodyMetricsProgressChangesUseCase getBodyMetricsProgressChangesUseCase;
 
     @MockitoBean
     private ErrorLogPublisher errorLogPublisher;
