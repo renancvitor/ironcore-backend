@@ -4,7 +4,7 @@
 
 O projeto separa exceptions por camada para manter explícitas as regras de domínio, decisões de aplicação e falhas de infraestrutura.
 
-O repositório inclui classes de exception, um handler REST global e controllers REST mínimos para autenticação e usuário autenticado. O handler já é usado pelos fluxos de users/auth/security fechados na `v0.2.0` e permanece preparado para endpoints futuros.
+O repositório inclui classes de exception, um handler REST global e factories de resposta para padronizar falhas expostas pela API. Esta documentação descreve a política transversal de erros; os documentos de cada módulo devem detalhar cenários específicos quando necessário.
 
 ## Exceptions de Domain
 
@@ -78,7 +78,7 @@ Factories atuais:
 
 O handler cobre exceptions de domínio, exceptions de application, erros de validação, métodos HTTP/media types não suportados, rotas ausentes, falhas de persistência, falhas de JWT, falhas de infraestrutura e exceptions inesperadas.
 
-## Mapeamentos Relevantes em Users/Auth/Security
+## Mapeamentos Relevantes
 
 | Exception | Status | Mensagem exposta |
 |---|---|---|
@@ -92,20 +92,19 @@ O handler cobre exceptions de domínio, exceptions de application, erros de vali
 | `JwtTokenConfigurationException` | `500 Internal Server Error` | `Erro interno ao processar autenticação.` |
 | `JwtTokenGenerationException` | `500 Internal Server Error` | `Erro interno ao processar autenticação.` |
 
-## User Body Metrics
+## Uso por Módulos
 
-O domínio de user body metrics já usa `InvalidBodyMetricException` para valores inválidos ou ausentes nas medições e cálculos corporais.
+Cada módulo deve reaproveitar as categorias existentes sempre que a semântica for suficiente:
 
-Quando o fluxo REST completo desse módulo for implementado, a recomendação é reaproveitar as categorias existentes sempre que a semântica for suficiente:
-
-- `ResourceNotFoundException` para medição inexistente no escopo do usuário autenticado.
+- `ResourceNotFoundException` para recurso inexistente no escopo permitido.
 - `DomainException` ou `IllegalArgumentException` para value objects inválidos, conforme o padrão já existente.
 - `BusinessRuleViolationException` ou `OperationNotAllowedException` somente quando houver regra de aplicação que não seja simples validação de valor.
 - `PersistenceException` para falhas técnicas de persistência.
 
+Crie uma exception nova apenas quando houver uma semântica recorrente que não esteja bem representada pelas categorias atuais.
+
 ## Limitações Atuais
 
-- A cobertura REST atual se concentra nos fluxos de autenticação e usuário autenticado.
 - O error logging está implementado, mas depende de uma requisição chegar ao REST exception handler ou de publicação explícita de error log.
 
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>

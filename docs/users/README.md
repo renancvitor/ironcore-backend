@@ -2,9 +2,9 @@
 
 ## Propósito
 
-O módulo `users` é a fundação atual para identidade de usuário dentro do backend.
+O módulo `users` fornece a base de identidade de usuário dentro do backend.
 
-Na `v0.2.0`, este módulo entrega o baseline de autenticação single-user: bootstrap opcional do usuário inicial, troca obrigatória de senha inicial, login com JWT, cookie `access_token`, logout, troca normal de senha e consulta do usuário autenticado.
+Este módulo entrega o baseline de autenticação single-user: bootstrap opcional do usuário inicial, troca obrigatória de senha inicial, login com JWT, cookie `access_token`, logout, troca normal de senha e consulta do usuário autenticado.
 
 ## Escopo Atual
 
@@ -134,7 +134,7 @@ Resposta:
 - `204 No Content`
 - Header `Set-Cookie` removendo o cookie `access_token` com `Max-Age=0`.
 
-O logout atual remove o cookie no cliente. Não há blacklist server-side de JWT nesta release.
+O logout atual remove o cookie no cliente. Não há blacklist server-side de JWT no modelo atual.
 
 ### Troca Inicial de Senha
 
@@ -216,7 +216,7 @@ O cookie de autenticação emitido no login possui:
 
 Como o cookie é marcado com `Secure`, clientes que aplicam regras de navegador podem exigir HTTPS para persistir/enviar o cookie automaticamente. Em testes locais via ferramenta HTTP, confirme se o cookie está sendo armazenado e reenviado.
 
-Na `v0.2.0`, o token também é retornado no corpo do `LoginResponse`. O filtro de autenticação, porém, recupera o token pelo cookie `access_token`.
+O token também é retornado no corpo do `LoginResponse`. O filtro de autenticação, porém, recupera o token pelo cookie `access_token`.
 
 ## Regras de Senha
 
@@ -262,7 +262,7 @@ Decisões atuais:
 
 ## Fora do Escopo Deliberado
 
-> Os itens abaixo não fazem parte do modelo single-user do IronCore e não são pendências planejadas para releases futuras.
+> Os itens abaixo não fazem parte do modelo single-user do IronCore e não são pendências planejadas para este módulo.
 
 - Cadastro público de usuário.
 - Edição de dados cadastrais pelo usuário.

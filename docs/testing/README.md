@@ -10,15 +10,18 @@ O projeto usa testes para proteger regras de domínio, fluxos de aplicação, ad
 
 Na última validação local, a suíte executou:
 
-- `138` testes.
+- `292` testes.
 - `0` falhas.
 - `0` erros.
+- `0` ignorados.
 
 Comando usado:
 
 ```bash
 ./mvnw test --batch-mode
 ```
+
+Validação executada em `2026-06-29`.
 
 ## Organização por Camada
 
@@ -56,8 +59,16 @@ Exemplos atuais:
 - `PasswordHashingServiceTest`
 - `AuditLogApplicationServiceTest`
 - `ErrorLogApplicationServiceTest`
+- `CreateUserBodyMetricsUseCaseTest`
+- `UpdateUserBodyMetricsUseCaseTest`
+- `DeleteUserBodyMetricsUseCaseTest`
+- `GetUserBodyMetricsUseCaseTest`
+- `GetLatestUserBodyMetricsUseCaseTest`
+- `ListUserBodyMetricsUseCaseTest`
+- `GetBodyMetricsProgressChartUseCaseTest`
+- `GetBodyMetricsProgressChangesUseCaseTest`
 
-Esses testes validam regras de orquestração, autenticação, troca de senha, bootstrap single-user e publicação de logs.
+Esses testes validam regras de orquestração, autenticação, troca de senha, bootstrap single-user, publicação de logs, métricas corporais e progresso.
 
 ### `infrastructure`
 
@@ -70,6 +81,11 @@ Exemplos atuais:
 - `UserMapperTest`
 - `UserRepositoryAdapterTest`
 - `UserRepositoryAdapterIntegrationTest`
+- `UserBodyMetricsRepositoryAdapterTest`
+- `ListUserBodyMetricsQueryAdapterTest`
+- `BodyMetricsProgressQueryAdapterTest`
+- `UserBodyMetricsMapperTest`
+- `PageMapperTest`
 - `JwtAccessTokenGenerationTest`
 - `JwtAccessTokenValidatorTest`
 - `JwtAuthenticationFilterTest`
@@ -86,6 +102,14 @@ Exemplos atuais:
 - `AuthControllerTest`
 - `AuthSecurityIntegrationTest`
 - `UserControllerTest`
+- `CreateUserBodyMetricsControllerTest`
+- `UpdateUserBodyMetricsControllerTest`
+- `DeleteUserBodyMetricsControllerTest`
+- `GetUserBodyMetricsControllerTest`
+- `GetLatestUserBodyMetricsControllerTest`
+- `ListUserBodyMetricsControllerTest`
+- `GetBodyMetricsProgressControllerTest`
+- `UserBodyMetricsIntegrationTest`
 
 Esses testes validam contratos HTTP, autenticação, logout, rotas protegidas, validação de request e respostas dos endpoints atuais.
 
@@ -98,6 +122,7 @@ Exemplos atuais:
 - `IroncoreBackendApplicationIntegrationTest`: valida inicialização do contexto Spring.
 - `UserRepositoryAdapterIntegrationTest`: valida persistência real com PostgreSQL via Testcontainers.
 - `AuthSecurityIntegrationTest`: valida autenticação e proteção de rotas no contexto REST/security.
+- `UserBodyMetricsIntegrationTest`: valida fluxo REST de métricas corporais no contexto da aplicação.
 
 Os testes com Testcontainers aplicam as migrations Flyway em um banco PostgreSQL temporário, o que aumenta a confiança na compatibilidade entre entidade, repository e schema.
 

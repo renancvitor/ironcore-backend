@@ -68,7 +68,9 @@ docs
 │   ├── README.md
 │   ├── v0.1.0
 │   │   └── README.md
-│   └── v0.2.0
+│   ├── v0.2.0
+│   │   └── README.md
+│   └── v0.3.0
 │       └── README.md
 ├── testing
 │   └── README.md
@@ -98,13 +100,25 @@ src/main/java/com/ironcore
 │   │       ├── event
 │   │       ├── port
 │   │       └── service
-│   └── user
-│       ├── service
-│       └── usecase
-│           ├── bootstrap
-│           ├── changepassword
-│           ├── getauthenticateduser
-│           └── initialchangepassword
+│   ├── shared
+│   │   └── pagination
+│   ├── user
+│   │   ├── service
+│   │   └── usecase
+│   │       ├── bootstrap
+│   │       ├── changepassword
+│   │       ├── getauthenticateduser
+│   │       └── initialchangepassword
+│   └── userbodymetrics
+│       ├── component
+│       ├── create
+│       ├── delete
+│       ├── get
+│       ├── latest
+│       ├── list
+│       ├── port
+│       ├── progress
+│       └── update
 ├── domain
 │   ├── exception
 │   ├── logging
@@ -130,6 +144,7 @@ src/main/java/com/ironcore
 │   └── userbodymetrics
 │       ├── exception
 │       ├── model
+│       ├── repository
 │       ├── service
 │       └── valueobject
 ├── infrastructure
@@ -145,12 +160,16 @@ src/main/java/com/ironcore
 │   │   ├── logging
 │   │   │   ├── audit
 │   │   │   └── error
+│   │   ├── shared
+│   │   │   └── pagination
 │   │   ├── user
 │   │   │   ├── entity
 │   │   │   ├── mapper
 │   │   │   └── repository
 │   │   └── userbodymetrics
-│   │       └── entity
+│   │       ├── entity
+│   │       ├── mapper
+│   │       └── repository
 │   └── security
 │       ├── auth
 │       ├── config
@@ -167,8 +186,17 @@ src/main/java/com/ironcore
         │   ├── factory
         │   ├── handler
         │   └── model
-        └── user
+        ├── user
+        │   ├── dto
+        │   └── mapper
+        └── userbodymetrics
             ├── dto
+            │   ├── create
+            │   ├── get
+            │   ├── latest
+            │   ├── list
+            │   ├── progress
+            │   └── update
             └── mapper
 ```
 
@@ -200,9 +228,19 @@ src/test/java/com/ironcore
 │   │   │   └── service
 │   │   └── error
 │   │       └── service
-│   └── user
-│       ├── service
-│       └── usecase
+│   ├── shared
+│   │   └── pagination
+│   ├── user
+│   │   ├── service
+│   │   └── usecase
+│   └── userbodymetrics
+│       ├── create
+│       ├── delete
+│       ├── get
+│       ├── latest
+│       ├── list
+│       ├── progress
+│       └── update
 ├── domain
 │   ├── user
 │   │   ├── model
@@ -214,7 +252,12 @@ src/test/java/com/ironcore
 │   ├── bootstrap
 │   │   └── config
 │   ├── persistence
-│   │   └── user
+│   │   ├── shared
+│   │   │   └── pagination
+│   │   ├── user
+│   │   │   ├── mapper
+│   │   │   └── repository
+│   │   └── userbodymetrics
 │   │       ├── mapper
 │   │       └── repository
 │   └── security
@@ -224,13 +267,16 @@ src/test/java/com/ironcore
 └── interfaces
     └── rest
         ├── auth
-        └── user
+        ├── user
+        ├── userbodymetrics
+        └── support
+            └── security
 ```
 
 ## Regra de Leitura
 
-- O estado funcional de users/auth/security pertence à `v0.2.0`.
-- User body metrics possui estruturas de domínio, cálculos e tabela, mas ainda não possui endpoint público concluído.
+- Users/auth/security possuem fluxo funcional single-user.
+- User body metrics possui fluxo funcional autenticado com domínio, aplicação, persistência, endpoints REST, progresso e testes.
 - Diagramas podem conter blueprint planejado; confirmar o estado real por código, migrations e testes.
 
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>

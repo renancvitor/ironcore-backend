@@ -1,7 +1,5 @@
 # Diagrama Entidade-Relacionamento (ER)
 
-**Status:** Parcialmente implementado / blueprint planejado — no estado atual, somente `users`, `user_body_metrics`, `audit_logs` e `error_logs` possuem migrations Flyway reais. As tabelas de exercise e workout neste diagrama representam escopo planejado.
-
 <p align="center">
     <img src="./IronCoreERDiagram.png" alt="Diagrama entidade-relacionamento do IronCore" />
 </p>

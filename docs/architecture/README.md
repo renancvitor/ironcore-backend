@@ -1,12 +1,10 @@
 # Documentação de Arquitetura
 
-## Status Atual
+## Visão Geral
 
-**Status:** fundação técnica do repositório, com baseline de autenticação single-user fechado na `v0.2.0`.
+Este documento descreve a organização arquitetural do backend IronCore.
 
-O backend está organizado com uma estrutura pragmática inspirada em DDD. A base atual estabelece limites de packages, modelos de domínio, adapters de persistência, logging, tratamento de exceptions, autenticação single-user, testes e CI.
-
-O repositório já inclui controllers REST mínimos para autenticação e usuário autenticado. O módulo de métricas corporais possui base de domínio e banco, mas ainda não possui fluxo REST funcional. Exercícios, treinos e IA permanecem planejados.
+O backend segue uma arquitetura em camadas com inspiração pragmática em DDD. A intenção é manter regras de domínio isoladas, casos de uso explícitos, entrada REST fina e detalhes técnicos concentrados em infraestrutura.
 
 ## Camadas
 
@@ -34,8 +32,9 @@ Exemplos atuais:
 - `InitialChangePasswordUseCase`
 - `ChangePasswordUseCase`
 - `GetAuthenticatedUserUseCase`
+- user body metrics use cases para create, update, delete, get, latest, list e progress
 - `PasswordHashingService`
-- audit and error logging application services
+- audit e error logging application services
 - application exceptions
 - application ports/events
 
@@ -47,7 +46,7 @@ Implementa preocupações técnicas necessárias para a aplicação.
 
 Exemplos atuais:
 
-- JPA entities and repositories
+- JPA entities e repositories
 - domain-to-persistence mappers
 - Spring event publishers/listeners
 - password hashing implementation
@@ -67,6 +66,7 @@ Status atual:
 - O tratamento global de exceptions REST existe.
 - Models e factories de resposta de erro da API existem.
 - Controllers REST de autenticação e usuário autenticado existem.
+- Controller REST de user body metrics existe com endpoints autenticados.
 
 ## Direção das Dependências
 
@@ -81,9 +81,9 @@ O domínio não deve depender de Spring, JPA, HTTP, entidades de banco ou integr
 
 ## Recortes Atuais
 
-- A `v0.2.0` cobre o baseline single-user de autenticação e usuário autenticado.
+- O baseline single-user cobre autenticação e usuário autenticado.
+- User body metrics possui fluxo funcional autenticado com CRUD, consulta, listagem, progresso, auditoria e testes.
 - Cadastro público, recuperação de senha, refresh token, blacklist JWT e roles ficam fora do modelo single-user do IronCore.
-- User body metrics possui base parcial implementada, mas ainda não possui fluxo funcional completo.
 - Swagger/OpenAPI ainda não está implementado.
 - MongoDB está disponível como dependência/serviço local, mas ainda não há módulo funcional de persistência documental.
 - Fluxos maiores de treino, catálogo de exercícios e IA estão planejados, não implementados.
