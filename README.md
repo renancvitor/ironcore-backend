@@ -61,8 +61,6 @@ Planejamento, tarefas e histórico de evolução disponíveis no GitHub Projects
 
 <b>IronCore</b> é um backend em desenvolvimento com <b>[Spring Boot](https://spring.io/projects/spring-boot)</b>, planejado para evoluir como uma API REST para gerenciamento de histórico de treinos, evolução física, catálogo de exercícios e planejamento de ciclos de treino.
 
-A release <b>v0.2.0</b> consolidou o baseline de autenticação single-user.
-
 O projeto nasce como uma aplicação prática de backend com foco em arquitetura limpa, modelagem de domínio e evolução incremental. A proposta é permitir que o usuário registre medições corporais, organize treinos de musculação ou cárdio, acompanhe sessões executadas e, em uma etapa posterior, gere treinos manualmente ou com apoio de um agente de IA.
 
 A arquitetura foi planejada em camadas e orientada por princípios de DDD (Domain-Driven Design), separando apresentação, aplicação, domínio e infraestrutura. Essa organização busca manter o backend preparado para crescer com segurança, testes, persistência relacional, integrações futuras e suporte a fluxos de IA.
@@ -81,7 +79,7 @@ O desenvolvimento do projeto busca consolidar habilidades como:
 
 <h2 id="status-atual-do-projeto" align="center">Status Atual do Projeto</h2>
 
-O <b>IronCore</b> está em fase inicial de desenvolvimento. A release <b>v0.2.0</b> consolidou users/auth/security single-user.
+O <b>IronCore</b> está em fase inicial de desenvolvimento. O backend já possui uma fundação funcional para autenticação single-user, usuário autenticado, métricas corporais, persistência relacional, logging, exceptions e testes automatizados.
 
 ### Já existe no projeto
 - Estrutura inicial do backend com Spring Boot.
@@ -94,16 +92,15 @@ O <b>IronCore</b> está em fase inicial de desenvolvimento. A release <b>v0.2.0<
 - Bootstrap opcional de usuário único.
 - Login, logout e autenticação por JWT via cookie `access_token` na base single-user.
 - Troca obrigatória de senha inicial, troca normal de senha e consulta do usuário autenticado.
+- Fluxo autenticado de métricas corporais com criação, atualização, exclusão, consulta por id, consulta do último registro, listagem paginada e progresso.
 - Testes automatizados e CI executando build/test.
 - Documentação visual com diagramas de domínio, arquitetura e fluxos principais.
 
 ### Parcialmente preparado
 - Spring Security e JWT cobrem o baseline single-user.
-- O domínio de user body metrics já possui base modelada, value objects, calculadoras e tabela relacional, mas ainda não possui fluxo REST funcional.
 - MongoDB sobe localmente via Docker Compose, mas ainda não há uso funcional de domínio/documentos.
 
 ### Planejado para as próximas etapas
-- Evolução funcional de métricas corporais, conforme refinamento das issues e do roadmap.
 - Fluxos REST para exercícios e treinos.
 - Swagger/OpenAPI conforme os endpoints forem criados.
 - Integração futura com frontend Angular.
@@ -125,7 +122,7 @@ Histórico de releases: [Releases](docs/releases/README.md).
   - ✅ Validações ([Bean Validation](https://docs.spring.io/spring-framework/reference/core/validation/beanvalidation.html))
   - 🔄 [Spring Boot DevTools](https://docs.spring.io/spring-boot/reference/using/devtools.html)
   - 🔧 Lombok
-  <!-- - 📄 [Swagger (OpenAPI)](https://swagger.io/specification/) - planejado para quando houver endpoints REST de negócio -->
+  <!-- - 📄 [Swagger (OpenAPI)](https://swagger.io/specification/) - planejado para quando a dependência Springdoc/OpenAPI for configurada -->
 
 - 🗄️ **Banco de Dados**
   - 🛠️ Controle de versionamento de banco com [Flyway](https://flywaydb.org/)
@@ -274,7 +271,7 @@ As funcionalidades abaixo representam o escopo funcional planejado para o projet
 
 <h3 id="api---swagger">🌐 <strong>API - Swagger</strong></h3>
 
-A documentação [Swagger/OpenAPI](https://swagger.io/specification/) será adicionada quando a dependência Springdoc/OpenAPI for configurada. A release `v0.2.0` já possui endpoints mínimos de autenticação e usuário autenticado, mas ainda não possui documentação OpenAPI gerada.
+A documentação [Swagger/OpenAPI](https://swagger.io/specification/) será adicionada quando a dependência Springdoc/OpenAPI for configurada. O projeto já possui endpoints REST de autenticação, usuário autenticado e métricas corporais, mas ainda não possui documentação OpenAPI gerada.
 
 <h3 id="documentacao-arquitetural">🗂️ <strong>Documentação Arquitetural</strong></h3>
 
@@ -330,7 +327,7 @@ Documentação detalhada: [Testes Automatizados](docs/testing/README.md).
 <h2 id="testando-a-api-via-insomnia" align="center">Testando a API via Insomnia</h2>
 
 > Esta seção será atualizada com uma coleção ou roteiro próprio quando os fluxos de API forem estabilizados.
-> A release `v0.2.0` já possui endpoints mínimos de autenticação e usuário autenticado.
+> O projeto já possui endpoints de autenticação, usuário autenticado e user body metrics.
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
@@ -431,7 +428,7 @@ SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
 ./mvnw clean verify --batch-mode
 ```
 
-8. Acesse a aplicação pela porta configurada (por padrão http://localhost:8080). A release `v0.2.0` possui endpoints mínimos de autenticação e usuário autenticado.<br>
+8. Acesse a aplicação pela porta configurada (por padrão http://localhost:8080). O projeto possui endpoints de autenticação, usuário autenticado e user body metrics.<br>
 ⚠️ **Lembre-se de manter o Docker rodando enquanto estiver utilizando a aplicação.**
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>

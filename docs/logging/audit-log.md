@@ -1,14 +1,12 @@
 # Documentação de Audit Log
 
-**Status:** atual para a `v0.1.0`.
-
 ## Propósito
 
 O `AuditLog` registra ações relevantes executadas no sistema para manter rastreabilidade funcional.
 
 Ele é voltado para auditoria de operações de negócio, especialmente quando é necessário saber quem executou uma ação, qual recurso foi afetado e quais estados foram registrados antes e depois da alteração.
 
-## Casos de Uso Esperados
+## Casos de Uso
 
 Use audit log para ações como:
 

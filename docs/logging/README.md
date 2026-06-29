@@ -1,7 +1,5 @@
 # Estratégia de Logging
 
-**Status:** atual para a `v0.1.0`.
-
 ## Visão Geral
 
 Este documento descreve a estratégia de logging implementada no backend do **IronCore**.
@@ -12,8 +10,6 @@ O projeto possui dois fluxos de logs persistidos em banco relacional:
 - `error_logs`: registros técnicos de erro para suporte, debugging e rastreabilidade de falhas.
 
 Esses logs são parte da infraestrutura de rastreabilidade da aplicação, mas não substituem observabilidade externa, métricas, tracing distribuído ou alertas operacionais.
-
-Na release `v0.1.0`, a estrutura de persistência e publicação dos logs existe. O projeto ainda não possui endpoints REST de negócio, então o fluxo de erro já está preparado no `GlobalExceptionHandler`, mas ainda não é exercitado por controllers de negócio.
 
 ## Tipos de Log
 

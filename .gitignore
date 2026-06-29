@@ -5,7 +5,6 @@ target/
 !**/src/test/**/target/
 .env
 .codex
-simple-ddd.md
 
 ### STS ###
 .apt_generated

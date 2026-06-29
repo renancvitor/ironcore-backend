@@ -1,12 +1,10 @@
 # Banco de Dados e Migrations
 
-## Status Atual
+## Visão Geral
 
-**Status:** estado atual do repositório para persistência relacional.
+Este documento descreve a estratégia de persistência, migrations e leitura do schema do IronCore Backend.
 
-A camada de persistência funcional do projeto é relacional e baseada em PostgreSQL, JPA/Hibernate e Flyway.
-
-MongoDB está presente como dependência e serviço local no Docker, mas não há repositories MongoDB, modelos documentais ou fluxos funcionais de domínio usando MongoDB no estado atual do repositório.
+A persistência transacional do projeto usa banco relacional versionado por migrations. Outros serviços de dados devem ser documentados aqui apenas quando houver uso funcional no código.
 
 ## Banco Relacional
 
@@ -30,7 +28,7 @@ A configuração base da aplicação habilita o Flyway e usa `hibernate.ddl-auto
 
 Alguns diagramas descrevem um modelo de dados planejado mais amplo, incluindo exercícios, ciclos de treino, dias de treino e atividades de treino. Essas tabelas são blueprint/escopo futuro e não são criadas pelas migrations atuais.
 
-Somente as quatro tabelas listadas acima devem ser tratadas como estado de banco implementado. A tabela `user_body_metrics` existe no schema, mas ainda não representa um fluxo funcional completo exposto pela API.
+Somente as quatro tabelas listadas acima devem ser tratadas como estado de banco implementado. A tabela `user_body_metrics` já é usada pelo fluxo funcional autenticado de métricas corporais, incluindo criação, atualização, exclusão, consultas e progresso.
 
 ## Serviços Locais
 

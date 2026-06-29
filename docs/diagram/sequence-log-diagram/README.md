@@ -1,7 +1,5 @@
 # Diagrama de Sequência de Registro
 
-**Status:** Blueprint planejado — o registro de sessões de treino ainda não está implementado.
-
 <p align="center">
     <img src="./Sequence%20Log%20Diagram.png" alt="Sequence Log Diagram" />
 </p>

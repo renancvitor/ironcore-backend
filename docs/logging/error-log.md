@@ -1,7 +1,5 @@
 # Documentação de Error Log
 
-**Status:** atual para a `v0.1.0`.
-
 ## Propósito
 
 O `ErrorLog` registra falhas técnicas e informações mínimas de contexto para suporte, debugging e rastreabilidade.
@@ -170,8 +168,6 @@ O handler registra:
 - `correlationId` vindo do header `X-Correlation-Id` ou gerado automaticamente;
 - `userId` como `null` na implementação atual.
 
-Como ainda não há controllers REST de negócio na release `v0.1.0`, essa integração existe como infraestrutura de tratamento global, mas ainda não é exercitada por endpoints de negócio.
-
 ## Mensagem, Código e Contexto
 
 `errorCode` categoriza a falha usando `ErrorCodeType`.
@@ -213,7 +209,6 @@ Não registre:
 - `exceptionClass` é uma `String`; não há normalização adicional além das validações do domínio.
 - `message` não possui mascaramento automático de dados sensíveis.
 - O `userId` publicado pelo `GlobalExceptionHandler` ainda é `null`.
-- Não há controllers REST de negócio exercitando esse fluxo em cenários funcionais.
 
 ## Decisões Atuais e Fora do Escopo
 
