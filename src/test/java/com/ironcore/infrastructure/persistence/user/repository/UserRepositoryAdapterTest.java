@@ -1,5 +1,6 @@
 package com.ironcore.infrastructure.persistence.user.repository;
 
+import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.UserId;
@@ -144,6 +145,41 @@ class UserRepositoryAdapterTest {
             assertThatExceptionOfType(PersistenceException.class)
                     .isThrownBy(() -> adapter.findByEmail(email))
                     .withMessage("Falha ao buscar user por email.");
+        }
+    }
+
+    @Nested
+    class FindByPersonId {
+
+        @Test
+        void shouldFindUserByPersonId() {
+            when(userJpaRepository.findByPerson_Id(1L)).thenReturn(Optional.of(userEntity()));
+
+            Optional<User> result = adapter.findByPersonId(new PersonId(1L));
+
+            assertThat(result).isPresent();
+            assertThat(result.get().getId()).isEqualTo(new UserId(1L));
+            verify(userJpaRepository).findByPerson_Id(1L);
+        }
+
+        @Test
+        void shouldReturnEmptyWhenPersonIdDoesNotHaveUser() {
+            when(userJpaRepository.findByPerson_Id(99L)).thenReturn(Optional.empty());
+
+            Optional<User> result = adapter.findByPersonId(new PersonId(99L));
+
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        void shouldWrapRepositoryFailure() {
+            when(userJpaRepository.findByPerson_Id(1L))
+                    .thenThrow(new RuntimeException("database unavailable"));
+            PersonId personId = new PersonId(1L);
+
+            assertThatExceptionOfType(PersistenceException.class)
+                    .isThrownBy(() -> adapter.findByPersonId(personId))
+                    .withMessage("Falha ao buscar user por id da pessoa.");
         }
     }
 
