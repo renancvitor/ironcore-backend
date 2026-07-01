@@ -3,7 +3,6 @@ package com.ironcore.infrastructure.bootstrap;
 import com.ironcore.application.user.usecase.bootstrap.BootstrapSingleUserCommand;
 import com.ironcore.application.user.usecase.bootstrap.BootstrapSingleUserUseCase;
 import com.ironcore.domain.user.valueobject.Email;
-import com.ironcore.domain.user.valueobject.Sex;
 import com.ironcore.infrastructure.bootstrap.config.SingleUserBootstrapProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;

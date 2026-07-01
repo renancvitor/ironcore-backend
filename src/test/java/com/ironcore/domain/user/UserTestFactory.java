@@ -1,10 +1,9 @@
 package com.ironcore.domain.user;
 
-import com.ironcore.domain.user.enums.SexType;
+import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.PasswordHash;
-import com.ironcore.domain.user.valueobject.Sex;
 import com.ironcore.domain.user.valueobject.UserId;
 
 import java.time.LocalDateTime;
@@ -20,9 +19,9 @@ public final class UserTestFactory {
     public static User userWithoutId() {
         return User.register(
                 "Renan",
+                personId(1L),
                 email("renan@example.com"),
                 passwordHash("hashed-password"),
-                sex(SexType.MALE),
                 CREATED_AT
         );
     }
@@ -31,9 +30,9 @@ public final class UserTestFactory {
         return User.restore(
                 new UserId(1L),
                 "Renan",
+                personId(1L),
                 email("renan@example.com"),
                 passwordHash("hashed-password"),
-                sex(SexType.MALE),
                 mustChangePassword,
                 active,
                 CREATED_AT,
@@ -61,7 +60,7 @@ public final class UserTestFactory {
         return new PasswordHash(value);
     }
 
-    public static Sex sex(SexType type) {
-        return new Sex(type);
+    public static PersonId personId(Long id) {
+        return new PersonId(id);
     }
 }

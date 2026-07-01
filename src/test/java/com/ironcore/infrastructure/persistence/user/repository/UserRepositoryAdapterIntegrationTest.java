@@ -4,7 +4,6 @@ import com.ironcore.domain.user.enums.SexType;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.PasswordHash;
-import com.ironcore.domain.user.valueobject.Sex;
 import com.ironcore.infrastructure.exception.PersistenceException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;

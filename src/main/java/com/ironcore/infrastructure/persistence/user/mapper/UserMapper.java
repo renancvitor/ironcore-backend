@@ -3,7 +3,6 @@ package com.ironcore.infrastructure.persistence.user.mapper;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.PasswordHash;
-import com.ironcore.domain.user.valueobject.Sex;
 import com.ironcore.domain.user.valueobject.UserId;
 import com.ironcore.infrastructure.exception.DataMappingException;
 import com.ironcore.infrastructure.persistence.user.entity.UserEntity;

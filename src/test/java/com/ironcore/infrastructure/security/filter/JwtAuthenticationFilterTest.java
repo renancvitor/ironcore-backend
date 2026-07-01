@@ -5,7 +5,6 @@ import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.PasswordHash;
-import com.ironcore.domain.user.valueobject.Sex;
 import com.ironcore.domain.user.valueobject.UserId;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
 import com.ironcore.infrastructure.security.jwt.JwtAccessTokenClaims;

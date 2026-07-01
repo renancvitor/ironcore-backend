@@ -10,7 +10,6 @@ import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.PasswordHash;
 import com.ironcore.domain.user.valueobject.RawPassword;
-import com.ironcore.domain.user.valueobject.Sex;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

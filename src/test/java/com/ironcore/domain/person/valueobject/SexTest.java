@@ -2,7 +2,6 @@ package com.ironcore.domain.person.valueobject;
 
 import com.ironcore.domain.user.enums.SexType;
 import com.ironcore.domain.user.exception.InvalidUserException;
-import com.ironcore.domain.user.valueobject.Sex;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

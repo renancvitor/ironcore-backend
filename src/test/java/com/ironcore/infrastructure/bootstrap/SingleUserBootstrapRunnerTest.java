@@ -4,7 +4,6 @@ import com.ironcore.application.user.usecase.bootstrap.BootstrapSingleUserComman
 import com.ironcore.application.user.usecase.bootstrap.BootstrapSingleUserUseCase;
 import com.ironcore.domain.user.enums.SexType;
 import com.ironcore.domain.user.valueobject.Email;
-import com.ironcore.domain.user.valueobject.Sex;
 import com.ironcore.infrastructure.bootstrap.config.SingleUserBootstrapProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
