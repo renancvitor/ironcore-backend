@@ -5,6 +5,7 @@ import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.UserId;
 import com.ironcore.infrastructure.exception.DataMappingException;
 import com.ironcore.infrastructure.exception.PersistenceException;
+import com.ironcore.infrastructure.persistence.person.repository.PersonJpaRepository;
 import com.ironcore.infrastructure.persistence.user.entity.UserEntity;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,7 @@ import org.springframework.lang.NonNull;
 import java.util.Optional;
 
 import static com.ironcore.domain.user.UserTestFactory.userWithoutId;
+import static com.ironcore.infrastructure.persistence.person.PersonEntityTestFactory.personEntity;
 import static com.ironcore.infrastructure.persistence.user.UserEntityTestFactory.invalidUserEntity;
 import static com.ironcore.infrastructure.persistence.user.UserEntityTestFactory.userEntity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,6 +34,9 @@ class UserRepositoryAdapterTest {
     @Mock
     private UserJpaRepository userJpaRepository;
 
+    @Mock
+    private PersonJpaRepository personJpaRepository;
+
     @InjectMocks
     private UserRepositoryAdapter adapter;
 
@@ -40,6 +45,7 @@ class UserRepositoryAdapterTest {
 
         @Test
         void shouldSaveUser() {
+            when(personJpaRepository.getReferenceById(1L)).thenReturn(personEntity());
             doReturn(userEntity()).when(userJpaRepository).save(anyUserEntity());
 
             User result = adapter.save(userWithoutId());
@@ -51,6 +57,7 @@ class UserRepositoryAdapterTest {
 
         @Test
         void shouldWrapRepositoryFailure() {
+            when(personJpaRepository.getReferenceById(1L)).thenReturn(personEntity());
             when(userJpaRepository.save(anyUserEntity()))
                     .thenThrow(new RuntimeException("database unavailable"));
             User user = userWithoutId();
@@ -62,6 +69,7 @@ class UserRepositoryAdapterTest {
 
         @Test
         void shouldWrapMappingFailureAfterPersistence() {
+            when(personJpaRepository.getReferenceById(1L)).thenReturn(personEntity());
             doReturn(invalidUserEntity()).when(userJpaRepository).save(anyUserEntity());
             User user = userWithoutId();
 

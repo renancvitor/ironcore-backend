@@ -9,7 +9,7 @@ import static org.assertj.core.data.Offset.offset;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.ironcore.domain.user.enums.SexType;
+import com.ironcore.domain.person.enums.SexType;
 import com.ironcore.domain.userbodymetrics.exception.InvalidBodyMetricException;
 import com.ironcore.domain.userbodymetrics.valueobject.BodyCircumferences;
 import com.ironcore.domain.userbodymetrics.valueobject.BodyFatPercentage;

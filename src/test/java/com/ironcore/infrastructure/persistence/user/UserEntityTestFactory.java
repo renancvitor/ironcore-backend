@@ -1,9 +1,10 @@
 package com.ironcore.infrastructure.persistence.user;
 
-import com.ironcore.domain.user.enums.SexType;
 import com.ironcore.infrastructure.persistence.user.entity.UserEntity;
 
 import java.time.LocalDateTime;
+
+import static com.ironcore.infrastructure.persistence.person.PersonEntityTestFactory.personEntity;
 
 public final class UserEntityTestFactory {
 
@@ -25,9 +26,9 @@ public final class UserEntityTestFactory {
         return new UserEntity(
                 1L,
                 "Renan",
+                personEntity(),
                 "renan@example.com",
                 "hashed-password",
-                SexType.MALE,
                 false,
                 false,
                 CREATED_AT,
@@ -39,9 +40,9 @@ public final class UserEntityTestFactory {
         return new UserEntity(
                 id,
                 "Renan",
+                personEntity(),
                 "renan@example.com",
                 "hashed-password",
-                SexType.MALE,
                 true,
                 true,
                 CREATED_AT,

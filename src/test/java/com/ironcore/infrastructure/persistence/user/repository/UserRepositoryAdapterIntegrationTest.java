@@ -1,10 +1,13 @@
 package com.ironcore.infrastructure.persistence.user.repository;
 
-import com.ironcore.domain.user.enums.SexType;
+import com.ironcore.domain.person.enums.SexType;
+import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.PasswordHash;
 import com.ironcore.infrastructure.exception.PersistenceException;
+import com.ironcore.infrastructure.persistence.person.entity.PersonEntity;
+import com.ironcore.infrastructure.persistence.person.repository.PersonJpaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -18,6 +21,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -42,7 +46,11 @@ class UserRepositoryAdapterIntegrationTest {
     @Autowired
     private UserJpaRepository userJpaRepository;
 
+    @Autowired
+    private PersonJpaRepository personJpaRepository;
+
     private UserRepositoryAdapter adapter;
+    private PersonEntity person;
 
     @DynamicPropertySource
     static void configurePostgres(DynamicPropertyRegistry registry) {
@@ -58,7 +66,8 @@ class UserRepositoryAdapterIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        adapter = new UserRepositoryAdapter(userJpaRepository);
+        adapter = new UserRepositoryAdapter(userJpaRepository, personJpaRepository);
+        person = createPerson("Renan");
     }
 
     @Nested
@@ -110,7 +119,7 @@ class UserRepositoryAdapterIntegrationTest {
 
             assertThat(savedUser.getId()).isNotNull();
             assertThat(savedUser.getId().value()).isPositive();
-            assertThat(savedUser.getName()).isEqualTo("Renan");
+            assertThat(savedUser.getNickname()).isEqualTo("Renan");
             assertThat(savedUser.getEmail()).isEqualTo(new Email("renan@example.com"));
         }
 
@@ -141,7 +150,7 @@ class UserRepositoryAdapterIntegrationTest {
             assertThat(result).isPresent();
             assertThat(result.get().getId()).isEqualTo(savedUser.getId());
             assertThat(result.get().getEmail()).isEqualTo(new Email("renan@example.com"));
-            assertThat(result.get().getName()).isEqualTo("Renan");
+            assertThat(result.get().getNickname()).isEqualTo("Renan");
         }
 
         @Test
@@ -181,9 +190,9 @@ class UserRepositoryAdapterIntegrationTest {
         return User.restore(
                 null,
                 "Renan Duplicado",
+                new PersonId(createPerson("Renan Duplicado").getId()),
                 new Email("renan@example.com"),
                 new PasswordHash("another-hashed-password"),
-                new Sex(SexType.MALE),
                 false,
                 true,
                 now,
@@ -197,13 +206,26 @@ class UserRepositoryAdapterIntegrationTest {
         return User.restore(
                 null,
                 "Renan",
+                new PersonId(person.getId()),
                 new Email("renan@example.com"),
                 new PasswordHash("hashed-password"),
-                new Sex(SexType.MALE),
                 false,
                 true,
                 now,
                 now
         );
+    }
+
+    private PersonEntity createPerson(String name) {
+        LocalDateTime now = LocalDateTime.now();
+
+        return personJpaRepository.save(new PersonEntity(
+                null,
+                name,
+                SexType.MALE,
+                LocalDate.of(1994, 4, 9),
+                now,
+                null
+        ));
     }
 }

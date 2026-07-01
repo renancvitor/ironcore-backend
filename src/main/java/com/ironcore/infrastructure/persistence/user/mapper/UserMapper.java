@@ -1,22 +1,24 @@
 package com.ironcore.infrastructure.persistence.user.mapper;
 
+import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.PasswordHash;
 import com.ironcore.domain.user.valueobject.UserId;
 import com.ironcore.infrastructure.exception.DataMappingException;
+import com.ironcore.infrastructure.persistence.person.entity.PersonEntity;
 import com.ironcore.infrastructure.persistence.user.entity.UserEntity;
 
 public class UserMapper {
 
-    public static UserEntity toEntity(User user) {
+    public static UserEntity toEntity(User user, PersonEntity person) {
         try {
             return new UserEntity(
                     user.getId() == null ? null : user.getId().value(),
-                    user.getName(),
+                    user.getNickname(),
+                    person,
                     user.getEmail().value(),
                     user.getPasswordHash().value(),
-                    user.getSex().type(),
                     user.getMustChangePassword(),
                     user.getActive(),
                     user.getCreatedAt(),
@@ -31,10 +33,10 @@ public class UserMapper {
         try {
             return User.restore(
                     new UserId(entity.getId()),
-                    entity.getName(),
+                    entity.getNickname(),
+                    new PersonId(entity.getPerson().getId()),
                     new Email(entity.getEmail()),
                     new PasswordHash(entity.getPasswordHash()),
-                    new Sex(entity.getSex()),
                     entity.getMustChangePassword(),
                     entity.getActive(),
                     entity.getCreatedAt(),

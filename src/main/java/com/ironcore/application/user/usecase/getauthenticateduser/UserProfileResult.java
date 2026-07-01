@@ -6,6 +6,6 @@ import com.ironcore.domain.user.valueobject.UserId;
 public record UserProfileResult(
         UserId userId,
         Email email,
-        String name
+        String nickname
 ) {
 }

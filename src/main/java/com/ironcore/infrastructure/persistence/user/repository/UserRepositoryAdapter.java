@@ -6,6 +6,8 @@ import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.UserId;
 import com.ironcore.infrastructure.exception.DataMappingException;
 import com.ironcore.infrastructure.exception.PersistenceException;
+import com.ironcore.infrastructure.persistence.person.entity.PersonEntity;
+import com.ironcore.infrastructure.persistence.person.repository.PersonJpaRepository;
 import com.ironcore.infrastructure.persistence.user.entity.UserEntity;
 import com.ironcore.infrastructure.persistence.user.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
@@ -19,13 +21,15 @@ import java.util.Optional;
 public class UserRepositoryAdapter implements UserRepository {
 
     private final UserJpaRepository userJpaRepository;
+    private final PersonJpaRepository personJpaRepository;
 
     @Override
     public User save(User user) {
+        PersonEntity personReference = personJpaRepository.getReferenceById(user.getPersonId().value());
         UserEntity entity;
         try {
             entity = Objects.requireNonNull(
-                    UserMapper.toEntity(user),
+                    UserMapper.toEntity(user,  personReference),
                     "UserMapper retornou entidade nula."
             );
         } catch (RuntimeException exception) {

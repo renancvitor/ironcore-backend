@@ -35,7 +35,7 @@ ironcore:
   bootstrap:
     single-user:
       enabled: ${IRONCORE_BOOTSTRAP_USER_ENABLED:false}
-      name: ${IRONCORE_BOOTSTRAP_USER_NAME:}
+      nickname: ${IRONCORE_BOOTSTRAP_USER_NICKNAME:}
+      person-id: ${IRONCORE_BOOTSTRAP_USER_PERSON_ID:}
       email: ${IRONCORE_BOOTSTRAP_USER_EMAIL:}
       password: ${IRONCORE_BOOTSTRAP_USER_PASSWORD:}
-      sex: ${IRONCORE_BOOTSTRAP_USER_SEX:}

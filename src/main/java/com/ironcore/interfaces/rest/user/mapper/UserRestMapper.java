@@ -12,7 +12,7 @@ public final class UserRestMapper {
         return new UserResponse(
                 result.userId().value(),
                 result.email().value(),
-                result.name()
+                result.nickname()
         );
     }
 }

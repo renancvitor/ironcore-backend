@@ -4,7 +4,6 @@ import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.user.service.PasswordHashingService;
 import com.ironcore.application.user.usecase.bootstrap.BootstrapSingleUserCommand;
 import com.ironcore.application.user.usecase.bootstrap.BootstrapSingleUserUseCase;
-import com.ironcore.domain.user.enums.SexType;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.Email;
@@ -99,10 +98,9 @@ class BootstrapSingleUserUseCaseTest {
 
             User savedUser = userCaptor.getValue();
 
-            assertThat(savedUser.getName()).isEqualTo("Renan");
+            assertThat(savedUser.getNickname()).isEqualTo("Renan");
             assertThat(savedUser.getEmail()).isEqualTo(new Email("renan@example.com"));
             assertThat(savedUser.getPasswordHash()).isEqualTo(passwordHash);
-            assertThat(savedUser.getSex()).isEqualTo(new Sex(SexType.MALE));
             assertThat(savedUser.getCreatedAt()).isEqualTo(CREATED_AT);
             assertThat(savedUser.isActive()).isTrue();
             assertThat(savedUser.mustChangePassword()).isTrue();

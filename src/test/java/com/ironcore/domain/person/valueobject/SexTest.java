@@ -1,7 +1,7 @@
 package com.ironcore.domain.person.valueobject;
 
-import com.ironcore.domain.user.enums.SexType;
-import com.ironcore.domain.user.exception.InvalidUserException;
+import com.ironcore.domain.person.enums.SexType;
+import com.ironcore.domain.person.exception.InvalidPersonException;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,14 +11,14 @@ class SexTest {
 
     @Test
     void shouldAcceptMale() {
-        com.ironcore.domain.user.valueobject.Sex sex = new com.ironcore.domain.user.valueobject.Sex(SexType.MALE);
+        Sex sex = new Sex(SexType.MALE);
 
         assertThat(sex.type()).isEqualTo(SexType.MALE);
     }
 
     @Test
     void shouldAcceptFemale() {
-        com.ironcore.domain.user.valueobject.Sex sex = new com.ironcore.domain.user.valueobject.Sex(SexType.FEMALE);
+        Sex sex = new Sex(SexType.FEMALE);
 
         assertThat(sex.type()).isEqualTo(SexType.FEMALE);
     }
@@ -26,6 +26,6 @@ class SexTest {
     @Test
     void shouldFailWhenSexIsNull() {
         assertThatThrownBy(() -> new Sex(null))
-                .isInstanceOf(InvalidUserException.class);
+                .isInstanceOf(InvalidPersonException.class);
     }
 }

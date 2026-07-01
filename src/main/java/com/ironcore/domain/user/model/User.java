@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 public class User {
 
     private final UserId id;
-    private String nickName;
+    private String nickname;
     private final Email email;
     private final PersonId personId;
     private PasswordHash passwordHash;
@@ -22,10 +22,10 @@ public class User {
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    private User(UserId id, String nickName, PersonId personId, Email email, PasswordHash passwordHash,
+    private User(UserId id, String nickname, PersonId personId, Email email, PasswordHash passwordHash,
                  Boolean mustChangePassword, Boolean active, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
-        this.nickName = requireNonBlank(nickName, "Nome não pode ser nulo ou vazio.");
+        this.nickname = requireNonBlank(nickname, "Nome não pode ser nulo ou vazio.");
         this.personId = requireNonNull(personId, "PersonId não pode ser nulo.");
         this.email = requireNonNull(email, "E-mail não pode ser nulo.");
         this.passwordHash = requireNonNull(passwordHash, "Senha hash não pode ser nulo.");
@@ -35,16 +35,16 @@ public class User {
         this.updatedAt = updatedAt;
     }
 
-    public static User register(String nickName, PersonId personId, Email email, PasswordHash passwordHash,
+    public static User register(String nickname, PersonId personId, Email email, PasswordHash passwordHash,
                                 LocalDateTime createdAt) {
-        return new User(null, nickName, personId, email, passwordHash, true, true,
+        return new User(null, nickname, personId, email, passwordHash, true, true,
                 createdAt, null);
     }
 
-    public static User restore(UserId id, String nickName, PersonId personId, Email email, PasswordHash passwordHash,
+    public static User restore(UserId id, String nickname, PersonId personId, Email email, PasswordHash passwordHash,
                                Boolean mustChangePassword, Boolean active, LocalDateTime createdAt,
                                LocalDateTime updatedAt) {
-        return new User(id, nickName, personId, email, passwordHash, mustChangePassword, active, createdAt, updatedAt);
+        return new User(id, nickname, personId, email, passwordHash, mustChangePassword, active, createdAt, updatedAt);
     }
 
     public boolean isActive() {
@@ -55,8 +55,8 @@ public class User {
         return mustChangePassword;
     }
 
-    public void changeNickName(String nickName, LocalDateTime updatedAt) {
-        this.nickName = requireNonBlank(nickName, "Apelido não pode ser nulo ou vazio");
+    public void changeNickname(String nickname, LocalDateTime updatedAt) {
+        this.nickname = requireNonBlank(nickname, "Apelido não pode ser nulo ou vazio");
         markUpdatedAt(updatedAt);
     }
 

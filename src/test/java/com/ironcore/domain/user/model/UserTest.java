@@ -24,7 +24,7 @@ class UserTest {
                     CREATED_AT);
 
             assertThat(user.getId()).isNull();
-            assertThat(user.getNickName()).isEqualTo("Renan");
+            assertThat(user.getNickname()).isEqualTo("Renan");
             assertThat(user.getPersonId().value()).isEqualTo(1L);
             assertThat(user.getEmail()).isEqualTo(email("renan@example.com"));
             assertThat(user.getPasswordHash()).isEqualTo(passwordHash("hashed-password"));
@@ -52,9 +52,9 @@ class UserTest {
         void shouldRenameUser() {
             User user = userWithoutId();
 
-            user.changeNickName(" Novo Apelido ", UPDATED_AT);
+            user.changeNickname(" Novo Apelido ", UPDATED_AT);
 
-            assertThat(user.getNickName()).isEqualTo("Novo Apelido");
+            assertThat(user.getNickname()).isEqualTo("Novo Apelido");
             assertThat(user.getUpdatedAt()).isEqualTo(UPDATED_AT);
         }
 
@@ -94,7 +94,7 @@ class UserTest {
                             email("renan@example.com"),
                             passwordHash("hashed-password"),
                             CREATED_AT))
-                    .withMessage("Nome não pode ser nulo ou vazio");
+                    .withMessage("Nome não pode ser nulo ou vazio.");
         }
 
         @Test

@@ -11,7 +11,7 @@ public record LoginResult(
         LocalDateTime expiresAt,
         UserId userId,
         Email email,
-        String name,
+        String nickname,
         Boolean mustChangePassword
 ) {
 }

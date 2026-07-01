@@ -2,16 +2,8 @@ package com.ironcore.infrastructure.persistence.user.entity;
 
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-
-import com.ironcore.domain.user.enums.SexType;
+import com.ironcore.infrastructure.persistence.person.entity.PersonEntity;
+import jakarta.persistence.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -30,18 +22,18 @@ public class UserEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String name;
+    @Column(name = "nickname", nullable = false, unique = true)
+    private String nickname;
+
+    @OneToOne(optional = false)
+    @JoinColumn(name = "person_id", nullable = false, unique = true)
+    private PersonEntity person;
 
     @Column(nullable = false, unique = true)
     private String email;
 
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 15)
-    private SexType sex;
 
     @Column(name = "must_change_password", nullable = false)
     private Boolean mustChangePassword;

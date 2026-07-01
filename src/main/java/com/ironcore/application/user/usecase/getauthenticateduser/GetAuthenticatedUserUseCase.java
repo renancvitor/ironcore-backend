@@ -25,7 +25,7 @@ public class GetAuthenticatedUserUseCase {
         return new UserProfileResult(
                 user.getId(),
                 user.getEmail(),
-                user.getName()
+                user.getNickname()
         );
     }
 }

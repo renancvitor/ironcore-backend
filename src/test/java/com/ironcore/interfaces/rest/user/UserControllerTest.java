@@ -171,7 +171,7 @@ class UserControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.userId").value(1L))
                     .andExpect(jsonPath("$.email").value("renan@example.com"))
-                    .andExpect(jsonPath("$.name").value("Renan"))
+                    .andExpect(jsonPath("$.nickname").value("Renan"))
                     .andExpect(jsonPath("$.passwordHash").doesNotExist());
 
             verify(getAuthenticatedUserUseCase).execute(new UserId(1L));
