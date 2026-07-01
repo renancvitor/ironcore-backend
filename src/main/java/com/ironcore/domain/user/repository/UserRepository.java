@@ -1,5 +1,6 @@
 package com.ironcore.domain.user.repository;
 
+import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.UserId;
@@ -10,6 +11,8 @@ public interface UserRepository {
     User save(User user);
 
     Optional<User> findById(UserId id);
+
+    Optional<User> findByPersonId(PersonId personId);
 
     Optional<User> findByEmail(Email email);
 

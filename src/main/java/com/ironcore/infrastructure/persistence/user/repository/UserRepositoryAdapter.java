@@ -1,5 +1,6 @@
 package com.ironcore.infrastructure.persistence.user.repository;
 
+import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.Email;
@@ -67,6 +68,23 @@ public class UserRepositoryAdapter implements UserRepository {
             return entity.map(UserMapper::toDomain);
         } catch (RuntimeException exception) {
             throw new DataMappingException("Falha ao converter user encontrado por id para domínio.", exception);
+        }
+    }
+
+    @Override
+    public Optional<User> findByPersonId(PersonId id) {
+        Optional<UserEntity> entity;
+        try {
+            Long personId = Objects.requireNonNull(id.value(), "Id da pessoa não pode ser nulo.");
+            entity = userJpaRepository.findByPerson_Id(personId);
+        } catch (RuntimeException exception) {
+            throw new PersistenceException("Falha ao buscar user por id da pessoa.", exception);
+        }
+
+        try {
+            return entity.map(UserMapper::toDomain);
+        } catch (RuntimeException exception) {
+            throw new DataMappingException("Falha ao converter user encontrado por id da pessoa para domínio.", exception);
         }
     }
 

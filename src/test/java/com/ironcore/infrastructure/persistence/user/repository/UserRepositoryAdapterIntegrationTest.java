@@ -154,6 +154,18 @@ class UserRepositoryAdapterIntegrationTest {
         }
 
         @Test
+        void shouldFindUserByPersonIdThroughRepositoryAdapter() {
+            User savedUser = adapter.save(activeUserWithoutId());
+
+            Optional<User> result = adapter.findByPersonId(new PersonId(person.getId()));
+
+            assertThat(result).isPresent();
+            assertThat(result.get().getId()).isEqualTo(savedUser.getId());
+            assertThat(result.get().getPersonId()).isEqualTo(new PersonId(person.getId()));
+            assertThat(result.get().getEmail()).isEqualTo(new Email("renan@example.com"));
+        }
+
+        @Test
         void shouldReturnTrueWhenUserEmailExistsThroughRepositoryAdapter() {
             adapter.save(activeUserWithoutId());
 
