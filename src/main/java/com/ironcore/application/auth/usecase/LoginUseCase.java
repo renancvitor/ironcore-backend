@@ -51,7 +51,7 @@ public class LoginUseCase {
                 accessToken.expiresAt(),
                 user.getId(),
                 user.getEmail(),
-                user.getName(),
+                user.getNickname(),
                 user.mustChangePassword()
         );
     }

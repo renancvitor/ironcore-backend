@@ -1,18 +1,11 @@
 package com.ironcore.domain.user.model;
 
-import com.ironcore.domain.user.enums.SexType;
 import com.ironcore.domain.user.exception.InvalidUserException;
 import com.ironcore.domain.user.valueobject.UserId;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import static com.ironcore.domain.user.UserTestFactory.CREATED_AT;
-import static com.ironcore.domain.user.UserTestFactory.UPDATED_AT;
-import static com.ironcore.domain.user.UserTestFactory.email;
-import static com.ironcore.domain.user.UserTestFactory.passwordHash;
-import static com.ironcore.domain.user.UserTestFactory.restoredUser;
-import static com.ironcore.domain.user.UserTestFactory.sex;
-import static com.ironcore.domain.user.UserTestFactory.userWithoutId;
+import static com.ironcore.domain.user.UserTestFactory.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
@@ -25,16 +18,16 @@ class UserTest {
         void shouldRegisterActiveUserWithoutId() {
             User user = User.register(
                     " Renan ",
+                    personId(1L),
                     email("renan@example.com"),
                     passwordHash("hashed-password"),
-                    sex(SexType.MALE),
                     CREATED_AT);
 
             assertThat(user.getId()).isNull();
-            assertThat(user.getName()).isEqualTo("Renan");
+            assertThat(user.getNickname()).isEqualTo("Renan");
+            assertThat(user.getPersonId().value()).isEqualTo(1L);
             assertThat(user.getEmail()).isEqualTo(email("renan@example.com"));
             assertThat(user.getPasswordHash()).isEqualTo(passwordHash("hashed-password"));
-            assertThat(user.getSex()).isEqualTo(sex(SexType.MALE));
             assertThat(user.mustChangePassword()).isTrue();
             assertThat(user.isActive()).isTrue();
             assertThat(user.getCreatedAt()).isEqualTo(CREATED_AT);
@@ -57,17 +50,17 @@ class UserTest {
 
         @Test
         void shouldRenameUser() {
-            User user = validUser();
+            User user = userWithoutId();
 
-            user.rename(" Novo Nome ", UPDATED_AT);
+            user.changeNickname(" Novo Apelido ", UPDATED_AT);
 
-            assertThat(user.getName()).isEqualTo("Novo Nome");
+            assertThat(user.getNickname()).isEqualTo("Novo Apelido");
             assertThat(user.getUpdatedAt()).isEqualTo(UPDATED_AT);
         }
 
         @Test
         void shouldChangePasswordAndClearRequiredPasswordChangeFlag() {
-            User user = validUser();
+            User user = userWithoutId();
 
             user.changePasswordHash(passwordHash("new-hashed-password"), UPDATED_AT);
 
@@ -78,7 +71,7 @@ class UserTest {
 
         @Test
         void shouldDeactivateAndActivateUser() {
-            User user = validUser();
+            User user = userWithoutId();
 
             user.deactivate(UPDATED_AT);
             assertThat(user.isActive()).isFalse();
@@ -97,24 +90,20 @@ class UserTest {
             assertThatExceptionOfType(InvalidUserException.class)
                     .isThrownBy(() -> User.register(
                             " ",
+                            personId(1L),
                             email("renan@example.com"),
                             passwordHash("hashed-password"),
-                            sex(SexType.MALE),
                             CREATED_AT))
-                    .withMessage("Nome não pode ser nulo ou vazio");
+                    .withMessage("Nome não pode ser nulo ou vazio.");
         }
 
         @Test
         void shouldRequireUpdateDateWhenChangingState() {
-            User user = validUser();
+            User user = userWithoutId();
 
             assertThatExceptionOfType(InvalidUserException.class)
                     .isThrownBy(() -> user.deactivate(null))
                     .withMessage("Data de atualização não pode ser nulo");
         }
-    }
-
-    private User validUser() {
-        return userWithoutId();
     }
 }

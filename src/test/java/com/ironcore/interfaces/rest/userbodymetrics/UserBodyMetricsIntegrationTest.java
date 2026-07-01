@@ -3,7 +3,9 @@ package com.ironcore.interfaces.rest.userbodymetrics;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ironcore.IroncoreBackendApplication;
-import com.ironcore.domain.user.enums.SexType;
+import com.ironcore.domain.person.enums.SexType;
+import com.ironcore.infrastructure.persistence.person.entity.PersonEntity;
+import com.ironcore.infrastructure.persistence.person.repository.PersonJpaRepository;
 import com.ironcore.infrastructure.persistence.user.entity.UserEntity;
 import com.ironcore.infrastructure.persistence.user.repository.UserJpaRepository;
 import com.ironcore.infrastructure.persistence.userbodymetrics.entity.UserBodyMetricsEntity;
@@ -25,6 +27,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,7 +40,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(
         classes = IroncoreBackendApplication.class,
-        webEnvironment = SpringBootTest.WebEnvironment.MOCK
+        webEnvironment = SpringBootTest.WebEnvironment.MOCK,
+        properties = "ironcore.bootstrap.single-user.enabled=false"
 )
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -58,6 +62,9 @@ class UserBodyMetricsIntegrationTest {
     private UserJpaRepository userJpaRepository;
 
     @Autowired
+    private PersonJpaRepository personJpaRepository;
+
+    @Autowired
     private UserBodyMetricsJpaRepository userBodyMetricsJpaRepository;
 
     @Autowired
@@ -67,6 +74,7 @@ class UserBodyMetricsIntegrationTest {
     void setUp() {
         userBodyMetricsJpaRepository.deleteAll();
         userJpaRepository.deleteAll();
+        personJpaRepository.deleteAll();
         userJpaRepository.save(activeUser());
     }
 
@@ -74,6 +82,7 @@ class UserBodyMetricsIntegrationTest {
     void tearDown() {
         userBodyMetricsJpaRepository.deleteAll();
         userJpaRepository.deleteAll();
+        personJpaRepository.deleteAll();
     }
 
     @Nested
@@ -272,13 +281,26 @@ class UserBodyMetricsIntegrationTest {
         return new UserEntity(
                 null,
                 "Renan",
+                activePerson(),
                 EMAIL,
                 passwordEncoder.encode(RAW_PASSWORD),
-                SexType.MALE,
                 false,
                 true,
                 now,
                 now
         );
+    }
+
+    private PersonEntity activePerson() {
+        LocalDateTime now = LocalDateTime.now();
+
+        return personJpaRepository.save(new PersonEntity(
+                null,
+                "Renan",
+                SexType.MALE,
+                LocalDate.of(1994, 4, 9),
+                now,
+                null
+        ));
     }
 }

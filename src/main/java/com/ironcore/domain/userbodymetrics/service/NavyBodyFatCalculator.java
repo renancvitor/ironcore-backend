@@ -1,6 +1,6 @@
 package com.ironcore.domain.userbodymetrics.service;
 
-import com.ironcore.domain.user.enums.SexType;
+import com.ironcore.domain.person.enums.SexType;
 import com.ironcore.domain.userbodymetrics.exception.InvalidBodyMetricException;
 import com.ironcore.domain.userbodymetrics.model.UserBodyMetrics;
 import com.ironcore.domain.userbodymetrics.valueobject.BodyCircumferenceCm;

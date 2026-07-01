@@ -12,7 +12,11 @@ import com.ironcore.application.userbodymetrics.create.CreateUserBodyMetricsUseC
 import com.ironcore.application.userbodymetrics.UserBodyMetricsAuditData;
 import com.ironcore.domain.logging.audit.enums.AuditActionType;
 import com.ironcore.domain.logging.audit.enums.AuditTargetType;
-import com.ironcore.domain.user.enums.SexType;
+import com.ironcore.domain.person.repository.PersonRepository;
+import com.ironcore.domain.person.enums.SexType;
+import com.ironcore.domain.person.model.Person;
+import com.ironcore.domain.person.valueobject.BirthDate;
+import com.ironcore.domain.person.valueobject.Sex;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.UserId;
@@ -34,6 +38,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
@@ -61,6 +66,9 @@ class CreateUserBodyMetricsUseCaseTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private PersonRepository personRepository;
 
     @Mock
     private UserBodyMetricsRepository userBodyMetricsRepository;
@@ -92,6 +100,7 @@ class CreateUserBodyMetricsUseCaseTest {
         bodyFatPercentageCalculator = new BodyFatPercentageCalculator(navyBodyFatCalculator);
         createUserBodyMetricsUseCase = new CreateUserBodyMetricsUseCase(
                 userRepository,
+                personRepository,
                 userBodyMetricsRepository,
                 bmiCalculator,
                 bodyFatPercentageCalculator,
@@ -114,6 +123,7 @@ class CreateUserBodyMetricsUseCaseTest {
 
             givenFixedClock();
             when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+            givenPersonExists(user, SexType.MALE);
             givenUserBodyMetricsIsPersisted();
 
             CreateUserBodyMetricsResult result = createUserBodyMetricsUseCase.execute(command);
@@ -175,6 +185,7 @@ class CreateUserBodyMetricsUseCaseTest {
 
             givenFixedClock();
             when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+            givenPersonExists(user, SexType.MALE);
             givenUserBodyMetricsIsPersisted();
 
             createUserBodyMetricsUseCase.execute(command);
@@ -212,6 +223,7 @@ class CreateUserBodyMetricsUseCaseTest {
 
             givenFixedClock();
             when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+            givenPersonExists(user, SexType.FEMALE);
             givenUserBodyMetricsIsPersisted();
 
             createUserBodyMetricsUseCase.execute(command);
@@ -249,6 +261,7 @@ class CreateUserBodyMetricsUseCaseTest {
 
             givenFixedClock();
             when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+            givenPersonExists(user, SexType.MALE);
             givenUserBodyMetricsIsPersisted();
 
             createUserBodyMetricsUseCase.execute(command);
@@ -285,6 +298,7 @@ class CreateUserBodyMetricsUseCaseTest {
 
             givenFixedClock();
             when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+            givenPersonExists(user, SexType.FEMALE);
             givenUserBodyMetricsIsPersisted();
 
             createUserBodyMetricsUseCase.execute(command);
@@ -343,6 +357,7 @@ class CreateUserBodyMetricsUseCaseTest {
             CreateUserBodyMetricsCommand command = commandWithoutCircumferences();
 
             when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            givenPersonExists(user, SexType.MALE);
 
             assertThatExceptionOfType(UserInactiveException.class)
                     .isThrownBy(() -> createUserBodyMetricsUseCase.execute(command))
@@ -367,6 +382,7 @@ class CreateUserBodyMetricsUseCaseTest {
             CreateUserBodyMetricsCommand command = commandWithoutWeight();
 
             when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            givenPersonExists(user, SexType.MALE);
 
             assertThatExceptionOfType(OperationNotAllowedException.class)
                     .isThrownBy(() -> createUserBodyMetricsUseCase.execute(command))
@@ -387,6 +403,7 @@ class CreateUserBodyMetricsUseCaseTest {
             CreateUserBodyMetricsCommand command = commandWithoutHeight();
 
             when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            givenPersonExists(user, SexType.MALE);
 
             assertThatExceptionOfType(OperationNotAllowedException.class)
                     .isThrownBy(() -> createUserBodyMetricsUseCase.execute(command))
@@ -434,13 +451,26 @@ class CreateUserBodyMetricsUseCaseTest {
                 });
     }
 
+    private void givenPersonExists(User user, SexType sexType) {
+        Person person = Person.restore(
+                user.getPersonId(),
+                "Renan",
+                new Sex(sexType),
+                new BirthDate(LocalDate.of(1994, 4, 9)),
+                CREATED_AT,
+                UPDATED_AT
+        );
+
+        when(personRepository.findById(user.getPersonId())).thenReturn(Optional.of(person));
+    }
+
     private User activeFemaleUser() {
         return User.restore(
                 new UserId(1L),
                 "Renata",
+                personId(1L),
                 email("renata@example.com"),
                 passwordHash("hashed-password"),
-                sex(SexType.FEMALE),
                 false,
                 true,
                 CREATED_AT,

@@ -1,9 +1,8 @@
 package com.ironcore.application.user;
 
 import com.ironcore.application.user.usecase.bootstrap.BootstrapSingleUserCommand;
-import com.ironcore.domain.user.enums.SexType;
+import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.user.valueobject.Email;
-import com.ironcore.domain.user.valueobject.Sex;
 
 import java.time.LocalDateTime;
 
@@ -17,9 +16,9 @@ public final class BootstrapSingleUserTestFactory {
     public static BootstrapSingleUserCommand command() {
         return new BootstrapSingleUserCommand(
                 "Renan",
+                new PersonId(1L),
                 new Email("renan@example.com"),
                 "StrongPass@2026",
-                new Sex(SexType.MALE),
                 CREATED_AT
         );
     }

@@ -119,7 +119,7 @@ class AuthControllerTest {
                     .andExpect(jsonPath("$.expiresAt").value(expiresAt.toString()))
                     .andExpect(jsonPath("$.userId").value(1L))
                     .andExpect(jsonPath("$.email").value("renan@example.com"))
-                    .andExpect(jsonPath("$.name").value("Renan"))
+                    .andExpect(jsonPath("$.nickname").value("Renan"))
                     .andExpect(jsonPath("$.mustChangePassword").value(true))
                     .andExpect(jsonPath("$.password").doesNotExist())
                     .andExpect(jsonPath("$.passwordHash").doesNotExist());

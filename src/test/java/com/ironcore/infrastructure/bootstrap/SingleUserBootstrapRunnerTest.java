@@ -2,9 +2,8 @@ package com.ironcore.infrastructure.bootstrap;
 
 import com.ironcore.application.user.usecase.bootstrap.BootstrapSingleUserCommand;
 import com.ironcore.application.user.usecase.bootstrap.BootstrapSingleUserUseCase;
-import com.ironcore.domain.user.enums.SexType;
+import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.user.valueobject.Email;
-import com.ironcore.domain.user.valueobject.Sex;
 import com.ironcore.infrastructure.bootstrap.config.SingleUserBootstrapProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -43,7 +42,7 @@ class SingleUserBootstrapRunnerTest {
             SingleUserBootstrapProperties properties = new SingleUserBootstrapProperties(
                     false,
                     "",
-                    "",
+                    0L,
                     "",
                     null
             );
@@ -64,9 +63,9 @@ class SingleUserBootstrapRunnerTest {
             SingleUserBootstrapProperties properties = new SingleUserBootstrapProperties(
                     true,
                     "Renan",
+                    1L,
                     "renan@example.com",
-                    "Strong123@",
-                    SexType.MALE
+                    "Strong123@"
             );
 
             SingleUserBootstrapRunner runner = new SingleUserBootstrapRunner(useCase, properties, clock);
@@ -80,10 +79,10 @@ class SingleUserBootstrapRunnerTest {
 
             BootstrapSingleUserCommand command = captor.getValue();
 
-            assertThat(command.name()).isEqualTo("Renan");
+            assertThat(command.nickname()).isEqualTo("Renan");
+            assertThat(command.personId()).isEqualTo(new PersonId(1L));
             assertThat(command.email()).isEqualTo(new Email("renan@example.com"));
             assertThat(command.rawPassword()).isEqualTo("Strong123@");
-            assertThat(command.sex()).isEqualTo(new Sex(SexType.MALE));
             assertThat(command.createdAt()).isNotNull();
         }
     }

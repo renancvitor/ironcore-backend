@@ -8,7 +8,7 @@ public record LoginResponse(
         LocalDateTime expiresAt,
         Long userId,
         String email,
-        String name,
+        String nickname,
         Boolean mustChangePassword
 ) {
 }

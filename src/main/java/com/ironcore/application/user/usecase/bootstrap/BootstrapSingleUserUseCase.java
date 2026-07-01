@@ -34,10 +34,10 @@ public class BootstrapSingleUserUseCase {
         PasswordHash passwordHash = passwordHashingService.hash(rawPassword);
 
         User user = User.register(
-                command.name(),
+                command.nickname(),
+                command.personId(),
                 command.email(),
                 passwordHash,
-                command.sex(),
                 command.createdAt()
         );
 

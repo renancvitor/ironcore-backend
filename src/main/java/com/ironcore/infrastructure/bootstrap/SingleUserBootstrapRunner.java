@@ -2,12 +2,13 @@ package com.ironcore.infrastructure.bootstrap;
 
 import com.ironcore.application.user.usecase.bootstrap.BootstrapSingleUserCommand;
 import com.ironcore.application.user.usecase.bootstrap.BootstrapSingleUserUseCase;
+import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.user.valueobject.Email;
-import com.ironcore.domain.user.valueobject.Sex;
 import com.ironcore.infrastructure.bootstrap.config.SingleUserBootstrapProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "ironcore.bootstrap.single-user", name = "enabled", havingValue = "true")
 public class SingleUserBootstrapRunner implements ApplicationRunner {
 
     private final BootstrapSingleUserUseCase bootstrapSingleUserUseCase;
@@ -28,10 +30,10 @@ public class SingleUserBootstrapRunner implements ApplicationRunner {
         }
 
         BootstrapSingleUserCommand command = new BootstrapSingleUserCommand(
-                properties.name(),
+                properties.nickname(),
+                new PersonId(properties.personId()),
                 new Email(properties.email()),
                 properties.password(),
-                new Sex(properties.sex()),
                 LocalDateTime.now(clock)
         );
 

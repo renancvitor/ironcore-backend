@@ -71,7 +71,7 @@ class LoginUseCaseTest {
             assertThat(result.expiresAt()).isEqualTo(accessToken.expiresAt());
             assertThat(result.userId()).isEqualTo(user.getId());
             assertThat(result.email()).isEqualTo(user.getEmail());
-            assertThat(result.name()).isEqualTo(user.getName());
+            assertThat(result.nickname()).isEqualTo(user.getNickname());
             assertThat(result.mustChangePassword()).isEqualTo(user.mustChangePassword());
 
             ArgumentCaptor<AccessTokenSubject> subjectCaptor = ArgumentCaptor.forClass(AccessTokenSubject.class);

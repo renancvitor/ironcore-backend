@@ -1,6 +1,5 @@
 package com.ironcore.infrastructure.bootstrap.config;
 
-import com.ironcore.domain.user.enums.SexType;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -22,20 +21,20 @@ class SingleUserBootstrapPropertiesTest {
             contextRunner
                     .withPropertyValues(
                             "ironcore.bootstrap.single-user.enabled=true",
-                            "ironcore.bootstrap.single-user.name=Renan",
+                            "ironcore.bootstrap.single-user.nickname=Renan",
+                            "ironcore.bootstrap.single-user.person-id=1",
                             "ironcore.bootstrap.single-user.email=renan@example.com",
-                            "ironcore.bootstrap.single-user.password=StrongPass@2026",
-                            "ironcore.bootstrap.single-user.sex=MALE"
+                            "ironcore.bootstrap.single-user.password=StrongPass@2026"
                     )
                     .run(context -> {
                         SingleUserBootstrapProperties properties =
                                 context.getBean(SingleUserBootstrapProperties.class);
 
                         assertThat(properties.enabled()).isTrue();
-                        assertThat(properties.name()).isEqualTo("Renan");
+                        assertThat(properties.nickname()).isEqualTo("Renan");
+                        assertThat(properties.personId()).isEqualTo(1L);
                         assertThat(properties.email()).isEqualTo("renan@example.com");
                         assertThat(properties.password()).isEqualTo("StrongPass@2026");
-                        assertThat(properties.sex()).isEqualTo(SexType.MALE);
                     });
 
         }

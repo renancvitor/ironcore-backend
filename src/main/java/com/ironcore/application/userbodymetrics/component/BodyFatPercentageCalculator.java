@@ -1,7 +1,7 @@
 package com.ironcore.application.userbodymetrics.component;
 
-import com.ironcore.domain.user.enums.SexType;
-import com.ironcore.domain.user.model.User;
+import com.ironcore.domain.person.enums.SexType;
+import com.ironcore.domain.person.model.Person;
 import com.ironcore.domain.userbodymetrics.service.NavyBodyFatCalculator;
 import com.ironcore.domain.userbodymetrics.valueobject.BodyCircumferences;
 import com.ironcore.domain.userbodymetrics.valueobject.BodyFatPercentage;
@@ -16,7 +16,7 @@ public class BodyFatPercentageCalculator {
     private final NavyBodyFatCalculator navyBodyFatCalculator;
 
     public BodyFatPercentage calculate(
-            User user,
+            Person person,
             BodyHeightCm height,
             BodyCircumferences circumferences
     ) {
@@ -24,17 +24,17 @@ public class BodyFatPercentageCalculator {
             return null;
         }
 
-        if (user.getSex().type() == SexType.MALE
+        if (person.getSex().type() == SexType.MALE
                 && circumferences.neck() != null
                 && circumferences.waist() != null) {
-            return navyBodyFatCalculator.calculate(user.getSex().type(), height, circumferences);
+            return navyBodyFatCalculator.calculate(person.getSex().type(), height, circumferences);
         }
 
-        if (user.getSex().type() == SexType.FEMALE
+        if (person.getSex().type() == SexType.FEMALE
                 && circumferences.neck() != null
                 && circumferences.waist() != null
                 && circumferences.hip() != null) {
-            return navyBodyFatCalculator.calculate(user.getSex().type(), height, circumferences);
+            return navyBodyFatCalculator.calculate(person.getSex().type(), height, circumferences);
         }
 
         return null;

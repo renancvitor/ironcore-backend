@@ -1,11 +1,10 @@
 package com.ironcore.infrastructure.security.filter;
 
-import com.ironcore.domain.user.enums.SexType;
+import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.PasswordHash;
-import com.ironcore.domain.user.valueobject.Sex;
 import com.ironcore.domain.user.valueobject.UserId;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
 import com.ironcore.infrastructure.security.jwt.JwtAccessTokenClaims;
@@ -174,9 +173,9 @@ class JwtAuthenticationFilterTest {
         return User.restore(
                 new UserId(1L),
                 "Renan",
+                new PersonId(1L),
                 new Email("renan@example.com"),
                 new PasswordHash("hashed-psw"),
-                new Sex(SexType.MALE),
                 false,
                 active,
                 LocalDateTime.now(),

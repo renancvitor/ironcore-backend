@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static com.ironcore.domain.user.UserTestFactory.restoredUser;
+import static com.ironcore.infrastructure.persistence.person.PersonEntityTestFactory.personEntity;
 import static com.ironcore.infrastructure.persistence.user.UserEntityTestFactory.inactiveUserEntity;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -19,7 +20,7 @@ class UserMapperTest {
         void shouldMapSecurityAndStatusFields() {
             User user = restoredUser(false, false);
 
-            UserEntity entity = UserMapper.toEntity(user);
+            UserEntity entity = UserMapper.toEntity(user, personEntity());
 
             assertThat(entity.getPasswordHash()).isEqualTo("hashed-password");
             assertThat(entity.getMustChangePassword()).isFalse();

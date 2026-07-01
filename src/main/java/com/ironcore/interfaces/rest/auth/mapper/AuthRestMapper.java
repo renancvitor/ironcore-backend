@@ -25,7 +25,7 @@ public final class AuthRestMapper {
                 result.expiresAt(),
                 result.userId().value(),
                 result.email().value(),
-                result.name(),
+                result.nickname(),
                 result.mustChangePassword()
         );
     }

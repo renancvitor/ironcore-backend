@@ -2,7 +2,9 @@ package com.ironcore.interfaces.rest.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ironcore.IroncoreBackendApplication;
-import com.ironcore.domain.user.enums.SexType;
+import com.ironcore.domain.person.enums.SexType;
+import com.ironcore.infrastructure.persistence.person.entity.PersonEntity;
+import com.ironcore.infrastructure.persistence.person.repository.PersonJpaRepository;
 import com.ironcore.infrastructure.persistence.user.entity.UserEntity;
 import com.ironcore.infrastructure.persistence.user.repository.UserJpaRepository;
 import com.ironcore.interfaces.rest.auth.dto.LoginRequest;
@@ -22,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -34,7 +37,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(
         classes = IroncoreBackendApplication.class,
-        webEnvironment = SpringBootTest.WebEnvironment.MOCK
+        webEnvironment = SpringBootTest.WebEnvironment.MOCK,
+        properties = "ironcore.bootstrap.single-user.enabled=false"
 )
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -47,6 +51,8 @@ class AuthSecurityIntegrationTest {
     private static final String EMAIL = "renan@example.com";
     private static final String RAW_PASSWORD = "StrongPass123@";
 
+    private static final Long PERSON_ID = 1L;
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -57,17 +63,22 @@ class AuthSecurityIntegrationTest {
     private UserJpaRepository userJpaRepository;
 
     @Autowired
+    private PersonJpaRepository personJpaRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @BeforeEach
     void setUp() {
         userJpaRepository.deleteAll();
+        personJpaRepository.deleteAll();
         userJpaRepository.save(activeUser());
     }
 
     @AfterEach
     void tearDown() {
         userJpaRepository.deleteAll();
+        personJpaRepository.deleteAll();
     }
 
     @Nested
@@ -92,7 +103,7 @@ class AuthSecurityIntegrationTest {
                     .andExpect(jsonPath("$.expiresAt").isString())
                     .andExpect(jsonPath("$.userId").isNumber())
                     .andExpect(jsonPath("$.email").value(EMAIL))
-                    .andExpect(jsonPath("$.name").value("Renan"))
+                    .andExpect(jsonPath("$.nickname").value("Renan"))
                     .andExpect(jsonPath("$.mustChangePassword").value(false))
                     .andExpect(jsonPath("$.password").doesNotExist())
                     .andExpect(jsonPath("$.passwordHash").doesNotExist());
@@ -133,7 +144,7 @@ class AuthSecurityIntegrationTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.userId").isNumber())
                     .andExpect(jsonPath("$.email").value(EMAIL))
-                    .andExpect(jsonPath("$.name").value("Renan"))
+                    .andExpect(jsonPath("$.nickname").value("Renan"))
                     .andExpect(jsonPath("$.password").doesNotExist())
                     .andExpect(jsonPath("$.passwordHash").doesNotExist());
         }
@@ -196,13 +207,26 @@ class AuthSecurityIntegrationTest {
         return new UserEntity(
                 null,
                 "Renan",
+                activePerson(),
                 EMAIL,
                 passwordEncoder.encode(RAW_PASSWORD),
-                SexType.MALE,
                 false,
                 true,
                 now,
                 now
         );
+    }
+
+    private PersonEntity activePerson() {
+        LocalDateTime now = LocalDateTime.now();
+
+        return personJpaRepository.save(new PersonEntity(
+                null,
+                "Renan",
+                SexType.MALE,
+                LocalDate.of(1994, 4, 9),
+                now,
+                null
+        ));
     }
 }

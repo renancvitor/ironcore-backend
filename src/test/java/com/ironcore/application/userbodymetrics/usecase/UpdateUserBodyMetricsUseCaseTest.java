@@ -12,7 +12,11 @@ import com.ironcore.application.userbodymetrics.update.UpdateUserBodyMetricsResu
 import com.ironcore.application.userbodymetrics.update.UpdateUserBodyMetricsUseCase;
 import com.ironcore.domain.logging.audit.enums.AuditActionType;
 import com.ironcore.domain.logging.audit.enums.AuditTargetType;
-import com.ironcore.domain.user.enums.SexType;
+import com.ironcore.domain.person.enums.SexType;
+import com.ironcore.domain.person.model.Person;
+import com.ironcore.domain.person.repository.PersonRepository;
+import com.ironcore.domain.person.valueobject.BirthDate;
+import com.ironcore.domain.person.valueobject.Sex;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.UserId;
@@ -34,6 +38,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
@@ -66,6 +71,9 @@ class UpdateUserBodyMetricsUseCaseTest {
     private UserRepository userRepository;
 
     @Mock
+    private PersonRepository personRepository;
+
+    @Mock
     private UserBodyMetricsRepository userBodyMetricsRepository;
 
     @Spy
@@ -95,6 +103,7 @@ class UpdateUserBodyMetricsUseCaseTest {
         bodyFatPercentageCalculator = new BodyFatPercentageCalculator(navyBodyFatCalculator);
         updateUserBodyMetricsUseCase = new UpdateUserBodyMetricsUseCase(
                 userRepository,
+                personRepository,
                 userBodyMetricsRepository,
                 bmiCalculator,
                 bodyFatPercentageCalculator,
@@ -116,6 +125,7 @@ class UpdateUserBodyMetricsUseCaseTest {
 
             givenFixedClock();
             when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            givenPersonExists(user, SexType.MALE);
             givenExistingUserBodyMetrics(command);
             givenUpdatedUserBodyMetricsIsPersisted();
 
@@ -194,6 +204,7 @@ class UpdateUserBodyMetricsUseCaseTest {
 
             givenFixedClock();
             when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            givenPersonExists(user, SexType.MALE);
             givenExistingUserBodyMetrics(command);
             givenUpdatedUserBodyMetricsIsPersisted();
 
@@ -235,6 +246,7 @@ class UpdateUserBodyMetricsUseCaseTest {
 
             givenFixedClock();
             when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            givenPersonExists(user, SexType.FEMALE);
             givenExistingUserBodyMetrics(command);
             givenUpdatedUserBodyMetricsIsPersisted();
 
@@ -276,6 +288,7 @@ class UpdateUserBodyMetricsUseCaseTest {
 
             givenFixedClock();
             when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            givenPersonExists(user, SexType.MALE);
             givenExistingUserBodyMetrics(command);
             givenUpdatedUserBodyMetricsIsPersisted();
 
@@ -316,6 +329,7 @@ class UpdateUserBodyMetricsUseCaseTest {
 
             givenFixedClock();
             when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            givenPersonExists(user, SexType.FEMALE);
             givenExistingUserBodyMetrics(command);
             givenUpdatedUserBodyMetricsIsPersisted();
 
@@ -379,6 +393,7 @@ class UpdateUserBodyMetricsUseCaseTest {
             UpdateUserBodyMetricsCommand command = commandWithoutCircumferences();
 
             when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            givenPersonExists(user, SexType.MALE);
 
             assertThatExceptionOfType(UserInactiveException.class)
                     .isThrownBy(() -> updateUserBodyMetricsUseCase.execute(command))
@@ -404,6 +419,7 @@ class UpdateUserBodyMetricsUseCaseTest {
             UpdateUserBodyMetricsCommand command = commandWithoutWeight();
 
             when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            givenPersonExists(user, SexType.MALE);
 
             assertThatExceptionOfType(OperationNotAllowedException.class)
                     .isThrownBy(() -> updateUserBodyMetricsUseCase.execute(command))
@@ -425,6 +441,7 @@ class UpdateUserBodyMetricsUseCaseTest {
             UpdateUserBodyMetricsCommand command = commandWithoutHeight();
 
             when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            givenPersonExists(user, SexType.MALE);
 
             assertThatExceptionOfType(OperationNotAllowedException.class)
                     .isThrownBy(() -> updateUserBodyMetricsUseCase.execute(command))
@@ -451,6 +468,7 @@ class UpdateUserBodyMetricsUseCaseTest {
 
             givenFixedClock();
             when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            givenPersonExists(user, SexType.MALE);
             when(userBodyMetricsRepository.findByIdAndUserId(command.userBodyMetricsId(), command.userId()))
                     .thenReturn(Optional.empty());
 
@@ -503,13 +521,26 @@ class UpdateUserBodyMetricsUseCaseTest {
                 .thenAnswer(invocation -> invocation.getArgument(0));
     }
 
+    private void givenPersonExists(User user, SexType sexType) {
+        Person person = Person.restore(
+                user.getPersonId(),
+                "Renan",
+                new Sex(sexType),
+                new BirthDate(LocalDate.of(1994, 4, 9)),
+                CREATED_AT,
+                UPDATED_AT
+        );
+
+        when(personRepository.findById(user.getPersonId())).thenReturn(Optional.of(person));
+    }
+
     private User activeFemaleUser() {
         return User.restore(
                 new UserId(1L),
                 "Renata",
+                personId(1L),
                 email("renata@example.com"),
                 passwordHash("hashed-password"),
-                sex(SexType.FEMALE),
                 false,
                 true,
                 CREATED_AT,

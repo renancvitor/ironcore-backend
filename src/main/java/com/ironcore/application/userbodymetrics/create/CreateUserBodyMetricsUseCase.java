@@ -8,6 +8,8 @@ import com.ironcore.application.userbodymetrics.UserBodyMetricsAuditData;
 import com.ironcore.application.userbodymetrics.component.BodyFatPercentageCalculator;
 import com.ironcore.domain.logging.audit.enums.AuditActionType;
 import com.ironcore.domain.logging.audit.enums.AuditTargetType;
+import com.ironcore.domain.person.model.Person;
+import com.ironcore.domain.person.repository.PersonRepository;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.userbodymetrics.model.UserBodyMetrics;
@@ -28,6 +30,7 @@ import java.time.LocalDateTime;
 public class CreateUserBodyMetricsUseCase {
 
     private final UserRepository userRepository;
+    private final PersonRepository personRepository;
     private final UserBodyMetricsRepository userBodyMetricsRepository;
     private final BMICalculator bmiCalculator;
     private final BodyFatPercentageCalculator bodyFatPercentageCalculator;
@@ -43,6 +46,9 @@ public class CreateUserBodyMetricsUseCase {
         User user = userRepository.findById(command.userId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
 
+        Person person = personRepository.findById(user.getPersonId())
+                .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada."));
+
         if (!user.isActive()) {
             throw new UserInactiveException("Usuário inativo.");
         }
@@ -54,7 +60,7 @@ public class CreateUserBodyMetricsUseCase {
         BMI bmi = bmiCalculator.calculate(command.height(), command.weight());
 
         BodyFatPercentage bodyFatPercentage = bodyFatPercentageCalculator.calculate(
-                user,
+                person,
                 command.height(),
                 circumferences
         );
