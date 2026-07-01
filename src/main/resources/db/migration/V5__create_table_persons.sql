@@ -2,7 +2,7 @@ CREATE TABLE persons(
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL UNIQUE,
     sex VARCHAR(15) NOT NULL,
-    birth_date TIMESTAMP NOT NULL,
+    birth_date DATE NOT NULL,
     created_at TIMESTAMP NOT NULL,
-    updated_at DATE
+    updated_at TIMESTAMP
 );
