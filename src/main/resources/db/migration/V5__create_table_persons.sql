@@ -4,5 +4,5 @@ CREATE TABLE persons(
     sex VARCHAR(15) NOT NULL,
     birth_date TIMESTAMP NOT NULL,
     created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP
+    updated_at DATE
 );
