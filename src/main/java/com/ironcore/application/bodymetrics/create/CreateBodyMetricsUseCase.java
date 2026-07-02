@@ -43,15 +43,15 @@ public class CreateBodyMetricsUseCase {
     public CreateBodyMetricsResult execute(CreateBodyMetricsCommand command) {
         BodyCircumferences circumferences = command.circumferences();
 
-        User user = userRepository.findById(command.userId())
+        User user = userRepository.findById(command.actorUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
-
-        Person person = personRepository.findById(user.getPersonId())
-                .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada."));
 
         if (!user.isActive()) {
             throw new UserInactiveException("Usuário inativo.");
         }
+
+        Person person = personRepository.findById(user.getPersonId())
+                .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada."));
 
         if (command.weight() == null || command.height() == null) {
             throw new OperationNotAllowedException("Peso e altura são obrigatórios.");
@@ -78,7 +78,7 @@ public class CreateBodyMetricsUseCase {
         LocalDateTime measuredAt = LocalDateTime.now(clock);
 
         BodyMetrics newBodyMetrics = BodyMetrics.register(
-                command.userId(),
+                person.getId(),
                 measuredAt,
                 command.weight(),
                 command.height(),
@@ -96,7 +96,7 @@ public class CreateBodyMetricsUseCase {
                 AuditActionType.CREATE,
                 user.getId().value(),
                 user.getEmail().value(),
-                AuditTargetType.USER_BODY_METRICS,
+                AuditTargetType.BODY_METRICS,
                 savedBodyMetrics.getId().value(),
                 null,
                 BodyMetricsAuditData.from(savedBodyMetrics)
@@ -104,7 +104,7 @@ public class CreateBodyMetricsUseCase {
 
         return new CreateBodyMetricsResult(
                 savedBodyMetrics.getId(),
-                savedBodyMetrics.getUserId(),
+                savedBodyMetrics.getPersonId(),
                 savedBodyMetrics.getMeasuredAt(),
                 savedBodyMetrics.getWeight(),
                 savedBodyMetrics.getHeight(),

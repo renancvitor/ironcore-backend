@@ -49,7 +49,7 @@ public final class BodyMetricsRestMapper {
     public static CreateBodyMetricsResponse toResponse(CreateBodyMetricsResult result) {
         return new CreateBodyMetricsResponse(
                 result.id().value(),
-                result.userId().value(),
+                result.personId().value(),
                 result.measuredAt(),
                 result.weight().value(),
                 result.height().value(),
@@ -80,7 +80,7 @@ public final class BodyMetricsRestMapper {
     public static UpdateBodyMetricsResponse toResponse(UpdateBodyMetricsResult result) {
         return new UpdateBodyMetricsResponse(
                 result.id().value(),
-                result.userId().value(),
+                result.personId().value(),
                 result.measuredAt(),
                 result.weight().value(),
                 result.height().value(),
@@ -140,7 +140,7 @@ public final class BodyMetricsRestMapper {
     public static GetBodyMetricsResponse toResponse(GetBodyMetricsResult result) {
         return new GetBodyMetricsResponse(
                 result.id().value(),
-                result.userId().value(),
+                result.personId().value(),
                 result.measuredAt(),
                 result.weight().value(),
                 result.height().value(),
@@ -163,7 +163,7 @@ public final class BodyMetricsRestMapper {
     public static GetLatestBodyMetricsResponse toResponse(GetLatestBodyMetricsResult result) {
         return new GetLatestBodyMetricsResponse(
                 result.id().value(),
-                result.userId().value(),
+                result.personId().value(),
                 result.measuredAt(),
                 result.weight().value(),
                 result.height().value(),

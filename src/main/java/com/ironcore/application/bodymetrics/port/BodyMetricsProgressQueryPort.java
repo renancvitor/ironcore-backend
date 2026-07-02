@@ -1,7 +1,7 @@
 package com.ironcore.application.bodymetrics.port;
 
 import com.ironcore.application.bodymetrics.progress.BodyMetricsProgressProjection;
-import com.ironcore.domain.user.valueobject.UserId;
+import com.ironcore.domain.person.valueobject.PersonId;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -9,7 +9,7 @@ import java.util.List;
 public interface BodyMetricsProgressQueryPort {
 
     List<BodyMetricsProgressProjection> findProgressData(
-            UserId userId,
+            PersonId personId,
             LocalDateTime startDate,
             LocalDateTime endDate
     );

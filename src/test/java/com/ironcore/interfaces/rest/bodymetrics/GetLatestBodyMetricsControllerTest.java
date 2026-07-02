@@ -1,5 +1,6 @@
 package com.ironcore.interfaces.rest.bodymetrics;
 
+import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
 import com.ironcore.application.bodymetrics.create.CreateBodyMetricsUseCase;
@@ -79,7 +80,7 @@ public class GetLatestBodyMetricsControllerTest {
     private UserRepository userRepository;
 
     @Test
-    void shouldReturnLatestUserBodyMetrics() throws Exception {
+    void shouldReturnLatestPersonBodyMetrics() throws Exception {
         GetLatestBodyMetricsCommand command = new GetLatestBodyMetricsCommand(
                 new UserId(1L)
         );
@@ -97,7 +98,7 @@ public class GetLatestBodyMetricsControllerTest {
         );
         GetLatestBodyMetricsResult result = new GetLatestBodyMetricsResult(
                 new BodyMetricsId(1L),
-                new UserId(1L),
+                new PersonId(1L),
                 LocalDateTime.of(2026, 6, 20, 10, 0),
                 new BodyWeightKg(65.0),
                 new BodyHeightCm(167.0),
@@ -117,7 +118,7 @@ public class GetLatestBodyMetricsControllerTest {
                         .with(authenticatedUser()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.userId").value(1L))
+                .andExpect(jsonPath("$.personId").value(1L))
                 .andExpect(jsonPath("$.measuredAt").value("2026-06-20T10:00:00"))
                 .andExpect(jsonPath("$.weightKg").value(65.0))
                 .andExpect(jsonPath("$.heightCm").value(167.0))
@@ -141,7 +142,7 @@ public class GetLatestBodyMetricsControllerTest {
     }
 
     @Test
-    void shouldReturnNotFoundWhenLatestUserBodyMetricsDoesNotExist() throws Exception {
+    void shouldReturnNotFoundWhenLatestPersonBodyMetricsDoesNotExist() throws Exception {
         GetLatestBodyMetricsCommand command = new GetLatestBodyMetricsCommand(
                 new UserId(1L)
         );

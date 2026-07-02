@@ -5,6 +5,6 @@ import com.ironcore.domain.bodymetrics.valueobject.BodyMetricsId;
 
 public record DeleteBodyMetricsCommand(
         BodyMetricsId bodyMetricsId,
-        UserId userId
+        UserId actorUserId
 ) {
 }

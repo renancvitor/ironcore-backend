@@ -5,7 +5,7 @@ import com.ironcore.domain.user.valueobject.UserId;
 import java.time.LocalDate;
 
 public record BodyMetricsProgressChangesCommand(
-        UserId userId,
+        UserId actorUserId,
         LocalDate startDate,
         LocalDate endDate
 ) {

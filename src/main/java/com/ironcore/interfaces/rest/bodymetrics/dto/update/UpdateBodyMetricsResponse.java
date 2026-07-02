@@ -6,15 +6,15 @@ import java.time.LocalDateTime;
 
 public record UpdateBodyMetricsResponse(
         Long id,
-        Long userId,
+        Long personId,
         LocalDateTime measuredAt,
         Double weightKg,
         Double heightCm,
         BodyCircumferencesResponse circumferences,
         Double bmi,
         Double bodyFatPercentage,
-        Double fatMass,
-        Double leanMass,
+        Double fatMassKg,
+        Double leanMassKg,
         String notes,
         LocalDateTime updatedAt
 ) {

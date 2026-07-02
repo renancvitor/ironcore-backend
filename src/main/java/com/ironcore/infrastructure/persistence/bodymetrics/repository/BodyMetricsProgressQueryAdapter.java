@@ -2,7 +2,7 @@ package com.ironcore.infrastructure.persistence.bodymetrics.repository;
 
 import com.ironcore.application.bodymetrics.port.BodyMetricsProgressQueryPort;
 import com.ironcore.application.bodymetrics.progress.BodyMetricsProgressProjection;
-import com.ironcore.domain.user.valueobject.UserId;
+import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.infrastructure.exception.PersistenceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -19,17 +19,17 @@ public class BodyMetricsProgressQueryAdapter implements BodyMetricsProgressQuery
 
     @Override
     public List<BodyMetricsProgressProjection> findProgressData(
-            UserId userId,
+            PersonId personId,
             LocalDateTime startDate,
             LocalDateTime endDate
     ) {
         try {
-            Long userIdValue = Objects.requireNonNull(
-                    userId.value(),
-                    "Id do usuário não pode ser nulo."
+            Long personIdValue = Objects.requireNonNull(
+                    personId.value(),
+                    "Id da pessoa não pode ser nulo."
             );
             return bodyMetricsProgressJpaRepository.findProgressData(
-                    userIdValue,
+                    personIdValue,
                     startDate,
                     endDate
             );

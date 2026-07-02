@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 public record BodyMetricsAuditData(
         Long id,
-        Long userId,
+        Long personId,
         LocalDateTime measuredAt,
         Double weightKg,
         Double heightCm,
@@ -34,7 +34,7 @@ public record BodyMetricsAuditData(
 
         return new BodyMetricsAuditData(
                 bodyMetrics.getId().value(),
-                bodyMetrics.getUserId().value(),
+                bodyMetrics.getPersonId().value(),
                 bodyMetrics.getMeasuredAt(),
                 bodyMetrics.getWeight().value(),
                 bodyMetrics.getHeight().value(),

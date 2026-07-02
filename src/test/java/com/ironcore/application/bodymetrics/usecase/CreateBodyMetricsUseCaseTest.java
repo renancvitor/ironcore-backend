@@ -115,7 +115,7 @@ class CreateBodyMetricsUseCaseTest {
     class SuccessfulCreation {
 
         @Test
-        void shouldCreateUserBodyMetricsWithWeightAndHeight() {
+        void shouldCreatePersonBodyMetricsWithWeightAndHeight() {
             User user = activeUser();
             CreateBodyMetricsCommand command = commandWithoutCircumferences();
             LocalDateTime measuredAt = LocalDateTime.of(2026, 5, 23, 10, 0);
@@ -124,33 +124,33 @@ class CreateBodyMetricsUseCaseTest {
             givenFixedClock();
             when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
             givenPersonExists(user, SexType.MALE);
-            givenUserBodyMetricsIsPersisted();
+            givenPersonBodyMetricsIsPersisted();
 
             CreateBodyMetricsResult result = createBodyMetricsUseCase.execute(command);
 
-            ArgumentCaptor<BodyMetrics> userBodyMetricsCaptor = ArgumentCaptor.forClass(BodyMetrics.class);
+            ArgumentCaptor<BodyMetrics> personBodyMetricsCaptor = ArgumentCaptor.forClass(BodyMetrics.class);
             ArgumentCaptor<LoggableData> auditAfterStateCaptor = ArgumentCaptor.forClass(LoggableData.class);
 
-            verify(userRepository).findById(command.userId());
+            verify(userRepository).findById(command.actorUserId());
             verify(bmiCalculator).calculate(command.height(), command.weight());
             verify(navyBodyFatCalculator, never()).calculate(any(), any(), any());
             verify(fatMassCalculator, never()).calculate(any(), any());
             verify(leanMassCalculator, never()).calculate(any(), any());
-            verify(bodyMetricsRepository).save(userBodyMetricsCaptor.capture());
+            verify(bodyMetricsRepository).save(personBodyMetricsCaptor.capture());
             verify(auditLogPublisher).publish(
                     eq(AuditActionType.CREATE),
                     eq(user.getId().value()),
                     eq(user.getEmail().value()),
-                    eq(AuditTargetType.USER_BODY_METRICS),
+                    eq(AuditTargetType.BODY_METRICS),
                     eq(1L),
                     isNull(),
                     auditAfterStateCaptor.capture()
             );
 
-            BodyMetrics savedBodyMetrics = userBodyMetricsCaptor.getValue();
+            BodyMetrics savedBodyMetrics = personBodyMetricsCaptor.getValue();
             BodyMetricsAuditData auditAfterState = (BodyMetricsAuditData) auditAfterStateCaptor.getValue();
 
-            assertThat(savedBodyMetrics.getUserId()).isEqualTo(command.userId());
+            assertThat(savedBodyMetrics.getPersonId()).isEqualTo(user.getPersonId());
             assertThat(savedBodyMetrics.getMeasuredAt()).isEqualTo(measuredAt);
             assertThat(savedBodyMetrics.getWeight()).isEqualTo(command.weight());
             assertThat(savedBodyMetrics.getHeight()).isEqualTo(command.height());
@@ -162,12 +162,12 @@ class CreateBodyMetricsUseCaseTest {
             assertThat(savedBodyMetrics.getNotes()).isEqualTo(command.notes());
 
             assertThat(result.id()).isEqualTo(new BodyMetricsId(1L));
-            assertThat(result.userId()).isEqualTo(command.userId());
+            assertThat(result.personId()).isEqualTo(user.getPersonId());
             assertThat(result.measuredAt()).isEqualTo(measuredAt);
             assertThat(result.bmi()).isEqualTo(savedBodyMetrics.getBmi());
 
             assertThat(auditAfterState.id()).isEqualTo(1L);
-            assertThat(auditAfterState.userId()).isEqualTo(command.userId().value());
+            assertThat(auditAfterState.personId()).isEqualTo(user.getPersonId().value());
             assertThat(auditAfterState.measuredAt()).isEqualTo(measuredAt);
             assertThat(auditAfterState.weightKg()).isEqualTo(command.weight().value());
             assertThat(auditAfterState.heightCm()).isEqualTo(command.height().value());
@@ -186,18 +186,18 @@ class CreateBodyMetricsUseCaseTest {
             givenFixedClock();
             when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
             givenPersonExists(user, SexType.MALE);
-            givenUserBodyMetricsIsPersisted();
+            givenPersonBodyMetricsIsPersisted();
 
             createBodyMetricsUseCase.execute(command);
 
-            ArgumentCaptor<BodyMetrics> userBodyMetricsCaptor = ArgumentCaptor.forClass(BodyMetrics.class);
+            ArgumentCaptor<BodyMetrics> personBodyMetricsCaptor = ArgumentCaptor.forClass(BodyMetrics.class);
 
-            verify(userRepository).findById(command.userId());
+            verify(userRepository).findById(command.actorUserId());
             verify(bmiCalculator).calculate(command.height(), command.weight());
             verify(navyBodyFatCalculator).calculate(SexType.MALE, command.height(), command.circumferences());
-            verify(bodyMetricsRepository).save(userBodyMetricsCaptor.capture());
+            verify(bodyMetricsRepository).save(personBodyMetricsCaptor.capture());
 
-            BodyMetrics savedBodyMetrics = userBodyMetricsCaptor.getValue();
+            BodyMetrics savedBodyMetrics = personBodyMetricsCaptor.getValue();
 
             verify(fatMassCalculator).calculate(command.weight(), savedBodyMetrics.getBodyFatPercentage());
             verify(leanMassCalculator).calculate(command.weight(), savedBodyMetrics.getFatMassKg());
@@ -205,7 +205,7 @@ class CreateBodyMetricsUseCaseTest {
                     eq(AuditActionType.CREATE),
                     eq(user.getId().value()),
                     eq(user.getEmail().value()),
-                    eq(AuditTargetType.USER_BODY_METRICS),
+                    eq(AuditTargetType.BODY_METRICS),
                     eq(1L),
                     isNull(),
                     any(BodyMetricsAuditData.class)
@@ -224,18 +224,18 @@ class CreateBodyMetricsUseCaseTest {
             givenFixedClock();
             when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
             givenPersonExists(user, SexType.FEMALE);
-            givenUserBodyMetricsIsPersisted();
+            givenPersonBodyMetricsIsPersisted();
 
             createBodyMetricsUseCase.execute(command);
 
-            ArgumentCaptor<BodyMetrics> userBodyMetricsCaptor = ArgumentCaptor.forClass(BodyMetrics.class);
+            ArgumentCaptor<BodyMetrics> personBodyMetricsCaptor = ArgumentCaptor.forClass(BodyMetrics.class);
 
-            verify(userRepository).findById(command.userId());
+            verify(userRepository).findById(command.actorUserId());
             verify(bmiCalculator).calculate(command.height(), command.weight());
             verify(navyBodyFatCalculator).calculate(SexType.FEMALE, command.height(), command.circumferences());
-            verify(bodyMetricsRepository).save(userBodyMetricsCaptor.capture());
+            verify(bodyMetricsRepository).save(personBodyMetricsCaptor.capture());
 
-            BodyMetrics savedBodyMetrics = userBodyMetricsCaptor.getValue();
+            BodyMetrics savedBodyMetrics = personBodyMetricsCaptor.getValue();
 
             verify(fatMassCalculator).calculate(command.weight(), savedBodyMetrics.getBodyFatPercentage());
             verify(leanMassCalculator).calculate(command.weight(), savedBodyMetrics.getFatMassKg());
@@ -243,7 +243,7 @@ class CreateBodyMetricsUseCaseTest {
                     eq(AuditActionType.CREATE),
                     eq(user.getId().value()),
                     eq(user.getEmail().value()),
-                    eq(AuditTargetType.USER_BODY_METRICS),
+                    eq(AuditTargetType.BODY_METRICS),
                     eq(1L),
                     isNull(),
                     any(BodyMetricsAuditData.class)
@@ -262,20 +262,20 @@ class CreateBodyMetricsUseCaseTest {
             givenFixedClock();
             when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
             givenPersonExists(user, SexType.MALE);
-            givenUserBodyMetricsIsPersisted();
+            givenPersonBodyMetricsIsPersisted();
 
             createBodyMetricsUseCase.execute(command);
 
-            ArgumentCaptor<BodyMetrics> userBodyMetricsCaptor = ArgumentCaptor.forClass(BodyMetrics.class);
+            ArgumentCaptor<BodyMetrics> personBodyMetricsCaptor = ArgumentCaptor.forClass(BodyMetrics.class);
 
-            verify(userRepository).findById(command.userId());
+            verify(userRepository).findById(command.actorUserId());
             verify(bmiCalculator).calculate(command.height(), command.weight());
             verify(navyBodyFatCalculator, never()).calculate(any(), any(), any());
             verify(fatMassCalculator, never()).calculate(any(), any());
             verify(leanMassCalculator, never()).calculate(any(), any());
-            verify(bodyMetricsRepository).save(userBodyMetricsCaptor.capture());
+            verify(bodyMetricsRepository).save(personBodyMetricsCaptor.capture());
 
-            BodyMetrics savedBodyMetrics = userBodyMetricsCaptor.getValue();
+            BodyMetrics savedBodyMetrics = personBodyMetricsCaptor.getValue();
 
             assertThat(savedBodyMetrics.getBodyFatPercentage()).isNull();
             assertThat(savedBodyMetrics.getFatMassKg()).isNull();
@@ -284,7 +284,7 @@ class CreateBodyMetricsUseCaseTest {
                     eq(AuditActionType.CREATE),
                     eq(user.getId().value()),
                     eq(user.getEmail().value()),
-                    eq(AuditTargetType.USER_BODY_METRICS),
+                    eq(AuditTargetType.BODY_METRICS),
                     eq(1L),
                     isNull(),
                     any(BodyMetricsAuditData.class)
@@ -299,20 +299,20 @@ class CreateBodyMetricsUseCaseTest {
             givenFixedClock();
             when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
             givenPersonExists(user, SexType.FEMALE);
-            givenUserBodyMetricsIsPersisted();
+            givenPersonBodyMetricsIsPersisted();
 
             createBodyMetricsUseCase.execute(command);
 
-            ArgumentCaptor<BodyMetrics> userBodyMetricsCaptor = ArgumentCaptor.forClass(BodyMetrics.class);
+            ArgumentCaptor<BodyMetrics> personBodyMetricsCaptor = ArgumentCaptor.forClass(BodyMetrics.class);
 
-            verify(userRepository).findById(command.userId());
+            verify(userRepository).findById(command.actorUserId());
             verify(bmiCalculator).calculate(command.height(), command.weight());
             verify(navyBodyFatCalculator, never()).calculate(any(), any(), any());
             verify(fatMassCalculator, never()).calculate(any(), any());
             verify(leanMassCalculator, never()).calculate(any(), any());
-            verify(bodyMetricsRepository).save(userBodyMetricsCaptor.capture());
+            verify(bodyMetricsRepository).save(personBodyMetricsCaptor.capture());
 
-            BodyMetrics savedBodyMetrics = userBodyMetricsCaptor.getValue();
+            BodyMetrics savedBodyMetrics = personBodyMetricsCaptor.getValue();
 
             assertThat(savedBodyMetrics.getBodyFatPercentage()).isNull();
             assertThat(savedBodyMetrics.getFatMassKg()).isNull();
@@ -321,7 +321,7 @@ class CreateBodyMetricsUseCaseTest {
                     eq(AuditActionType.CREATE),
                     eq(user.getId().value()),
                     eq(user.getEmail().value()),
-                    eq(AuditTargetType.USER_BODY_METRICS),
+                    eq(AuditTargetType.BODY_METRICS),
                     eq(1L),
                     isNull(),
                     any(BodyMetricsAuditData.class)
@@ -336,13 +336,13 @@ class CreateBodyMetricsUseCaseTest {
         void shouldFailWhenUserDoesNotExist() {
             CreateBodyMetricsCommand command = commandWithoutCircumferences();
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.empty());
+            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.empty());
 
             assertThatExceptionOfType(ResourceNotFoundException.class)
                     .isThrownBy(() -> createBodyMetricsUseCase.execute(command))
                     .withMessage("Usuário não encontrado.");
 
-            verify(userRepository).findById(command.userId());
+            verify(userRepository).findById(command.actorUserId());
             verify(bodyMetricsRepository, never()).save(any());
             verify(bmiCalculator, never()).calculate(any(), any());
             verify(navyBodyFatCalculator, never()).calculate(any(), any(), any());
@@ -356,14 +356,13 @@ class CreateBodyMetricsUseCaseTest {
             User user = inactiveUser();
             CreateBodyMetricsCommand command = commandWithoutCircumferences();
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
-            givenPersonExists(user, SexType.MALE);
+            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.of(user));
 
             assertThatExceptionOfType(UserInactiveException.class)
                     .isThrownBy(() -> createBodyMetricsUseCase.execute(command))
                     .withMessage("Usuário inativo.");
 
-            verify(userRepository).findById(command.userId());
+            verify(userRepository).findById(command.actorUserId());
             verify(bodyMetricsRepository, never()).save(any());
             verify(bmiCalculator, never()).calculate(any(), any());
             verify(navyBodyFatCalculator, never()).calculate(any(), any(), any());
@@ -381,14 +380,14 @@ class CreateBodyMetricsUseCaseTest {
             User user = activeUser();
             CreateBodyMetricsCommand command = commandWithoutWeight();
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.of(user));
             givenPersonExists(user, SexType.MALE);
 
             assertThatExceptionOfType(OperationNotAllowedException.class)
                     .isThrownBy(() -> createBodyMetricsUseCase.execute(command))
                     .withMessage("Peso e altura são obrigatórios.");
 
-            verify(userRepository).findById(command.userId());
+            verify(userRepository).findById(command.actorUserId());
             verify(bodyMetricsRepository, never()).save(any());
             verify(bmiCalculator, never()).calculate(any(), any());
             verify(navyBodyFatCalculator, never()).calculate(any(), any(), any());
@@ -402,14 +401,14 @@ class CreateBodyMetricsUseCaseTest {
             User user = activeUser();
             CreateBodyMetricsCommand command = commandWithoutHeight();
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.of(user));
             givenPersonExists(user, SexType.MALE);
 
             assertThatExceptionOfType(OperationNotAllowedException.class)
                     .isThrownBy(() -> createBodyMetricsUseCase.execute(command))
                     .withMessage("Peso e altura são obrigatórios.");
 
-            verify(userRepository).findById(command.userId());
+            verify(userRepository).findById(command.actorUserId());
             verify(bodyMetricsRepository, never()).save(any());
             verify(bmiCalculator, never()).calculate(any(), any());
             verify(navyBodyFatCalculator, never()).calculate(any(), any(), any());
@@ -429,14 +428,14 @@ class CreateBodyMetricsUseCaseTest {
         when(clock.getZone()).thenReturn(fixedClock.getZone());
     }
 
-    private void givenUserBodyMetricsIsPersisted() {
+    private void givenPersonBodyMetricsIsPersisted() {
         when(bodyMetricsRepository.save(any(BodyMetrics.class)))
                 .thenAnswer(invocation -> {
                     BodyMetrics bodyMetrics = invocation.getArgument(0);
 
                     return BodyMetrics.restore(
                             new BodyMetricsId(1L),
-                            bodyMetrics.getUserId(),
+                            bodyMetrics.getPersonId(),
                             bodyMetrics.getMeasuredAt(),
                             bodyMetrics.getWeight(),
                             bodyMetrics.getHeight(),

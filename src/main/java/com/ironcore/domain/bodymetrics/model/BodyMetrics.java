@@ -1,7 +1,7 @@
 package com.ironcore.domain.bodymetrics.model;
 
 import com.ironcore.domain.bodymetrics.valueobject.*;
-import com.ironcore.domain.user.valueobject.UserId;
+import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.bodymetrics.exception.InvalidBodyMetricException;
 import lombok.Getter;
 
@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 public class BodyMetrics {
 
     private final BodyMetricsId id;
-    private final UserId userId;
+    private final PersonId personId;
     private final LocalDateTime measuredAt;
     private BodyWeightKg weight;
     private BodyHeightCm height;
@@ -23,12 +23,12 @@ public class BodyMetrics {
     private LocalDateTime updatedAt;
     private String notes;
 
-    public BodyMetrics(BodyMetricsId id, UserId userId, LocalDateTime measuredAt, BodyWeightKg weight,
+    public BodyMetrics(BodyMetricsId id, PersonId personId, LocalDateTime measuredAt, BodyWeightKg weight,
                        BodyHeightCm height, BodyCircumferences circumferences, BMI bmi,
                        BodyFatPercentage bodyFatPercentage, FatMassKg fatMassKg,
                        LeanMassKg leanMassKg, LocalDateTime updatedAt, String notes) {
         this.id = id;
-        this.userId = requireNonNull(userId, "Usuário não pode ser nulo.");
+        this.personId = requireNonNull(personId, "Pessoa não pode ser nula.");
         this.measuredAt = requireNonNull(measuredAt, "Data de medição é obrigatória.");
         this.weight = requireNonNull(weight, "Peso é obrigatório.");
         this.height = requireNonNull(height, "Altura é obrigatória.");
@@ -42,7 +42,7 @@ public class BodyMetrics {
     }
 
     public static BodyMetrics register(
-            UserId userId,
+            PersonId personId,
             LocalDateTime measuredAt,
             BodyWeightKg weight,
             BodyHeightCm height,
@@ -55,7 +55,7 @@ public class BodyMetrics {
     ) {
         return new BodyMetrics(
                 null,
-                userId,
+                personId,
                 measuredAt,
                 weight,
                 height,
@@ -71,7 +71,7 @@ public class BodyMetrics {
 
     public static BodyMetrics restore(
             BodyMetricsId id,
-            UserId userId,
+            PersonId personId,
             LocalDateTime measuredAt,
             BodyWeightKg weight,
             BodyHeightCm height,
@@ -85,7 +85,7 @@ public class BodyMetrics {
     ) {
         return new BodyMetrics(
                 id,
-                userId,
+                personId,
                 measuredAt,
                 weight,
                 height,

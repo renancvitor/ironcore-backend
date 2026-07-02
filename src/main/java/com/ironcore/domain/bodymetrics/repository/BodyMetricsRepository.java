@@ -1,6 +1,6 @@
 package com.ironcore.domain.bodymetrics.repository;
 
-import com.ironcore.domain.user.valueobject.UserId;
+import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.bodymetrics.model.BodyMetrics;
 import com.ironcore.domain.bodymetrics.valueobject.BodyMetricsId;
 
@@ -12,9 +12,9 @@ public interface BodyMetricsRepository {
 
     Optional<BodyMetrics> findById(BodyMetricsId bodyMetricsId);
 
-    Optional<BodyMetrics> findByIdAndUserId(BodyMetricsId bodyMetricsId, UserId userId);
+    Optional<BodyMetrics> findByIdAndPersonId(BodyMetricsId bodyMetricsId, PersonId personId);
 
-    Optional<BodyMetrics> findLatestByUserId(UserId userId);
+    Optional<BodyMetrics> findLatestByPersonId(PersonId personId);
 
     void deleteById(BodyMetricsId bodyMetricsId);
 }

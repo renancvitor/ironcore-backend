@@ -6,6 +6,8 @@ import com.ironcore.application.logging.audit.port.AuditLogPublisher;
 import com.ironcore.application.bodymetrics.BodyMetricsAuditData;
 import com.ironcore.domain.logging.audit.enums.AuditActionType;
 import com.ironcore.domain.logging.audit.enums.AuditTargetType;
+import com.ironcore.domain.person.model.Person;
+import com.ironcore.domain.person.repository.PersonRepository;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.bodymetrics.model.BodyMetrics;
@@ -19,20 +21,24 @@ import org.springframework.transaction.annotation.Transactional;
 public class DeleteBodyMetricsUseCase {
 
     private final UserRepository userRepository;
+    private final PersonRepository personRepository;
     private final BodyMetricsRepository bodyMetricsRepository;
     private final AuditLogPublisher publisher;
 
     @Transactional
     public void execute(DeleteBodyMetricsCommand command) {
-        User user = userRepository.findById(command.userId())
+        User user = userRepository.findById(command.actorUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
 
         if (!user.isActive()) {
             throw new UserInactiveException("Usuário inativo.");
         }
 
+        Person person = personRepository.findById(user.getPersonId())
+                .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada."));
+
         BodyMetrics bodyMetrics = bodyMetricsRepository
-                .findByIdAndUserId(command.bodyMetricsId(), command.userId())
+                .findByIdAndPersonId(command.bodyMetricsId(), person.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Métricas corporais não encontradas."));
 
         BodyMetricsAuditData beforeState = BodyMetricsAuditData.from(bodyMetrics);
@@ -43,7 +49,7 @@ public class DeleteBodyMetricsUseCase {
                 AuditActionType.DELETE,
                 user.getId().value(),
                 user.getEmail().value(),
-                AuditTargetType.USER_BODY_METRICS,
+                AuditTargetType.BODY_METRICS,
                 bodyMetrics.getId().value(),
                 beforeState,
                 null

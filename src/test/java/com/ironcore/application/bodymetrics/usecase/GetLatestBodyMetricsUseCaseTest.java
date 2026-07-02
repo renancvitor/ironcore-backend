@@ -42,20 +42,20 @@ class GetLatestBodyMetricsUseCaseTest {
     class SuccessfulGetLatestBodyMetrics {
 
         @Test
-        void shouldReturnLatestUserBodyMetrics() {
+        void shouldReturnLatestPersonBodyMetrics() {
             User user = activeUser();
             BodyMetrics metrics = restoreBodyMetrics();
             GetLatestBodyMetricsCommand command = new GetLatestBodyMetricsCommand(
                     user.getId()
             );
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
-            when(bodyMetricsRepository.findLatestByUserId(command.userId())).thenReturn(Optional.of(metrics));
+            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.of(user));
+            when(bodyMetricsRepository.findLatestByPersonId(user.getPersonId())).thenReturn(Optional.of(metrics));
 
             GetLatestBodyMetricsResult result = getLatestBodyMetricsUseCase.execute(command);
 
-            verify(userRepository).findById(command.userId());
-            verify(bodyMetricsRepository).findLatestByUserId(command.userId());
+            verify(userRepository).findById(command.actorUserId());
+            verify(bodyMetricsRepository).findLatestByPersonId(user.getPersonId());
 
             assertThat(result)
                     .usingRecursiveComparison()
@@ -72,13 +72,13 @@ class GetLatestBodyMetricsUseCaseTest {
                     new UserId(1L)
             );
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.empty());
+            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.empty());
 
             assertThatExceptionOfType(ResourceNotFoundException.class)
                     .isThrownBy(() -> getLatestBodyMetricsUseCase.execute(command))
                     .withMessage("Usuário não encontrado.");
 
-            verify(userRepository).findById(command.userId());
+            verify(userRepository).findById(command.actorUserId());
             verifyNoInteractions(bodyMetricsRepository);
         }
 
@@ -89,13 +89,13 @@ class GetLatestBodyMetricsUseCaseTest {
                     user.getId()
             );
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.of(user));
 
             assertThatExceptionOfType(UserInactiveException.class)
                     .isThrownBy(() -> getLatestBodyMetricsUseCase.execute(command))
                     .withMessage("Usuário inativo.");
 
-            verify(userRepository).findById(command.userId());
+            verify(userRepository).findById(command.actorUserId());
             verifyNoInteractions(bodyMetricsRepository);
         }
     }
@@ -110,15 +110,15 @@ class GetLatestBodyMetricsUseCaseTest {
                     user.getId()
             );
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
-            when(bodyMetricsRepository.findLatestByUserId(command.userId())).thenReturn(Optional.empty());
+            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.of(user));
+            when(bodyMetricsRepository.findLatestByPersonId(user.getPersonId())).thenReturn(Optional.empty());
 
             assertThatExceptionOfType(ResourceNotFoundException.class)
                     .isThrownBy(() -> getLatestBodyMetricsUseCase.execute(command))
                     .withMessage("Métricas corporais não encontradas.");
 
-            verify(userRepository).findById(command.userId());
-            verify(bodyMetricsRepository).findLatestByUserId(command.userId());
+            verify(userRepository).findById(command.actorUserId());
+            verify(bodyMetricsRepository).findLatestByPersonId(user.getPersonId());
         }
     }
 }

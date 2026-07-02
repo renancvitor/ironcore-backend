@@ -2,6 +2,7 @@ package com.ironcore.infrastructure.persistence.bodymetrics.entity;
 
 import java.time.LocalDateTime;
 
+import com.ironcore.infrastructure.persistence.person.entity.PersonEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,8 +11,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-
-import com.ironcore.infrastructure.persistence.user.entity.UserEntity;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -31,8 +30,8 @@ public class BodyMetricsEntity {
     private Long id;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private UserEntity user;
+    @JoinColumn(name = "person_id", nullable = false)
+    private PersonEntity person;
 
     @Column(name = "measured_at", nullable = false)
     private LocalDateTime measuredAt;

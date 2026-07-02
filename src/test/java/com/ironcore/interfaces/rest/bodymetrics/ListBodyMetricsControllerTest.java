@@ -88,7 +88,7 @@ public class ListBodyMetricsControllerTest {
     class SuccessfulList {
 
         @Test
-        void shouldListUserBodyMetricsWithPagination() throws Exception {
+        void shouldListPersonBodyMetricsWithPagination() throws Exception {
             ListBodyMetricsCommand command = new ListBodyMetricsCommand(
                     new UserId(1L),
                     1,

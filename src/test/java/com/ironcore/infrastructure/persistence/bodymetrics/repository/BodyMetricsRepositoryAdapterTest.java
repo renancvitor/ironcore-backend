@@ -1,11 +1,11 @@
 package com.ironcore.infrastructure.persistence.bodymetrics.repository;
 
-import com.ironcore.domain.user.valueobject.UserId;
+import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.bodymetrics.model.BodyMetrics;
 import com.ironcore.domain.bodymetrics.valueobject.BodyMetricsId;
 import com.ironcore.infrastructure.exception.DataMappingException;
 import com.ironcore.infrastructure.exception.PersistenceException;
-import com.ironcore.infrastructure.persistence.user.repository.UserJpaRepository;
+import com.ironcore.infrastructure.persistence.person.repository.PersonJpaRepository;
 import com.ironcore.infrastructure.persistence.bodymetrics.entity.BodyMetricsEntity;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -18,8 +18,8 @@ import org.springframework.lang.NonNull;
 import java.util.Optional;
 
 import static com.ironcore.domain.bodymetrics.BodyMetricsTestFactory.restoreBodyMetrics;
-import static com.ironcore.infrastructure.persistence.user.UserEntityTestFactory.userEntity;
-import static com.ironcore.infrastructure.persistence.bodymetrics.BodyMetricsTestFactory.createUserBodyMetricsEntity;
+import static com.ironcore.infrastructure.persistence.person.PersonEntityTestFactory.personEntity;
+import static com.ironcore.infrastructure.persistence.bodymetrics.BodyMetricsTestFactory.createPersonBodyMetricsEntity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.notNull;
@@ -34,7 +34,7 @@ class BodyMetricsRepositoryAdapterTest {
     private BodyMetricsJpaRepository bodyMetricsJpaRepository;
 
     @Mock
-    private UserJpaRepository userJpaRepository;
+    private PersonJpaRepository personJpaRepository;
 
     @InjectMocks
     private BodyMetricsRepositoryAdapter adapter;
@@ -43,22 +43,22 @@ class BodyMetricsRepositoryAdapterTest {
     class Save {
 
         @Test
-        void shouldSaveUserBodyMetrics() {
-            when(userJpaRepository.getReferenceById(1L)).thenReturn(userEntity());
-            when(bodyMetricsJpaRepository.save(anyUserBodyMetricsEntity()))
-                    .thenReturn(createUserBodyMetricsEntity());
+        void shouldSaveBodyMetrics() {
+            when(personJpaRepository.getReferenceById(1L)).thenReturn(personEntity());
+            when(bodyMetricsJpaRepository.save(anyBodyMetricsEntity()))
+                    .thenReturn(createPersonBodyMetricsEntity());
 
             BodyMetrics result = adapter.save(restoreBodyMetrics());
 
             assertThat(result.getId()).isEqualTo(new BodyMetricsId(1L));
-            assertThat(result.getUserId()).isEqualTo(new UserId(1L));
-            verify(userJpaRepository).getReferenceById(1L);
-            verify(bodyMetricsJpaRepository).save(anyUserBodyMetricsEntity());
+            assertThat(result.getPersonId()).isEqualTo(new PersonId(1L));
+            verify(personJpaRepository).getReferenceById(1L);
+            verify(bodyMetricsJpaRepository).save(anyBodyMetricsEntity());
         }
 
         @Test
         void shouldWrapMappingFailureBeforePersistence() {
-            when(userJpaRepository.getReferenceById(1L)).thenThrow(new RuntimeException("user unavailable"));
+            when(personJpaRepository.getReferenceById(1L)).thenThrow(new RuntimeException("user unavailable"));
             BodyMetrics bodyMetrics = restoreBodyMetrics();
 
             assertThatExceptionOfType(DataMappingException.class)
@@ -68,8 +68,8 @@ class BodyMetricsRepositoryAdapterTest {
 
         @Test
         void shouldWrapRepositoryFailure() {
-            when(userJpaRepository.getReferenceById(1L)).thenReturn(userEntity());
-            when(bodyMetricsJpaRepository.save(anyUserBodyMetricsEntity()))
+            when(personJpaRepository.getReferenceById(1L)).thenReturn(personEntity());
+            when(bodyMetricsJpaRepository.save(anyBodyMetricsEntity()))
                     .thenThrow(new RuntimeException("database unavailable"));
             BodyMetrics bodyMetrics = restoreBodyMetrics();
 
@@ -80,9 +80,9 @@ class BodyMetricsRepositoryAdapterTest {
 
         @Test
         void shouldWrapMappingFailureAfterPersistence() {
-            when(userJpaRepository.getReferenceById(1L)).thenReturn(userEntity());
-            when(bodyMetricsJpaRepository.save(anyUserBodyMetricsEntity()))
-                    .thenReturn(invalidUserBodyMetricsEntity());
+            when(personJpaRepository.getReferenceById(1L)).thenReturn(personEntity());
+            when(bodyMetricsJpaRepository.save(anyBodyMetricsEntity()))
+                    .thenReturn(invalidBodyMetricsEntity());
             BodyMetrics bodyMetrics = restoreBodyMetrics();
 
             assertThatExceptionOfType(DataMappingException.class)
@@ -95,8 +95,8 @@ class BodyMetricsRepositoryAdapterTest {
     class FindById {
 
         @Test
-        void shouldFindUserBodyMetricsById() {
-            when(bodyMetricsJpaRepository.findById(1L)).thenReturn(Optional.of(createUserBodyMetricsEntity()));
+        void shouldFindBodyMetricsById() {
+            when(bodyMetricsJpaRepository.findById(1L)).thenReturn(Optional.of(createPersonBodyMetricsEntity()));
 
             Optional<BodyMetrics> result = adapter.findById(new BodyMetricsId(1L));
 
@@ -125,30 +125,30 @@ class BodyMetricsRepositoryAdapterTest {
     }
 
     @Nested
-    class FindByIdAndUserId {
+    class FindByIdAndPersonId {
 
         @Test
-        void shouldFindUserBodyMetricsByIdAndUserId() {
-            when(bodyMetricsJpaRepository.findByIdAndUser_Id(1L, 1L))
-                    .thenReturn(Optional.of(createUserBodyMetricsEntity()));
+        void shouldFindBodyMetricsByIdAndPersonId() {
+            when(bodyMetricsJpaRepository.findByIdAndPerson_Id(1L, 1L))
+                    .thenReturn(Optional.of(createPersonBodyMetricsEntity()));
 
-            Optional<BodyMetrics> result = adapter.findByIdAndUserId(
+            Optional<BodyMetrics> result = adapter.findByIdAndPersonId(
                     new BodyMetricsId(1L),
-                    new UserId(1L)
+                    new PersonId(1L)
             );
 
             assertThat(result).isPresent();
             assertThat(result.get().getId()).isEqualTo(new BodyMetricsId(1L));
-            assertThat(result.get().getUserId()).isEqualTo(new UserId(1L));
+            assertThat(result.get().getPersonId()).isEqualTo(new PersonId(1L));
         }
 
         @Test
-        void shouldReturnEmptyWhenUserBodyMetricsDoesNotBelongToUser() {
-            when(bodyMetricsJpaRepository.findByIdAndUser_Id(1L, 99L)).thenReturn(Optional.empty());
+        void shouldReturnEmptyWhenBodyMetricsDoesNotBelongToPerson() {
+            when(bodyMetricsJpaRepository.findByIdAndPerson_Id(1L, 99L)).thenReturn(Optional.empty());
 
-            Optional<BodyMetrics> result = adapter.findByIdAndUserId(
+            Optional<BodyMetrics> result = adapter.findByIdAndPersonId(
                     new BodyMetricsId(1L),
-                    new UserId(99L)
+                    new PersonId(99L)
             );
 
             assertThat(result).isEmpty();
@@ -156,50 +156,50 @@ class BodyMetricsRepositoryAdapterTest {
 
         @Test
         void shouldWrapRepositoryFailure() {
-            when(bodyMetricsJpaRepository.findByIdAndUser_Id(1L, 1L))
+            when(bodyMetricsJpaRepository.findByIdAndPerson_Id(1L, 1L))
                     .thenThrow(new RuntimeException("database unavailable"));
             BodyMetricsId bodyMetricsId = new BodyMetricsId(1L);
-            UserId userId = new UserId(1L);
+            PersonId userId = new PersonId(1L);
 
             assertThatExceptionOfType(PersistenceException.class)
-                    .isThrownBy(() -> adapter.findByIdAndUserId(bodyMetricsId, userId))
-                    .withMessage("Falha ao buscar métricas corporais por id e usuário.");
+                    .isThrownBy(() -> adapter.findByIdAndPersonId(bodyMetricsId, userId))
+                    .withMessage("Falha ao buscar métricas corporais por id e pessoa.");
         }
     }
 
     @Nested
-    class FindLatestByUserId {
+    class FindLatestByPersonId {
 
         @Test
-        void shouldFindLatestUserBodyMetricsByUserId() {
-            when(bodyMetricsJpaRepository.findFirstByUser_IdOrderByMeasuredAtDesc(1L))
-                    .thenReturn(Optional.of(createUserBodyMetricsEntity()));
+        void shouldFindLatestBodyMetricsByPersonId() {
+            when(bodyMetricsJpaRepository.findFirstByPerson_IdOrderByMeasuredAtDesc(1L))
+                    .thenReturn(Optional.of(createPersonBodyMetricsEntity()));
 
-            Optional<BodyMetrics> result = adapter.findLatestByUserId(new UserId(1L));
+            Optional<BodyMetrics> result = adapter.findLatestByPersonId(new PersonId(1L));
 
             assertThat(result).isPresent();
-            assertThat(result.get().getUserId()).isEqualTo(new UserId(1L));
+            assertThat(result.get().getPersonId()).isEqualTo(new PersonId(1L));
         }
 
         @Test
-        void shouldReturnEmptyWhenUserDoesNotHaveBodyMetrics() {
-            when(bodyMetricsJpaRepository.findFirstByUser_IdOrderByMeasuredAtDesc(99L))
+        void shouldReturnEmptyWhenPersonDoesNotHaveBodyMetrics() {
+            when(bodyMetricsJpaRepository.findFirstByPerson_IdOrderByMeasuredAtDesc(99L))
                     .thenReturn(Optional.empty());
 
-            Optional<BodyMetrics> result = adapter.findLatestByUserId(new UserId(99L));
+            Optional<BodyMetrics> result = adapter.findLatestByPersonId(new PersonId(99L));
 
             assertThat(result).isEmpty();
         }
 
         @Test
         void shouldWrapRepositoryFailure() {
-            when(bodyMetricsJpaRepository.findFirstByUser_IdOrderByMeasuredAtDesc(1L))
+            when(bodyMetricsJpaRepository.findFirstByPerson_IdOrderByMeasuredAtDesc(1L))
                     .thenThrow(new RuntimeException("database unavailable"));
-            UserId userId = new UserId(1L);
+            PersonId userId = new PersonId(1L);
 
             assertThatExceptionOfType(PersistenceException.class)
-                    .isThrownBy(() -> adapter.findLatestByUserId(userId))
-                    .withMessage("Falha ao buscar último registro pelo usuário.");
+                    .isThrownBy(() -> adapter.findLatestByPersonId(userId))
+                    .withMessage("Falha ao buscar último registro pela pessoa.");
         }
     }
 
@@ -207,7 +207,7 @@ class BodyMetricsRepositoryAdapterTest {
     class DeleteById {
 
         @Test
-        void shouldDeleteUserBodyMetricsById() {
+        void shouldDeleteBodyMetricsById() {
             adapter.deleteById(new BodyMetricsId(1L));
 
             verify(bodyMetricsJpaRepository).deleteById(1L);
@@ -225,12 +225,12 @@ class BodyMetricsRepositoryAdapterTest {
     }
 
     @NonNull
-    private BodyMetricsEntity anyUserBodyMetricsEntity() {
+    private BodyMetricsEntity anyBodyMetricsEntity() {
         return notNull(BodyMetricsEntity.class);
     }
 
-    private BodyMetricsEntity invalidUserBodyMetricsEntity() {
-        BodyMetricsEntity entity = createUserBodyMetricsEntity();
+    private BodyMetricsEntity invalidBodyMetricsEntity() {
+        BodyMetricsEntity entity = createPersonBodyMetricsEntity();
         entity.setId(null);
         return entity;
     }

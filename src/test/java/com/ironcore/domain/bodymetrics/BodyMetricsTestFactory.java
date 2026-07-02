@@ -6,6 +6,8 @@ import com.ironcore.domain.bodymetrics.model.BodyMetrics;
 
 import java.time.LocalDateTime;
 
+import static com.ironcore.domain.user.UserTestFactory.personId;
+
 public final class BodyMetricsTestFactory {
 
     private BodyMetricsTestFactory() {
@@ -59,7 +61,7 @@ public final class BodyMetricsTestFactory {
     public static BodyMetrics restoreBodyMetrics() {
         return BodyMetrics.restore(
                 new BodyMetricsId(1L),
-                userId(),
+                personId(1L),
                 LocalDateTime.of(2026, 5, 10, 10, 0),
                 weightInKg(80.0),
                 heightInCm(180.0),

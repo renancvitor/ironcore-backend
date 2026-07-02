@@ -62,18 +62,18 @@ class GetBodyMetricsProgressChartUseCaseTest {
                     progressProjection(LocalDateTime.of(2026, 3, 15, 10, 0), 77.0, 18.0, 62.0)
             );
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.of(user));
             when(queryPort.findProgressData(
-                    command.userId(),
+                    user.getPersonId(),
                     startDate.atStartOfDay(),
                     endDate.atTime(LocalTime.MAX)
             )).thenReturn(progress);
 
             GetBodyMetricsProgressChartResult result = getBodyMetricsProgressChartUseCase.execute(command);
 
-            verify(userRepository).findById(command.userId());
+            verify(userRepository).findById(command.actorUserId());
             verify(queryPort).findProgressData(
-                    command.userId(),
+                    user.getPersonId(),
                     startDate.atStartOfDay(),
                     endDate.atTime(LocalTime.MAX)
             );
@@ -125,18 +125,18 @@ class GetBodyMetricsProgressChartUseCaseTest {
                     endDate
             );
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.of(user));
             when(queryPort.findProgressData(
-                    command.userId(),
+                    user.getPersonId(),
                     startDate.atStartOfDay(),
                     endDate.atTime(LocalTime.MAX)
             )).thenReturn(List.of());
 
             GetBodyMetricsProgressChartResult result = getBodyMetricsProgressChartUseCase.execute(command);
 
-            verify(userRepository).findById(command.userId());
+            verify(userRepository).findById(command.actorUserId());
             verify(queryPort).findProgressData(
-                    command.userId(),
+                    user.getPersonId(),
                     startDate.atStartOfDay(),
                     endDate.atTime(LocalTime.MAX)
             );
@@ -165,9 +165,9 @@ class GetBodyMetricsProgressChartUseCaseTest {
                     )
             );
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.of(user));
             when(queryPort.findProgressData(
-                    command.userId(),
+                    user.getPersonId(),
                     startDate.atStartOfDay(),
                     endDate.atTime(LocalTime.MAX)
             )).thenReturn(progress);
@@ -194,13 +194,13 @@ class GetBodyMetricsProgressChartUseCaseTest {
                     LocalDate.of(2026, 6, 30)
             );
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.empty());
+            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.empty());
 
             assertThatExceptionOfType(ResourceNotFoundException.class)
                     .isThrownBy(() -> getBodyMetricsProgressChartUseCase.execute(command))
                     .withMessage("Usuário não encontrado.");
 
-            verify(userRepository).findById(command.userId());
+            verify(userRepository).findById(command.actorUserId());
             verifyNoInteractions(queryPort);
         }
 
@@ -214,13 +214,13 @@ class GetBodyMetricsProgressChartUseCaseTest {
                     LocalDate.of(2026, 6, 30)
             );
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.of(user));
 
             assertThatExceptionOfType(UserInactiveException.class)
                     .isThrownBy(() -> getBodyMetricsProgressChartUseCase.execute(command))
                     .withMessage("Usuário inativo.");
 
-            verify(userRepository).findById(command.userId());
+            verify(userRepository).findById(command.actorUserId());
             verifyNoInteractions(queryPort);
         }
     }
@@ -238,13 +238,13 @@ class GetBodyMetricsProgressChartUseCaseTest {
                     LocalDate.of(2026, 6, 30)
             );
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.of(user));
 
             assertThatExceptionOfType(BusinessRuleViolationException.class)
                     .isThrownBy(() -> getBodyMetricsProgressChartUseCase.execute(command))
                     .withMessage("Tipo do gráfico é obrigatório.");
 
-            verify(userRepository).findById(command.userId());
+            verify(userRepository).findById(command.actorUserId());
             verifyNoInteractions(queryPort);
         }
 
@@ -258,13 +258,13 @@ class GetBodyMetricsProgressChartUseCaseTest {
                     null
             );
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.of(user));
 
             assertThatExceptionOfType(BusinessRuleViolationException.class)
                     .isThrownBy(() -> getBodyMetricsProgressChartUseCase.execute(command))
                     .withMessage("As datas são obrigatórias.");
 
-            verify(userRepository).findById(command.userId());
+            verify(userRepository).findById(command.actorUserId());
             verifyNoInteractions(queryPort);
         }
 
@@ -278,13 +278,13 @@ class GetBodyMetricsProgressChartUseCaseTest {
                     LocalDate.of(2026, 6, 1)
             );
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.of(user));
 
             assertThatExceptionOfType(OperationNotAllowedException.class)
                     .isThrownBy(() -> getBodyMetricsProgressChartUseCase.execute(command))
                     .withMessage("Data inicial não pode ser maior do que data final.");
 
-            verify(userRepository).findById(command.userId());
+            verify(userRepository).findById(command.actorUserId());
             verifyNoInteractions(queryPort);
         }
 
@@ -298,13 +298,13 @@ class GetBodyMetricsProgressChartUseCaseTest {
                     LocalDate.of(2026, 1, 1)
             );
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.of(user));
 
             assertThatExceptionOfType(OperationNotAllowedException.class)
                     .isThrownBy(() -> getBodyMetricsProgressChartUseCase.execute(command))
                     .withMessage("Período máximo permitido é de 12 meses.");
 
-            verify(userRepository).findById(command.userId());
+            verify(userRepository).findById(command.actorUserId());
             verifyNoInteractions(queryPort);
         }
     }

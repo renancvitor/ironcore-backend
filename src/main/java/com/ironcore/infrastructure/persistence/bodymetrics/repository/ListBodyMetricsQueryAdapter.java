@@ -4,7 +4,7 @@ import com.ironcore.application.shared.pagination.PageQuery;
 import com.ironcore.application.shared.pagination.PageResult;
 import com.ironcore.application.bodymetrics.list.ListBodyMetricsItemResult;
 import com.ironcore.application.bodymetrics.port.ListBodyMetricsQueryPort;
-import com.ironcore.domain.user.valueobject.UserId;
+import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.bodymetrics.valueobject.BodyHeightCm;
 import com.ironcore.domain.bodymetrics.valueobject.BodyWeightKg;
 import com.ironcore.domain.bodymetrics.valueobject.BodyMetricsId;
@@ -27,22 +27,22 @@ public class ListBodyMetricsQueryAdapter implements ListBodyMetricsQueryPort {
     private final BodyMetricsJpaRepository bodyMetricsJpaRepository;
 
     @Override
-    public PageResult<ListBodyMetricsItemResult> findByUserIdOrderByMeasuredAtDesc(
-            UserId userId,
+    public PageResult<ListBodyMetricsItemResult> findByPersonIdOrderByMeasuredAtDesc(
+            PersonId personId,
             PageQuery pageQuery
     ) {
         Page<BodyMetricsEntity> entities;
         try {
-            Long userIdValue = Objects.requireNonNull(
-                    userId.value(),
-                    "Id do usuário não pode ser nulo."
+            Long personIdValue = Objects.requireNonNull(
+                    personId.value(),
+                    "Id da pessoa não pode ser nulo."
             );
             Pageable pageable = PageRequest.of(pageQuery.page(), pageQuery.size());
             entities = bodyMetricsJpaRepository
-                    .findByUser_IdOrderByMeasuredAtDescIdDesc(userIdValue, pageable);
+                    .findByPerson_IdOrderByMeasuredAtDescIdDesc(personIdValue, pageable);
         } catch (RuntimeException exception) {
             throw new PersistenceException(
-                    "Falha ao buscar histórico de métricas corporais do usuário.",
+                    "Falha ao buscar histórico de métricas corporais da pessoa.",
                     exception
             );
         }
@@ -59,7 +59,7 @@ public class ListBodyMetricsQueryAdapter implements ListBodyMetricsQueryPort {
             return PageMapper.toPageResult(result);
         } catch (RuntimeException exception) {
             throw new DataMappingException(
-                    "Falha ao converter histórico de métricas corporais do usuário.",
+                    "Falha ao converter histórico de métricas corporais da pessoa.",
                     exception
             );
         }

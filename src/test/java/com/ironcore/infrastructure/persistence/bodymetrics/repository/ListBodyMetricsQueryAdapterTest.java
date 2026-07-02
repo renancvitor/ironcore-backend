@@ -3,7 +3,7 @@ package com.ironcore.infrastructure.persistence.bodymetrics.repository;
 import com.ironcore.application.shared.pagination.PageQuery;
 import com.ironcore.application.shared.pagination.PageResult;
 import com.ironcore.application.bodymetrics.list.ListBodyMetricsItemResult;
-import com.ironcore.domain.user.valueobject.UserId;
+import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.bodymetrics.valueobject.BodyHeightCm;
 import com.ironcore.domain.bodymetrics.valueobject.BodyWeightKg;
 import com.ironcore.domain.bodymetrics.valueobject.BodyMetricsId;
@@ -24,7 +24,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 import static com.ironcore.infrastructure.persistence.bodymetrics.BodyMetricsTestFactory.MEASURED_AT;
-import static com.ironcore.infrastructure.persistence.bodymetrics.BodyMetricsTestFactory.createUserBodyMetricsEntity;
+import static com.ironcore.infrastructure.persistence.bodymetrics.BodyMetricsTestFactory.createPersonBodyMetricsEntity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
@@ -44,15 +44,15 @@ class ListBodyMetricsQueryAdapterTest {
     void shouldReturnMappedPageAndForwardPagination() {
         PageRequest requestedPage = PageRequest.of(1, 2);
         Page<BodyMetricsEntity> entities = new PageImpl<>(
-                List.of(createUserBodyMetricsEntity()),
+                List.of(createPersonBodyMetricsEntity()),
                 requestedPage,
                 5
         );
-        when(bodyMetricsJpaRepository.findByUser_IdOrderByMeasuredAtDescIdDesc(any(), any()))
+        when(bodyMetricsJpaRepository.findByPerson_IdOrderByMeasuredAtDescIdDesc(any(), any()))
                 .thenReturn(entities);
 
-        PageResult<ListBodyMetricsItemResult> result = adapter.findByUserIdOrderByMeasuredAtDesc(
-                new UserId(1L),
+        PageResult<ListBodyMetricsItemResult> result = adapter.findByPersonIdOrderByMeasuredAtDesc(
+                new PersonId(1L),
                 new PageQuery(1, 2)
         );
 
@@ -71,20 +71,20 @@ class ListBodyMetricsQueryAdapterTest {
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
         verify(bodyMetricsJpaRepository)
-                .findByUser_IdOrderByMeasuredAtDescIdDesc(org.mockito.ArgumentMatchers.eq(1L), pageableCaptor.capture());
+                .findByPerson_IdOrderByMeasuredAtDescIdDesc(org.mockito.ArgumentMatchers.eq(1L), pageableCaptor.capture());
         assertThat(pageableCaptor.getValue().getPageNumber()).isEqualTo(1);
         assertThat(pageableCaptor.getValue().getPageSize()).isEqualTo(2);
         assertThat(pageableCaptor.getValue().getSort().isUnsorted()).isTrue();
     }
 
     @Test
-    void shouldReturnEmptyPageWhenUserDoesNotHaveBodyMetrics() {
+    void shouldReturnEmptyPageWhenPersonDoesNotHaveBodyMetrics() {
         PageRequest requestedPage = PageRequest.of(0, 10);
-        when(bodyMetricsJpaRepository.findByUser_IdOrderByMeasuredAtDescIdDesc(99L, requestedPage))
+        when(bodyMetricsJpaRepository.findByPerson_IdOrderByMeasuredAtDescIdDesc(99L, requestedPage))
                 .thenReturn(Page.empty(requestedPage));
 
-        PageResult<ListBodyMetricsItemResult> result = adapter.findByUserIdOrderByMeasuredAtDesc(
-                new UserId(99L),
+        PageResult<ListBodyMetricsItemResult> result = adapter.findByPersonIdOrderByMeasuredAtDesc(
+                new PersonId(99L),
                 new PageQuery(0, 10)
         );
 
@@ -99,30 +99,30 @@ class ListBodyMetricsQueryAdapterTest {
     @Test
     void shouldWrapRepositoryFailure() {
         PageRequest requestedPage = PageRequest.of(0, 10);
-        when(bodyMetricsJpaRepository.findByUser_IdOrderByMeasuredAtDescIdDesc(1L, requestedPage))
+        when(bodyMetricsJpaRepository.findByPerson_IdOrderByMeasuredAtDescIdDesc(1L, requestedPage))
                 .thenThrow(new RuntimeException("database unavailable"));
 
         assertThatExceptionOfType(PersistenceException.class)
-                .isThrownBy(() -> adapter.findByUserIdOrderByMeasuredAtDesc(
-                        new UserId(1L),
+                .isThrownBy(() -> adapter.findByPersonIdOrderByMeasuredAtDesc(
+                        new PersonId(1L),
                         new PageQuery(0, 10)
                 ))
-                .withMessage("Falha ao buscar histórico de métricas corporais do usuário.");
+                .withMessage("Falha ao buscar histórico de métricas corporais da pessoa.");
     }
 
     @Test
     void shouldWrapMappingFailure() {
-        BodyMetricsEntity invalidEntity = createUserBodyMetricsEntity();
+        BodyMetricsEntity invalidEntity = createPersonBodyMetricsEntity();
         invalidEntity.setId(null);
         PageRequest requestedPage = PageRequest.of(0, 10);
-        when(bodyMetricsJpaRepository.findByUser_IdOrderByMeasuredAtDescIdDesc(1L, requestedPage))
+        when(bodyMetricsJpaRepository.findByPerson_IdOrderByMeasuredAtDescIdDesc(1L, requestedPage))
                 .thenReturn(new PageImpl<>(List.of(invalidEntity), requestedPage, 1));
 
         assertThatExceptionOfType(DataMappingException.class)
-                .isThrownBy(() -> adapter.findByUserIdOrderByMeasuredAtDesc(
-                        new UserId(1L),
+                .isThrownBy(() -> adapter.findByPersonIdOrderByMeasuredAtDesc(
+                        new PersonId(1L),
                         new PageQuery(0, 10)
                 ))
-                .withMessage("Falha ao converter histórico de métricas corporais do usuário.");
+                .withMessage("Falha ao converter histórico de métricas corporais da pessoa.");
     }
 }

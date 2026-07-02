@@ -10,7 +10,7 @@ import com.ironcore.domain.bodymetrics.valueobject.BodyMetricsId;
 
 public final class UpdateBodyMetricsUseCaseTestFactory {
 
-    private static final BodyMetricsId USER_BODY_METRICS_ID = new BodyMetricsId(1L);
+    private static final BodyMetricsId BODY_METRICS_ID = new BodyMetricsId(1L);
     private static final UserId USER_ID = new UserId(1L);
 
     private UpdateBodyMetricsUseCaseTestFactory() {
@@ -18,7 +18,7 @@ public final class UpdateBodyMetricsUseCaseTestFactory {
 
     public static UpdateBodyMetricsCommand commandWithoutCircumferences() {
         return new UpdateBodyMetricsCommand(
-                USER_BODY_METRICS_ID,
+                BODY_METRICS_ID,
                 USER_ID,
                 new BodyWeightKg(65.0),
                 new BodyHeightCm(167.0),
@@ -29,7 +29,7 @@ public final class UpdateBodyMetricsUseCaseTestFactory {
 
     public static UpdateBodyMetricsCommand commandWithCircumferences() {
         return new UpdateBodyMetricsCommand(
-                USER_BODY_METRICS_ID,
+                BODY_METRICS_ID,
                 USER_ID,
                 new BodyWeightKg(65.0),
                 new BodyHeightCm(167.0),
@@ -50,7 +50,7 @@ public final class UpdateBodyMetricsUseCaseTestFactory {
 
     public static UpdateBodyMetricsCommand commandWithMaleRequiredCircumferences() {
         return new UpdateBodyMetricsCommand(
-                USER_BODY_METRICS_ID,
+                BODY_METRICS_ID,
                 USER_ID,
                 new BodyWeightKg(65.0),
                 new BodyHeightCm(167.0),
@@ -71,7 +71,7 @@ public final class UpdateBodyMetricsUseCaseTestFactory {
 
     public static UpdateBodyMetricsCommand commandWithFemaleRequiredCircumferences() {
         return new UpdateBodyMetricsCommand(
-                USER_BODY_METRICS_ID,
+                BODY_METRICS_ID,
                 USER_ID,
                 new BodyWeightKg(65.0),
                 new BodyHeightCm(167.0),
@@ -92,7 +92,7 @@ public final class UpdateBodyMetricsUseCaseTestFactory {
 
     public static UpdateBodyMetricsCommand commandWithInsufficientMaleCircumferences() {
         return new UpdateBodyMetricsCommand(
-                USER_BODY_METRICS_ID,
+                BODY_METRICS_ID,
                 USER_ID,
                 new BodyWeightKg(65.0),
                 new BodyHeightCm(167.0),
@@ -113,7 +113,7 @@ public final class UpdateBodyMetricsUseCaseTestFactory {
 
     public static UpdateBodyMetricsCommand commandWithInsufficientFemaleCircumferences() {
         return new UpdateBodyMetricsCommand(
-                USER_BODY_METRICS_ID,
+                BODY_METRICS_ID,
                 USER_ID,
                 new BodyWeightKg(65.0),
                 new BodyHeightCm(167.0),
@@ -134,7 +134,7 @@ public final class UpdateBodyMetricsUseCaseTestFactory {
 
     public static UpdateBodyMetricsCommand commandWithoutWeight() {
         return new UpdateBodyMetricsCommand(
-                USER_BODY_METRICS_ID,
+                BODY_METRICS_ID,
                 USER_ID,
                 null,
                 new BodyHeightCm(167.0),
@@ -145,7 +145,7 @@ public final class UpdateBodyMetricsUseCaseTestFactory {
 
     public static UpdateBodyMetricsCommand commandWithoutHeight() {
         return new UpdateBodyMetricsCommand(
-                USER_BODY_METRICS_ID,
+                BODY_METRICS_ID,
                 USER_ID,
                 new BodyWeightKg(65.0),
                 null,

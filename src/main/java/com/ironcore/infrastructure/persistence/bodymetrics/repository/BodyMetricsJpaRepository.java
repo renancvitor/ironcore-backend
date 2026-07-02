@@ -9,9 +9,9 @@ import java.util.Optional;
 
 public interface BodyMetricsJpaRepository extends JpaRepository<BodyMetricsEntity, Long> {
 
-    Optional<BodyMetricsEntity> findByIdAndUser_Id(Long userBodyMetricsId, Long userId);
+    Optional<BodyMetricsEntity> findByIdAndPerson_Id(Long bodyMetricsId, Long personId);
 
-    Optional<BodyMetricsEntity> findFirstByUser_IdOrderByMeasuredAtDesc(Long userId);
+    Optional<BodyMetricsEntity> findFirstByPerson_IdOrderByMeasuredAtDesc(Long personId);
 
-    Page<BodyMetricsEntity> findByUser_IdOrderByMeasuredAtDescIdDesc(Long userId, Pageable pageable);
+    Page<BodyMetricsEntity> findByPerson_IdOrderByMeasuredAtDescIdDesc(Long personId, Pageable pageable);
 }

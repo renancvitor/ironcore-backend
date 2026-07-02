@@ -6,7 +6,7 @@ import com.ironcore.domain.bodymetrics.valueobject.BodyWeightKg;
 import com.ironcore.domain.user.valueobject.UserId;
 
 public record CreateBodyMetricsCommand(
-        UserId userId,
+        UserId actorUserId,
         BodyWeightKg weight,
         BodyHeightCm height,
         BodyCircumferences circumferences,

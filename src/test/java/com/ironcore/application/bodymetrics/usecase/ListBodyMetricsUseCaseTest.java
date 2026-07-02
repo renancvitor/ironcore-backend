@@ -46,7 +46,7 @@ class ListBodyMetricsUseCaseTest {
     class SuccessfulList {
 
         @Test
-        void shouldListUserBodyMetricsWithPagination() {
+        void shouldListPersonBodyMetricsWithPagination() {
             User user = activeUser();
             BodyMetrics metrics = restoreBodyMetrics();
             ListBodyMetricsCommand command = new ListBodyMetricsCommand(
@@ -74,16 +74,16 @@ class ListBodyMetricsUseCaseTest {
                     );
 
             when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-            when(queryPort.findByUserIdOrderByMeasuredAtDesc(
-                    command.userId(),
+            when(queryPort.findByPersonIdOrderByMeasuredAtDesc(
+                    user.getPersonId(),
                     expectedQuery
             )).thenReturn(expectedPage);
 
             ListBodyMetricsResult result = listBodyMetricsUseCase.execute(command);
 
             verify(userRepository).findById(user.getId());
-            verify(queryPort).findByUserIdOrderByMeasuredAtDesc(
-                    command.userId(),
+            verify(queryPort).findByPersonIdOrderByMeasuredAtDesc(
+                    user.getPersonId(),
                     expectedQuery
             );
 
@@ -111,16 +111,16 @@ class ListBodyMetricsUseCaseTest {
                     );
 
             when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-            when(queryPort.findByUserIdOrderByMeasuredAtDesc(
-                    command.userId(),
+            when(queryPort.findByPersonIdOrderByMeasuredAtDesc(
+                    user.getPersonId(),
                     expectedQuery
             )).thenReturn(expectedPage);
 
             ListBodyMetricsResult result = listBodyMetricsUseCase.execute(command);
 
             verify(userRepository).findById(user.getId());
-            verify(queryPort).findByUserIdOrderByMeasuredAtDesc(
-                    command.userId(),
+            verify(queryPort).findByPersonIdOrderByMeasuredAtDesc(
+                    user.getPersonId(),
                     expectedQuery
             );
 
@@ -139,14 +139,14 @@ class ListBodyMetricsUseCaseTest {
                     1
             );
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.empty());
+            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.empty());
 
             assertThatExceptionOfType(ResourceNotFoundException.class)
                     .isThrownBy(() -> listBodyMetricsUseCase.execute(command))
                     .withMessage("Usuário não encontrado.");
 
-            verify(userRepository).findById(command.userId());
-            verify(queryPort, never()).findByUserIdOrderByMeasuredAtDesc(
+            verify(userRepository).findById(command.actorUserId());
+            verify(queryPort, never()).findByPersonIdOrderByMeasuredAtDesc(
                     any(),
                     any()
             );
@@ -161,14 +161,14 @@ class ListBodyMetricsUseCaseTest {
                     1
             );
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.of(user));
 
             assertThatExceptionOfType(UserInactiveException.class)
                     .isThrownBy(() -> listBodyMetricsUseCase.execute(command))
                     .withMessage("Usuário inativo.");
 
-            verify(userRepository).findById(command.userId());
-            verify(queryPort, never()).findByUserIdOrderByMeasuredAtDesc(
+            verify(userRepository).findById(command.actorUserId());
+            verify(queryPort, never()).findByPersonIdOrderByMeasuredAtDesc(
                     any(),
                     any()
             );

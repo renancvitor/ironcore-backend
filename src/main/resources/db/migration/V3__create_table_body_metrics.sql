@@ -1,6 +1,6 @@
 CREATE TABLE body_metrics(
     id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL,
+    person_id BIGINT NOT NULL,
     measured_at TIMESTAMP NOT NULL,
     weight_kg DOUBLE PRECISION NOT NULL,
     height_cm DOUBLE PRECISION NOT NULL,
@@ -20,5 +20,5 @@ CREATE TABLE body_metrics(
     updated_at TIMESTAMP,
     notes TEXT,
 
-    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    CONSTRAINT fk_body_metrics_person FOREIGN KEY (person_id) REFERENCES persons(id) ON DELETE CASCADE
 );

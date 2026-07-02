@@ -76,7 +76,7 @@ public class DeleteBodyMetricsControllerTest {
     class SuccessfulDelete {
 
         @Test
-        void shouldDeleteUserBodyMetrics() throws Exception {
+        void shouldDeletePersonBodyMetrics() throws Exception {
             DeleteBodyMetricsCommand command = new DeleteBodyMetricsCommand(
                     new BodyMetricsId(1L),
                     new UserId(1L)
@@ -94,7 +94,7 @@ public class DeleteBodyMetricsControllerTest {
     class UnsuccessfulDelete {
 
         @Test
-        void shouldReturnNotFoundWhenUserBodyMetricsDoesNotExist() throws Exception {
+        void shouldReturnNotFoundWhenPersonBodyMetricsDoesNotExist() throws Exception {
             DeleteBodyMetricsCommand command = new DeleteBodyMetricsCommand(
                     new BodyMetricsId(1L),
                     new UserId(1L)

@@ -1,14 +1,14 @@
 package com.ironcore.infrastructure.persistence.bodymetrics.mapper;
 
 import com.ironcore.domain.bodymetrics.model.BodyMetrics;
-import com.ironcore.infrastructure.persistence.user.entity.UserEntity;
+import com.ironcore.infrastructure.persistence.person.entity.PersonEntity;
 import com.ironcore.infrastructure.persistence.bodymetrics.entity.BodyMetricsEntity;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static com.ironcore.domain.bodymetrics.BodyMetricsTestFactory.restoreBodyMetrics;
-import static com.ironcore.infrastructure.persistence.user.UserEntityTestFactory.userEntity;
-import static com.ironcore.infrastructure.persistence.bodymetrics.BodyMetricsTestFactory.createUserBodyMetricsEntity;
+import static com.ironcore.infrastructure.persistence.person.PersonEntityTestFactory.personEntity;
+import static com.ironcore.infrastructure.persistence.bodymetrics.BodyMetricsTestFactory.createPersonBodyMetricsEntity;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class BodyMetricsMapperTest {
@@ -19,12 +19,12 @@ class BodyMetricsMapperTest {
         @Test
         void shouldMapSecurityAndStatusFields() {
             BodyMetrics bodyMetrics = restoreBodyMetrics();
-            UserEntity user = userEntity();
+            PersonEntity person = personEntity();
 
-            BodyMetricsEntity entity = BodyMetricsMapper.toEntity(bodyMetrics, user);
+            BodyMetricsEntity entity = BodyMetricsMapper.toEntity(bodyMetrics, person);
 
             assertThat(entity.getId()).isEqualTo(1L);
-            assertThat(entity.getUser()).isSameAs(user);
+            assertThat(entity.getPerson()).isSameAs(person);
             assertThat(entity.getMeasuredAt()).isEqualTo(bodyMetrics.getMeasuredAt());
             assertThat(entity.getWeightKg()).isEqualTo(80.0);
             assertThat(entity.getHeightCm()).isEqualTo(180.0);
@@ -44,12 +44,12 @@ class BodyMetricsMapperTest {
 
         @Test
         void shouldRestoreSecurityAndStatusFields() {
-            BodyMetricsEntity entity = createUserBodyMetricsEntity();
+            BodyMetricsEntity entity = createPersonBodyMetricsEntity();
 
             BodyMetrics bodyMetrics = BodyMetricsMapper.toDomain(entity);
 
             assertThat(bodyMetrics.getId().value()).isEqualTo(1L);
-            assertThat(bodyMetrics.getUserId().value()).isEqualTo(entity.getUser().getId());
+            assertThat(bodyMetrics.getPersonId().value()).isEqualTo(entity.getPerson().getId());
             assertThat(bodyMetrics.getMeasuredAt()).isEqualTo(entity.getMeasuredAt());
             assertThat(bodyMetrics.getWeight().value()).isEqualTo(65.0);
             assertThat(bodyMetrics.getHeight().value()).isEqualTo(1.67);

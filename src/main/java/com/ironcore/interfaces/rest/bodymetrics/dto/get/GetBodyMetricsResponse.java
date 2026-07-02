@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 
 public record GetBodyMetricsResponse(
         Long id,
-        Long userId,
+        Long personId,
         LocalDateTime measuredAt,
         Double weightKg,
         Double heightCm,
