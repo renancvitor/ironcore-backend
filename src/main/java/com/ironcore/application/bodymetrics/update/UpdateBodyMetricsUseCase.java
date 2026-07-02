@@ -43,15 +43,19 @@ public class UpdateBodyMetricsUseCase {
     public UpdateBodyMetricsResult execute(UpdateBodyMetricsCommand command) {
         BodyCircumferences circumferences = command.circumferences();
 
-        User user = userRepository.findById(command.userId())
+        User user = userRepository.findById(command.actorUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
-
-        Person person = personRepository.findById(user.getPersonId())
-                .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada."));
 
         if (!user.isActive()) {
             throw new UserInactiveException("Usuário inativo.");
         }
+
+        Person person = personRepository.findById(user.getPersonId())
+                .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada."));
+
+        BodyMetrics bodyMetrics = bodyMetricsRepository
+                .findByIdAndPersonId(command.bodyMetricsId(), user.getPersonId())
+                .orElseThrow(() -> new ResourceNotFoundException("Métricas corporais não encontradas."));
 
         if (command.weight() == null || command.height() == null) {
             throw new OperationNotAllowedException("Peso e altura são obrigatórios.");
@@ -77,10 +81,6 @@ public class UpdateBodyMetricsUseCase {
 
         LocalDateTime updatedAt = LocalDateTime.now(clock);
 
-        BodyMetrics bodyMetrics = bodyMetricsRepository
-                .findByIdAndUserId(command.bodyMetricsId(), command.userId())
-                .orElseThrow(() -> new ResourceNotFoundException("Métricas corporais não encontradas."));
-
         BodyMetricsAuditData beforeState = BodyMetricsAuditData.from(bodyMetrics);
 
         bodyMetrics.updateMeasurements(
@@ -101,7 +101,7 @@ public class UpdateBodyMetricsUseCase {
                 AuditActionType.UPDATE,
                 user.getId().value(),
                 user.getEmail().value(),
-                AuditTargetType.USER_BODY_METRICS,
+                AuditTargetType.BODY_METRICS,
                 savedBodyMetrics.getId().value(),
                 beforeState,
                 BodyMetricsAuditData.from(savedBodyMetrics)
@@ -109,7 +109,7 @@ public class UpdateBodyMetricsUseCase {
 
         return new UpdateBodyMetricsResult(
                 savedBodyMetrics.getId(),
-                savedBodyMetrics.getUserId(),
+                savedBodyMetrics.getPersonId(),
                 savedBodyMetrics.getMeasuredAt(),
                 savedBodyMetrics.getWeight(),
                 savedBodyMetrics.getHeight(),

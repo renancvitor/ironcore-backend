@@ -1,13 +1,13 @@
 package com.ironcore.application.bodymetrics.latest;
 
 import com.ironcore.domain.bodymetrics.valueobject.*;
-import com.ironcore.domain.user.valueobject.UserId;
+import com.ironcore.domain.person.valueobject.PersonId;
 
 import java.time.LocalDateTime;
 
 public record GetLatestBodyMetricsResult(
         BodyMetricsId id,
-        UserId userId,
+        PersonId personId,
         LocalDateTime measuredAt,
         BodyWeightKg weight,
         BodyHeightCm height,

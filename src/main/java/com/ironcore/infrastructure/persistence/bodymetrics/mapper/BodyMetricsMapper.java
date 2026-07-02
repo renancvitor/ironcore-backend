@@ -1,21 +1,21 @@
 package com.ironcore.infrastructure.persistence.bodymetrics.mapper;
 
 import com.ironcore.domain.bodymetrics.valueobject.*;
-import com.ironcore.domain.user.valueobject.UserId;
+import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.bodymetrics.model.BodyMetrics;
 import com.ironcore.infrastructure.exception.DataMappingException;
-import com.ironcore.infrastructure.persistence.user.entity.UserEntity;
+import com.ironcore.infrastructure.persistence.person.entity.PersonEntity;
 import com.ironcore.infrastructure.persistence.bodymetrics.entity.BodyMetricsEntity;
 
 public class BodyMetricsMapper {
 
-    public static BodyMetricsEntity toEntity(BodyMetrics bodyMetrics, UserEntity user) {
+    public static BodyMetricsEntity toEntity(BodyMetrics bodyMetrics, PersonEntity person) {
         BodyCircumferences circumferences = bodyMetrics.getCircumferences();
 
         try {
             return new BodyMetricsEntity(
                     bodyMetrics.getId() == null ? null : bodyMetrics.getId().value(),
-                    user,
+                    person,
                     bodyMetrics.getMeasuredAt(),
                     bodyMetrics.getWeight().value(),
                     bodyMetrics.getHeight().value(),
@@ -44,7 +44,7 @@ public class BodyMetricsMapper {
         try {
             return BodyMetrics.restore(
                     new BodyMetricsId(entity.getId()),
-                    new UserId(entity.getUser().getId()),
+                    new PersonId(entity.getPerson().getId()),
                     entity.getMeasuredAt(),
                     new BodyWeightKg(entity.getWeightKg()),
                     new BodyHeightCm(entity.getHeightCm()),

@@ -1,13 +1,13 @@
 package com.ironcore.infrastructure.persistence.bodymetrics.repository;
 
-import com.ironcore.domain.user.valueobject.UserId;
+import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.bodymetrics.model.BodyMetrics;
 import com.ironcore.domain.bodymetrics.repository.BodyMetricsRepository;
 import com.ironcore.domain.bodymetrics.valueobject.BodyMetricsId;
 import com.ironcore.infrastructure.exception.DataMappingException;
 import com.ironcore.infrastructure.exception.PersistenceException;
-import com.ironcore.infrastructure.persistence.user.entity.UserEntity;
-import com.ironcore.infrastructure.persistence.user.repository.UserJpaRepository;
+import com.ironcore.infrastructure.persistence.person.entity.PersonEntity;
+import com.ironcore.infrastructure.persistence.person.repository.PersonJpaRepository;
 import com.ironcore.infrastructure.persistence.bodymetrics.entity.BodyMetricsEntity;
 import com.ironcore.infrastructure.persistence.bodymetrics.mapper.BodyMetricsMapper;
 import lombok.RequiredArgsConstructor;
@@ -21,19 +21,19 @@ import java.util.Optional;
 public class BodyMetricsRepositoryAdapter implements BodyMetricsRepository {
 
     private final BodyMetricsJpaRepository bodyMetricsJpaRepository;
-    private final UserJpaRepository userJpaRepository;
+    private final PersonJpaRepository personJpaRepository;
 
     @Override
     public BodyMetrics save(BodyMetrics bodyMetrics) {
         BodyMetricsEntity entity;
         try {
-            UserEntity userReference = userJpaRepository.getReferenceById(
-                    bodyMetrics.getUserId().value()
+            PersonEntity personReference = personJpaRepository.getReferenceById(
+                    bodyMetrics.getPersonId().value()
             );
 
             entity = Objects.requireNonNull(
-                    BodyMetricsMapper.toEntity(bodyMetrics, userReference),
-                    "UserBodyMetrics retornou entidade nula."
+                    BodyMetricsMapper.toEntity(bodyMetrics, personReference),
+                    "BodyMetrics retornou entidade nula."
             );
         } catch (RuntimeException exception) {
             throw new DataMappingException("Falha ao converter domínio para entidade.", exception);
@@ -43,7 +43,7 @@ public class BodyMetricsRepositoryAdapter implements BodyMetricsRepository {
         try {
             saveEntity = Objects.requireNonNull(
                     bodyMetricsJpaRepository.save(entity),
-                    "UserBodyMetricsMapper retornou entidade nula após persistência."
+                    "BodyMetricsMapper retornou entidade nula após persistência."
             );
         } catch (RuntimeException exception) {
             throw new PersistenceException("Falha ao persistir entidade.", exception);
@@ -60,11 +60,11 @@ public class BodyMetricsRepositoryAdapter implements BodyMetricsRepository {
     public Optional<BodyMetrics> findById(BodyMetricsId bodyMetricsId) {
         Optional<BodyMetricsEntity> entity;
         try {
-            Long userBodyMetricsIdValue = Objects.requireNonNull(
+            Long bodyMetricsIdValue = Objects.requireNonNull(
                     bodyMetricsId.value(),
                     "Id das métricas corporais não pode ser nulo."
             );
-            entity = bodyMetricsJpaRepository.findById(userBodyMetricsIdValue);
+            entity = bodyMetricsJpaRepository.findById(bodyMetricsIdValue);
         } catch (RuntimeException exception) {
             throw new PersistenceException("Falha ao buscar métricas corporais por id.", exception);
         }
@@ -76,21 +76,20 @@ public class BodyMetricsRepositoryAdapter implements BodyMetricsRepository {
         }
     }
 
-    @Override
-    public Optional<BodyMetrics> findByIdAndUserId(BodyMetricsId bodyMetricsId, UserId userId) {
+    public Optional<BodyMetrics> findByIdAndPersonId(BodyMetricsId bodyMetricsId, PersonId personId) {
         Optional<BodyMetricsEntity> entity;
         try {
-            Long userBodyMetricsIdValue = Objects.requireNonNull(
+            Long bodyMetricsIdValue = Objects.requireNonNull(
                     bodyMetricsId.value(),
                     "Id das métricas corporais não pode ser nulo."
             );
-            Long userIdValue = Objects.requireNonNull(
-                    userId.value(),
-                    "Id do usuário não pode ser nulo."
+            Long personIdValue = Objects.requireNonNull(
+                    personId.value(),
+                    "Id da pessoa não pode ser nulo."
             );
-            entity = bodyMetricsJpaRepository.findByIdAndUser_Id(userBodyMetricsIdValue, userIdValue);
+            entity = bodyMetricsJpaRepository.findByIdAndPerson_Id(bodyMetricsIdValue, personIdValue);
         } catch (RuntimeException exception) {
-            throw new PersistenceException("Falha ao buscar métricas corporais por id e usuário.", exception);
+            throw new PersistenceException("Falha ao buscar métricas corporais por id e pessoa.", exception);
         }
 
         try {
@@ -103,17 +102,16 @@ public class BodyMetricsRepositoryAdapter implements BodyMetricsRepository {
         }
     }
 
-    @Override
-    public Optional<BodyMetrics> findLatestByUserId(UserId userId) {
+    public Optional<BodyMetrics> findLatestByPersonId(PersonId personId) {
         Optional<BodyMetricsEntity> entity;
         try {
-            Long userIdValue = Objects.requireNonNull(
-                    userId.value(),
-                    "Id do usuário não pode ser nulo."
+            Long personIdValue = Objects.requireNonNull(
+                    personId.value(),
+                    "Id da pessoa não pode ser nulo."
             );
-            entity = bodyMetricsJpaRepository.findFirstByUser_IdOrderByMeasuredAtDesc(userIdValue);
+            entity = bodyMetricsJpaRepository.findFirstByPerson_IdOrderByMeasuredAtDesc(personIdValue);
         } catch (RuntimeException exception) {
-            throw new PersistenceException("Falha ao buscar último registro pelo usuário.", exception);
+            throw new PersistenceException("Falha ao buscar último registro pela pessoa.", exception);
         }
 
         try {
@@ -129,11 +127,11 @@ public class BodyMetricsRepositoryAdapter implements BodyMetricsRepository {
     @Override
     public void deleteById(BodyMetricsId bodyMetricsId) {
         try {
-            Long userBodyMetricsIdValue = Objects.requireNonNull(
+            Long bodyMetricsIdValue = Objects.requireNonNull(
                     bodyMetricsId.value(),
                     "Id das métricas corporais não pode ser nulo."
             );
-            bodyMetricsJpaRepository.deleteById(userBodyMetricsIdValue);
+            bodyMetricsJpaRepository.deleteById(bodyMetricsIdValue);
         } catch (RuntimeException exception) {
             throw new PersistenceException("Falha ao excluir métricas corporais por id.", exception);
         }

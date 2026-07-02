@@ -1,5 +1,6 @@
 package com.ironcore.interfaces.rest.bodymetrics;
 
+import com.ironcore.domain.person.valueobject.PersonId;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
 import com.ironcore.application.bodymetrics.create.CreateBodyMetricsUseCase;
@@ -91,7 +92,7 @@ public class UpdateBodyMetricsControllerTest {
     class SuccessfulUpdate {
 
         @Test
-        void shouldUpdateUserBodyMetricsWithCircumferences() throws Exception {
+        void shouldUpdatePersonBodyMetricsWithCircumferences() throws Exception {
             BodyCircumferencesRequest circumferencesRequest = new BodyCircumferencesRequest(
                     39.0,
                     104.0,
@@ -131,7 +132,7 @@ public class UpdateBodyMetricsControllerTest {
             );
             UpdateBodyMetricsResult result = new UpdateBodyMetricsResult(
                     new BodyMetricsId(1L),
-                    new UserId(1L),
+                    new PersonId(1L),
                     LocalDateTime.of(2026, 6, 14, 10, 0),
                     new BodyWeightKg(65.0),
                     new BodyHeightCm(167.0),
@@ -152,7 +153,7 @@ public class UpdateBodyMetricsControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(1L))
-                    .andExpect(jsonPath("$.userId").value(1L))
+                    .andExpect(jsonPath("$.personId").value(1L))
                     .andExpect(jsonPath("$.weightKg").value(65.0))
                     .andExpect(jsonPath("$.heightCm").value(167.0))
                     .andExpect(jsonPath("$.circumferences.neckCm").value(39.0))
@@ -166,8 +167,8 @@ public class UpdateBodyMetricsControllerTest {
                     .andExpect(jsonPath("$.circumferences.calfCm").value(36.0))
                     .andExpect(jsonPath("$.bmi").value(23.31))
                     .andExpect(jsonPath("$.bodyFatPercentage").value(12.5))
-                    .andExpect(jsonPath("$.fatMass").value(56.9))
-                    .andExpect(jsonPath("$.leanMass").value(8.1))
+                    .andExpect(jsonPath("$.fatMassKg").value(56.9))
+                    .andExpect(jsonPath("$.leanMassKg").value(8.1))
                     .andExpect(jsonPath("$.notes").value("TEXT"))
                     .andExpect(jsonPath("$.updatedAt").value("2026-06-15T10:00:00"));
 
@@ -175,7 +176,7 @@ public class UpdateBodyMetricsControllerTest {
         }
 
         @Test
-        void shouldUpdateUserBodyMetricsWithoutCircumferences() throws Exception {
+        void shouldUpdatePersonBodyMetricsWithoutCircumferences() throws Exception {
             BodyCircumferencesRequest circumferencesRequest = null;
             UpdateBodyMetricsRequest request = new UpdateBodyMetricsRequest(
                     65.0,
@@ -195,7 +196,7 @@ public class UpdateBodyMetricsControllerTest {
             );
             UpdateBodyMetricsResult result = new UpdateBodyMetricsResult(
                     new BodyMetricsId(1L),
-                    new UserId(1L),
+                    new PersonId(1L),
                     LocalDateTime.of(2026, 6, 14, 10, 0),
                     new BodyWeightKg(65.0),
                     new BodyHeightCm(167.0),
@@ -216,7 +217,7 @@ public class UpdateBodyMetricsControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(1L))
-                    .andExpect(jsonPath("$.userId").value(1L))
+                    .andExpect(jsonPath("$.personId").value(1L))
                     .andExpect(jsonPath("$.weightKg").value(65.0))
                     .andExpect(jsonPath("$.heightCm").value(167.0))
                     .andExpect(jsonPath("$.bmi").value(23.31))

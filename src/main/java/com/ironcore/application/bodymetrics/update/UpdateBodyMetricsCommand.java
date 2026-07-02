@@ -8,7 +8,7 @@ import com.ironcore.domain.bodymetrics.valueobject.BodyMetricsId;
 
 public record UpdateBodyMetricsCommand(
         BodyMetricsId bodyMetricsId,
-        UserId userId,
+        UserId actorUserId,
         BodyWeightKg weight,
         BodyHeightCm height,
         BodyCircumferences circumferences,

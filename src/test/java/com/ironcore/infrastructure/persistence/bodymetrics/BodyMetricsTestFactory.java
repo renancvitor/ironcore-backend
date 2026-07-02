@@ -4,7 +4,7 @@ import com.ironcore.infrastructure.persistence.bodymetrics.entity.BodyMetricsEnt
 
 import java.time.LocalDateTime;
 
-import static com.ironcore.infrastructure.persistence.user.UserEntityTestFactory.userEntity;
+import static com.ironcore.infrastructure.persistence.person.PersonEntityTestFactory.personEntity;
 
 public final class BodyMetricsTestFactory {
 
@@ -14,14 +14,14 @@ public final class BodyMetricsTestFactory {
     private BodyMetricsTestFactory() {
     }
 
-    public static BodyMetricsEntity createUserBodyMetricsEntity() {
-        return createUserBodyMetricsEntity(1L);
+    public static BodyMetricsEntity createPersonBodyMetricsEntity() {
+        return createPersonBodyMetricsEntity(1L);
     }
 
-    private  static BodyMetricsEntity createUserBodyMetricsEntity(Long id) {
+    private  static BodyMetricsEntity createPersonBodyMetricsEntity(Long id) {
         return new BodyMetricsEntity(
                 id,
-                userEntity(),
+                personEntity(),
                 MEASURED_AT,
                 65.0,
                 1.67,

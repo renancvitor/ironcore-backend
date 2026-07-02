@@ -2,7 +2,7 @@ package com.ironcore.domain.bodymetrics.service;
 
 import static com.ironcore.domain.bodymetrics.BodyMetricsTestFactory.fatMass;
 import static com.ironcore.domain.bodymetrics.BodyMetricsTestFactory.heightInCm;
-import static com.ironcore.domain.bodymetrics.BodyMetricsTestFactory.userId;
+import static com.ironcore.domain.user.UserTestFactory.personId;
 import static com.ironcore.domain.bodymetrics.BodyMetricsTestFactory.weightInKg;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -35,7 +35,7 @@ class LeanMassCalculatorTest {
         void shouldCalculateLeanMassFromBodyMetrics() {
             BodyMetrics metrics = new BodyMetrics(
                     null,
-                    userId(),
+                    personId(1L),
                     LocalDateTime.now(),
                     weightInKg(82.0),
                     heightInCm(180.0),

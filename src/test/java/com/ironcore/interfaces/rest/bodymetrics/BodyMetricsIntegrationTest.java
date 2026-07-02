@@ -89,7 +89,7 @@ class BodyMetricsIntegrationTest {
     class Authentication {
 
         @Test
-        void shouldBlockUserBodyMetricsAccessWithoutAuthentication() throws Exception {
+        void shouldBlockPersonBodyMetricsAccessWithoutAuthentication() throws Exception {
             mockMvc.perform(get(BODY_METRICS_ENDPOINT))
                     .andExpect(status().isForbidden());
         }
@@ -99,16 +99,16 @@ class BodyMetricsIntegrationTest {
     class IntegratedFlow {
 
         @Test
-        void shouldManageUserBodyMetricsThroughAuthenticatedHttpFlow() throws Exception {
+        void shouldManagePersonBodyMetricsThroughAuthenticatedHttpFlow() throws Exception {
             Cookie accessTokenCookie = loginAndGetAccessTokenCookie();
 
-            Long firstMetricId = createUserBodyMetrics(
+            Long firstMetricId = createPersonBodyMetrics(
                     accessTokenCookie,
                     createRequest(80.0, "Medição inicial.")
             );
             updateMeasuredAt(firstMetricId, LocalDateTime.of(2026, 6, 1, 10, 0));
 
-            Long secondMetricId = createUserBodyMetrics(
+            Long secondMetricId = createPersonBodyMetrics(
                     accessTokenCookie,
                     createRequest(78.0, "Medição de acompanhamento.")
             );
@@ -222,7 +222,7 @@ class BodyMetricsIntegrationTest {
         return accessTokenCookie;
     }
 
-    private Long createUserBodyMetrics(Cookie accessTokenCookie, CreateBodyMetricsRequest request) throws Exception {
+    private Long createPersonBodyMetrics(Cookie accessTokenCookie, CreateBodyMetricsRequest request) throws Exception {
         MvcResult result = mockMvc.perform(post(BODY_METRICS_ENDPOINT)
                         .cookie(accessTokenCookie)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -233,8 +233,8 @@ class BodyMetricsIntegrationTest {
                 .andExpect(jsonPath("$.heightCm").value(request.heightCm()))
                 .andExpect(jsonPath("$.bmi").isNumber())
                 .andExpect(jsonPath("$.bodyFatPercentage").isNumber())
-                .andExpect(jsonPath("$.fatMass").isNumber())
-                .andExpect(jsonPath("$.leanMass").isNumber())
+                .andExpect(jsonPath("$.fatMassKg").isNumber())
+                .andExpect(jsonPath("$.leanMassKg").isNumber())
                 .andExpect(jsonPath("$.notes").value(request.notes()))
                 .andReturn();
 

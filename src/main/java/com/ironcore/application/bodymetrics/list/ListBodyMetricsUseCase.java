@@ -20,7 +20,7 @@ public class ListBodyMetricsUseCase {
 
     @Transactional(readOnly = true)
     public ListBodyMetricsResult execute(ListBodyMetricsCommand command) {
-        User user = userRepository.findById(command.userId())
+        User user = userRepository.findById(command.actorUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
 
         if (!user.isActive()) {
@@ -33,8 +33,8 @@ public class ListBodyMetricsUseCase {
         );
 
         PageResult<ListBodyMetricsItemResult> metrics = queryPort
-                .findByUserIdOrderByMeasuredAtDesc(
-                        command.userId(),
+                .findByPersonIdOrderByMeasuredAtDesc(
+                        user.getPersonId(),
                         pageQuery
                 );
 

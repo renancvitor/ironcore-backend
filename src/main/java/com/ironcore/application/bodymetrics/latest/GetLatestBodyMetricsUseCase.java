@@ -19,7 +19,7 @@ public class GetLatestBodyMetricsUseCase {
 
     @Transactional(readOnly = true)
     public GetLatestBodyMetricsResult execute(GetLatestBodyMetricsCommand command) {
-        User user = userRepository.findById(command.userId())
+        User user = userRepository.findById(command.actorUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
 
         if (!user.isActive()) {
@@ -27,12 +27,12 @@ public class GetLatestBodyMetricsUseCase {
         }
 
         BodyMetrics bodyMetrics = bodyMetricsRepository
-                .findLatestByUserId(command.userId())
+                .findLatestByPersonId(user.getPersonId())
                 .orElseThrow(() -> new ResourceNotFoundException("Métricas corporais não encontradas."));
 
         return new GetLatestBodyMetricsResult(
                 bodyMetrics.getId(),
-                bodyMetrics.getUserId(),
+                bodyMetrics.getPersonId(),
                 bodyMetrics.getMeasuredAt(),
                 bodyMetrics.getWeight(),
                 bodyMetrics.getHeight(),

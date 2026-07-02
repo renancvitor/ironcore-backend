@@ -9,9 +9,13 @@ import com.ironcore.application.bodymetrics.delete.DeleteBodyMetricsCommand;
 import com.ironcore.application.bodymetrics.delete.DeleteBodyMetricsUseCase;
 import com.ironcore.domain.logging.audit.enums.AuditActionType;
 import com.ironcore.domain.logging.audit.enums.AuditTargetType;
+import com.ironcore.domain.person.enums.SexType;
+import com.ironcore.domain.person.model.Person;
+import com.ironcore.domain.person.repository.PersonRepository;
+import com.ironcore.domain.person.valueobject.BirthDate;
+import com.ironcore.domain.person.valueobject.Sex;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
-import com.ironcore.domain.user.valueobject.UserId;
 import com.ironcore.domain.bodymetrics.model.BodyMetrics;
 import com.ironcore.domain.bodymetrics.repository.BodyMetricsRepository;
 import com.ironcore.domain.bodymetrics.valueobject.BMI;
@@ -26,10 +30,13 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static com.ironcore.domain.user.UserTestFactory.activeUser;
+import static com.ironcore.domain.user.UserTestFactory.CREATED_AT;
+import static com.ironcore.domain.user.UserTestFactory.UPDATED_AT;
 import static com.ironcore.domain.user.UserTestFactory.inactiveUser;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
@@ -40,6 +47,9 @@ public class DeleteBodyMetricsUseCaseTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private PersonRepository personRepository;
 
     @Mock
     private BodyMetricsRepository bodyMetricsRepository;
@@ -53,6 +63,7 @@ public class DeleteBodyMetricsUseCaseTest {
     void setUp() {
         deleteBodyMetricsUseCase = new DeleteBodyMetricsUseCase(
                 userRepository,
+                personRepository,
                 bodyMetricsRepository,
                 auditLogPublisher
         );
@@ -62,13 +73,13 @@ public class DeleteBodyMetricsUseCaseTest {
     class SuccessfulDelete {
 
         @Test
-        void shouldDeleteUserBodyMetrics() {
+        void shouldDeletePersonBodyMetrics() {
             User user = activeUser();
             BodyMetricsId bodyMetricsId = new BodyMetricsId(1L);
             DeleteBodyMetricsCommand command = new DeleteBodyMetricsCommand(bodyMetricsId, user.getId());
             BodyMetrics bodyMetrics = new BodyMetrics(
                     bodyMetricsId,
-                    new UserId(1L),
+                    user.getPersonId(),
                     LocalDateTime.of(2026, 5, 14, 10, 0),
                     new BodyWeightKg(65.0),
                     new BodyHeightCm(167.0),
@@ -82,7 +93,8 @@ public class DeleteBodyMetricsUseCaseTest {
             );
 
             when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-            when(bodyMetricsRepository.findByIdAndUserId(bodyMetricsId, user.getId()))
+            givenPersonExists(user);
+            when(bodyMetricsRepository.findByIdAndPersonId(bodyMetricsId, user.getPersonId()))
                     .thenReturn(Optional.of(bodyMetrics));
 
             ArgumentCaptor<LoggableData> auditBeforeCaptor = ArgumentCaptor.forClass(LoggableData.class);
@@ -90,13 +102,14 @@ public class DeleteBodyMetricsUseCaseTest {
             deleteBodyMetricsUseCase.execute(command);
 
             verify(userRepository).findById(user.getId());
-            verify(bodyMetricsRepository).findByIdAndUserId(bodyMetricsId, user.getId());
+            verify(personRepository).findById(user.getPersonId());
+            verify(bodyMetricsRepository).findByIdAndPersonId(bodyMetricsId, user.getPersonId());
             verify(bodyMetricsRepository).deleteById(bodyMetricsId);
             verify(auditLogPublisher).publish(
                     eq(AuditActionType.DELETE),
                     eq(user.getId().value()),
                     eq(user.getEmail().value()),
-                    eq(AuditTargetType.USER_BODY_METRICS),
+                    eq(AuditTargetType.BODY_METRICS),
                     eq(bodyMetricsId.value()),
                     auditBeforeCaptor.capture(),
                     isNull()
@@ -105,7 +118,7 @@ public class DeleteBodyMetricsUseCaseTest {
             BodyMetricsAuditData auditBeforeState = (BodyMetricsAuditData) auditBeforeCaptor.getValue();
 
             assertThat(auditBeforeState.id()).isEqualTo(bodyMetrics.getId().value());
-            assertThat(auditBeforeState.userId()).isEqualTo(bodyMetrics.getUserId().value());
+            assertThat(auditBeforeState.personId()).isEqualTo(bodyMetrics.getPersonId().value());
             assertThat(auditBeforeState.measuredAt()).isEqualTo(bodyMetrics.getMeasuredAt());
             assertThat(auditBeforeState.weightKg()).isEqualTo(65.0);
             assertThat(auditBeforeState.heightCm()).isEqualTo(167.0);
@@ -130,7 +143,7 @@ public class DeleteBodyMetricsUseCaseTest {
                     .withMessage("Usuário não encontrado.");
 
             verify(userRepository).findById(user.getId());
-            verify(bodyMetricsRepository, never()).findByIdAndUserId(any(), any());
+            verify(bodyMetricsRepository, never()).findByIdAndPersonId(any(), any());
             verify(bodyMetricsRepository, never()).deleteById(any());
         }
 
@@ -147,7 +160,7 @@ public class DeleteBodyMetricsUseCaseTest {
                     .withMessage("Usuário inativo.");
 
             verify(userRepository).findById(user.getId());
-            verify(bodyMetricsRepository, never()).findByIdAndUserId(any(), any());
+            verify(bodyMetricsRepository, never()).findByIdAndPersonId(any(), any());
             verify(bodyMetricsRepository, never()).deleteById(any());
         }
     }
@@ -162,7 +175,8 @@ public class DeleteBodyMetricsUseCaseTest {
             DeleteBodyMetricsCommand command = new DeleteBodyMetricsCommand(bodyMetricsId, user.getId());
 
             when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-            when(bodyMetricsRepository.findByIdAndUserId(bodyMetricsId, user.getId()))
+            givenPersonExists(user);
+            when(bodyMetricsRepository.findByIdAndPersonId(bodyMetricsId, user.getPersonId()))
                     .thenReturn(Optional.empty());
 
             assertThatExceptionOfType(ResourceNotFoundException.class)
@@ -170,9 +184,23 @@ public class DeleteBodyMetricsUseCaseTest {
                     .withMessage("Métricas corporais não encontradas.");
 
             verify(userRepository).findById(user.getId());
-            verify(bodyMetricsRepository).findByIdAndUserId(bodyMetricsId, user.getId());
+            verify(personRepository).findById(user.getPersonId());
+            verify(bodyMetricsRepository).findByIdAndPersonId(bodyMetricsId, user.getPersonId());
             verify(bodyMetricsRepository, never()).deleteById(any());
             verify(auditLogPublisher, never()).publish(any(), any(), any(), any(), any(), any(), any());
         }
+    }
+
+    private void givenPersonExists(User user) {
+        Person person = Person.restore(
+                user.getPersonId(),
+                "Renan",
+                new Sex(SexType.MALE),
+                new BirthDate(LocalDate.of(1994, 4, 9)),
+                CREATED_AT,
+                UPDATED_AT
+        );
+
+        when(personRepository.findById(user.getPersonId())).thenReturn(Optional.of(person));
     }
 }

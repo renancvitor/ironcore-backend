@@ -43,7 +43,7 @@ class GetBodyMetricsUseCaseTest {
     class SuccessfulGetBodyMetrics {
 
         @Test
-        void shouldReturnUserBodyMetricsById() {
+        void shouldReturnPersonBodyMetricsById() {
             User user = activeUser();
             BodyMetrics metrics = restoreBodyMetrics();
             GetBodyMetricsCommand command = new GetBodyMetricsCommand(
@@ -51,16 +51,16 @@ class GetBodyMetricsUseCaseTest {
                     user.getId()
             );
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
-            when(bodyMetricsRepository.findByIdAndUserId(
+            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.of(user));
+            when(bodyMetricsRepository.findByIdAndPersonId(
                     command.bodyMetricsId(),
-                    command.userId()
+                    user.getPersonId()
             )).thenReturn(Optional.of(metrics));
 
             GetBodyMetricsResult result = getBodyMetricsUseCase.execute(command);
 
-            verify(userRepository).findById(command.userId());
-            verify(bodyMetricsRepository).findByIdAndUserId(command.bodyMetricsId(), user.getId());
+            verify(userRepository).findById(command.actorUserId());
+            verify(bodyMetricsRepository).findByIdAndPersonId(command.bodyMetricsId(), user.getPersonId());
 
             assertThat(result)
                     .usingRecursiveComparison()
@@ -78,13 +78,13 @@ class GetBodyMetricsUseCaseTest {
                     new UserId(1L)
             );
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.empty());
+            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.empty());
 
             assertThatExceptionOfType(ResourceNotFoundException.class)
                     .isThrownBy(() -> getBodyMetricsUseCase.execute(command))
                     .withMessage("Usuário não encontrado.");
 
-            verify(userRepository).findById(command.userId());
+            verify(userRepository).findById(command.actorUserId());
             verifyNoInteractions(bodyMetricsRepository);
         }
 
@@ -97,13 +97,13 @@ class GetBodyMetricsUseCaseTest {
                     user.getId()
             );
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.of(user));
 
             assertThatExceptionOfType(UserInactiveException.class)
                     .isThrownBy(() -> getBodyMetricsUseCase.execute(command))
                     .withMessage("Usuário inativo.");
 
-            verify(userRepository).findById(command.userId());
+            verify(userRepository).findById(command.actorUserId());
             verifyNoInteractions(bodyMetricsRepository);
         }
     }
@@ -119,18 +119,18 @@ class GetBodyMetricsUseCaseTest {
                     user.getId()
             );
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
-            when(bodyMetricsRepository.findByIdAndUserId(
+            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.of(user));
+            when(bodyMetricsRepository.findByIdAndPersonId(
                     command.bodyMetricsId(),
-                    command.userId()
+                    user.getPersonId()
             )).thenReturn(Optional.empty());
 
             assertThatExceptionOfType(ResourceNotFoundException.class)
                     .isThrownBy(() -> getBodyMetricsUseCase.execute(command))
                     .withMessage("Métricas corporais não encontradas.");
 
-            verify(userRepository).findById(command.userId());
-            verify(bodyMetricsRepository).findByIdAndUserId(command.bodyMetricsId(), user.getId());
+            verify(userRepository).findById(command.actorUserId());
+            verify(bodyMetricsRepository).findByIdAndPersonId(command.bodyMetricsId(), user.getPersonId());
         }
     }
 }

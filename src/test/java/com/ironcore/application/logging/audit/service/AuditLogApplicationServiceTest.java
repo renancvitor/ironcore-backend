@@ -33,7 +33,7 @@ class AuditLogApplicationServiceTest {
                 AuditActionType.UPDATE,
                 1L,
                 "actor@ironcore.com",
-                AuditTargetType.USER_BODY_METRICS,
+                AuditTargetType.BODY_METRICS,
                 10L,
                 "{\"weightKg\":80.0}",
                 "{\"weightKg\":82.0}",
@@ -50,7 +50,7 @@ class AuditLogApplicationServiceTest {
         assertThat(auditLog.getActor().userId().value()).isEqualTo(1L);
         assertThat(auditLog.getActor().email().value()).isEqualTo("actor@ironcore.com");
         assertThat(auditLog.getAction().type()).isEqualTo(AuditActionType.UPDATE);
-        assertThat(auditLog.getTarget().type()).isEqualTo(AuditTargetType.USER_BODY_METRICS);
+        assertThat(auditLog.getTarget().type()).isEqualTo(AuditTargetType.BODY_METRICS);
         assertThat(auditLog.getTarget().id()).isEqualTo(10L);
         assertThat(auditLog.getBeforeState().value()).isEqualTo("{\"weightKg\":80.0}");
         assertThat(auditLog.getAfterState().value()).isEqualTo("{\"weightKg\":82.0}");

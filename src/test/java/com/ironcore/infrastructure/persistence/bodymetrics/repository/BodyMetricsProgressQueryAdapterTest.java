@@ -1,7 +1,7 @@
 package com.ironcore.infrastructure.persistence.bodymetrics.repository;
 
 import com.ironcore.application.bodymetrics.progress.BodyMetricsProgressProjection;
-import com.ironcore.domain.user.valueobject.UserId;
+import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.infrastructure.exception.PersistenceException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -35,8 +35,8 @@ class BodyMetricsProgressQueryAdapterTest {
     class SuccessfulFindProgressData {
 
         @Test
-        void shouldFindProgressDataByUserIdAndPeriod() {
-            UserId userId = new UserId(1L);
+        void shouldFindProgressDataByPersonIdAndPeriod() {
+            PersonId userId = new PersonId(1L);
             LocalDateTime startDate = LocalDateTime.of(2026, 6, 1, 0, 0);
             LocalDateTime endDate = LocalDateTime.of(2026, 6, 30, 23, 59);
             List<BodyMetricsProgressProjection> expectedProgress = List.of(
@@ -86,7 +86,7 @@ class BodyMetricsProgressQueryAdapterTest {
 
         @Test
         void shouldWrapRepositoryFailureInPersistenceException() {
-            UserId userId = new UserId(1L);
+            PersonId userId = new PersonId(1L);
             LocalDateTime startDate = LocalDateTime.of(2026, 6, 1, 0, 0);
             LocalDateTime endDate = LocalDateTime.of(2026, 6, 30, 23, 59);
 

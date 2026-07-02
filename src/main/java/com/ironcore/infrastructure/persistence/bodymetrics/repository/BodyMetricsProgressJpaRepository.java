@@ -30,12 +30,12 @@ public interface BodyMetricsProgressJpaRepository extends Repository<BodyMetrics
               m.calfCm
           )
           from BodyMetricsEntity m
-          where m.user.id = :userId
+          where m.person.id = :personId
             and m.measuredAt between :startDate and :endDate
           order by m.measuredAt asc, m.id asc
           """)
     List<BodyMetricsProgressProjection> findProgressData(
-            @Param("userId") Long userId,
+            @Param("personId") Long personId,
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );

@@ -24,7 +24,7 @@ public class GetBodyMetricsProgressChangesUseCase {
 
     @Transactional(readOnly = true)
     public GetBodyMetricsProgressChangesResult execute(BodyMetricsProgressChangesCommand command) {
-        User user = userRepository.findById(command.userId())
+        User user = userRepository.findById(command.actorUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
 
         if (!user.isActive()) {
@@ -37,7 +37,7 @@ public class GetBodyMetricsProgressChangesUseCase {
         LocalDate endDate = command.endDate();
 
         List<BodyMetricsProgressProjection> progress = queryPort.findProgressData(
-                user.getId(),
+                user.getPersonId(),
                 startDate.atStartOfDay(),
                 endDate.atTime(LocalTime.MAX)
         );

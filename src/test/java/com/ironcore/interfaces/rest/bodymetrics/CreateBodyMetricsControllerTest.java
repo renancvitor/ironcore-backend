@@ -14,6 +14,7 @@ import com.ironcore.application.bodymetrics.progress.GetBodyMetricsProgressChart
 import com.ironcore.application.bodymetrics.update.UpdateBodyMetricsUseCase;
 import com.ironcore.domain.bodymetrics.valueobject.*;
 import com.ironcore.domain.user.repository.UserRepository;
+import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.user.valueobject.UserId;
 import com.ironcore.domain.bodymetrics.repository.BodyMetricsRepository;
 import com.ironcore.infrastructure.security.jwt.JwtAccessTokenValidator;
@@ -89,7 +90,7 @@ public class CreateBodyMetricsControllerTest {
     class SuccessfulCreation {
 
         @Test
-        void shouldCreateUserBodyMetricsWithCircumferences() throws Exception {
+        void shouldCreatePersonBodyMetricsWithCircumferences() throws Exception {
             BodyCircumferencesRequest circumferencesRequest = new BodyCircumferencesRequest(
                     39.0,
                     104.0,
@@ -128,7 +129,7 @@ public class CreateBodyMetricsControllerTest {
             );
             CreateBodyMetricsResult result = new CreateBodyMetricsResult(
                     new BodyMetricsId(1L),
-                    new UserId(1L),
+                    new PersonId(1L),
                     LocalDateTime.of(2026, 6, 14, 10, 0),
                     new BodyWeightKg(65.0),
                     new BodyHeightCm(167.0),
@@ -148,7 +149,7 @@ public class CreateBodyMetricsControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.id").value(1L))
-                    .andExpect(jsonPath("$.userId").value(1L))
+                    .andExpect(jsonPath("$.personId").value(1L))
                     .andExpect(jsonPath("$.weightKg").value(65.0))
                     .andExpect(jsonPath("$.heightCm").value(167.0))
                     .andExpect(jsonPath("$.circumferences.neckCm").value(39.0))
@@ -162,15 +163,15 @@ public class CreateBodyMetricsControllerTest {
                     .andExpect(jsonPath("$.circumferences.calfCm").value(36.0))
                     .andExpect(jsonPath("$.bmi").value(23.31))
                     .andExpect(jsonPath("$.bodyFatPercentage").value(12.5))
-                    .andExpect(jsonPath("$.fatMass").value(56.9))
-                    .andExpect(jsonPath("$.leanMass").value(8.1))
+                    .andExpect(jsonPath("$.fatMassKg").value(56.9))
+                    .andExpect(jsonPath("$.leanMassKg").value(8.1))
                     .andExpect(jsonPath("$.notes").value("TEXT"));
 
             verify(createBodyMetricsUseCase).execute(command);
         }
 
         @Test
-        void shouldCreateUserBodyMetricsWithoutCircumferences() throws Exception {
+        void shouldCreatePersonBodyMetricsWithoutCircumferences() throws Exception {
             BodyCircumferencesRequest circumferencesRequest = null;
             CreateBodyMetricsRequest request = new CreateBodyMetricsRequest(
                     65.0,
@@ -189,7 +190,7 @@ public class CreateBodyMetricsControllerTest {
             );
             CreateBodyMetricsResult result = new CreateBodyMetricsResult(
                     new BodyMetricsId(1L),
-                    new UserId(1L),
+                    new PersonId(1L),
                     LocalDateTime.of(2026, 6, 14, 10, 0),
                     new BodyWeightKg(65.0),
                     new BodyHeightCm(167.0),
@@ -209,7 +210,7 @@ public class CreateBodyMetricsControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.id").value(1L))
-                    .andExpect(jsonPath("$.userId").value(1L))
+                    .andExpect(jsonPath("$.personId").value(1L))
                     .andExpect(jsonPath("$.weightKg").value(65.0))
                     .andExpect(jsonPath("$.heightCm").value(167.0))
                     .andExpect(jsonPath("$.bmi").value(23.31))
