@@ -4,6 +4,12 @@ import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.user.service.PasswordHashingService;
 import com.ironcore.application.user.usecase.bootstrap.BootstrapSingleUserCommand;
 import com.ironcore.application.user.usecase.bootstrap.BootstrapSingleUserUseCase;
+import com.ironcore.domain.person.enums.SexType;
+import com.ironcore.domain.person.model.Person;
+import com.ironcore.domain.person.repository.PersonRepository;
+import com.ironcore.domain.person.valueobject.BirthDate;
+import com.ironcore.domain.person.valueobject.PersonId;
+import com.ironcore.domain.person.valueobject.Sex;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.Email;
@@ -17,6 +23,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Optional;
+
+import static com.ironcore.application.person.BootstrapPersonTestFactory.existingPerson;
 import static com.ironcore.application.user.BootstrapSingleUserTestFactory.CREATED_AT;
 import static com.ironcore.application.user.BootstrapSingleUserTestFactory.command;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,6 +42,9 @@ class BootstrapSingleUserUseCaseTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private PersonRepository personRepository;
 
     @Mock
     private PasswordHashingService passwordHashingService;
@@ -63,7 +77,17 @@ class BootstrapSingleUserUseCaseTest {
         void shouldFailWhenAnotherUserAlreadyExists() {
             BootstrapSingleUserCommand command = command();
 
+            Person existingPerson = Person.restore(
+                    new PersonId(1L),
+                    "Renan C Vitor",
+                    new Sex(SexType.MALE),
+                    new BirthDate(LocalDate.of(1994, 4, 9)),
+                    LocalDateTime.of(2026, 5, 10, 10, 0, 0),
+                    null
+            );
+
             when(userRepository.existsByEmail(command.email())).thenReturn(false);
+            when(personRepository.findByName(command.personName())).thenReturn(Optional.of(existingPerson));
             when(userRepository.existsAny()).thenReturn(true);
 
             assertThatExceptionOfType(OperationNotAllowedException.class)
@@ -84,7 +108,17 @@ class BootstrapSingleUserUseCaseTest {
             BootstrapSingleUserCommand command = command();
             PasswordHash passwordHash = new PasswordHash("hashed-password");
 
+            Person existingPerson = Person.restore(
+                    new PersonId(1L),
+                    "Renan C Vitor",
+                    new Sex(SexType.MALE),
+                    new BirthDate(LocalDate.of(1994, 4, 9)),
+                    LocalDateTime.of(2026, 5, 10, 10, 0, 0),
+                    null
+            );
+
             when(userRepository.existsByEmail(command.email())).thenReturn(false);
+            when(personRepository.findByName(command.personName())).thenReturn(Optional.of(existingPerson));
             when(userRepository.existsAny()).thenReturn(false);
             when(passwordHashingService.hash(new RawPassword(command.rawPassword())))
                     .thenReturn(passwordHash);
