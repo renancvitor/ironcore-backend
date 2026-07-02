@@ -1,9 +1,9 @@
 package com.ironcore.infrastructure.config;
 
-import com.ironcore.domain.userbodymetrics.service.BMICalculator;
-import com.ironcore.domain.userbodymetrics.service.FatMassCalculator;
-import com.ironcore.domain.userbodymetrics.service.LeanMassCalculator;
-import com.ironcore.domain.userbodymetrics.service.NavyBodyFatCalculator;
+import com.ironcore.domain.bodymetrics.service.BMICalculator;
+import com.ironcore.domain.bodymetrics.service.FatMassCalculator;
+import com.ironcore.domain.bodymetrics.service.LeanMassCalculator;
+import com.ironcore.domain.bodymetrics.service.NavyBodyFatCalculator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
