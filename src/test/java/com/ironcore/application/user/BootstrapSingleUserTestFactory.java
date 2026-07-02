@@ -16,7 +16,7 @@ public final class BootstrapSingleUserTestFactory {
     public static BootstrapSingleUserCommand command() {
         return new BootstrapSingleUserCommand(
                 "Renan",
-                new PersonId(1L),
+                "Renan C Vitor",
                 new Email("renan@example.com"),
                 "StrongPass@2026",
                 CREATED_AT

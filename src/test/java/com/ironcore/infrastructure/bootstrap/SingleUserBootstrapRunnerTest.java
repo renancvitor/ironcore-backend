@@ -42,7 +42,7 @@ class SingleUserBootstrapRunnerTest {
             SingleUserBootstrapProperties properties = new SingleUserBootstrapProperties(
                     false,
                     "",
-                    0L,
+                    "",
                     "",
                     null
             );
@@ -63,7 +63,7 @@ class SingleUserBootstrapRunnerTest {
             SingleUserBootstrapProperties properties = new SingleUserBootstrapProperties(
                     true,
                     "Renan",
-                    1L,
+                    "Renan C Vitor",
                     "renan@example.com",
                     "Strong123@"
             );
@@ -80,7 +80,7 @@ class SingleUserBootstrapRunnerTest {
             BootstrapSingleUserCommand command = captor.getValue();
 
             assertThat(command.nickname()).isEqualTo("Renan");
-            assertThat(command.personId()).isEqualTo(new PersonId(1L));
+            assertThat(command.personName()).isEqualTo("Renan C Vitor");
             assertThat(command.email()).isEqualTo(new Email("renan@example.com"));
             assertThat(command.rawPassword()).isEqualTo("Strong123@");
             assertThat(command.createdAt()).isNotNull();
