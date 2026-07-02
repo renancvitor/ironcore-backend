@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public record SingleUserBootstrapProperties(
         boolean enabled,
         String nickname,
-        Long personId,
+        String personName,
         String email,
         String password
 ) {

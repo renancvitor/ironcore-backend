@@ -33,9 +33,15 @@ app:
 
 ironcore:
   bootstrap:
+    person:
+      enabled: ${IRONCORE_BOOTSTRAP_PERSON_ENABLED:false}
+      name: ${IRONCORE_BOOTSTRAP_PERSON_NAME:}
+      sex: ${IRONCORE_BOOTSTRAP_PERSON_SEX:}
+      birth-date: ${IRONCORE_BOOTSTRAP_PERSON_BIRTH_DATE:}
+
     single-user:
       enabled: ${IRONCORE_BOOTSTRAP_USER_ENABLED:false}
       nickname: ${IRONCORE_BOOTSTRAP_USER_NICKNAME:}
-      person-id: ${IRONCORE_BOOTSTRAP_USER_PERSON_ID:}
+      person-name: ${IRONCORE_BOOTSTRAP_PERSON_NAME:}
       email: ${IRONCORE_BOOTSTRAP_USER_EMAIL:}
       password: ${IRONCORE_BOOTSTRAP_USER_PASSWORD:}
