@@ -4,7 +4,7 @@ import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
 import com.ironcore.application.logging.audit.port.AuditLogPublisher;
-import com.ironcore.application.person.usecase.PersonAuditData;
+import com.ironcore.application.person.PersonAuditData;
 import com.ironcore.domain.logging.audit.enums.AuditActionType;
 import com.ironcore.domain.logging.audit.enums.AuditTargetType;
 import com.ironcore.domain.person.model.Person;

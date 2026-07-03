@@ -1,4 +1,4 @@
-package com.ironcore.application.person.usecase;
+package com.ironcore.application.person;
 
 import com.ironcore.application.logging.audit.payload.LoggableData;
 import com.ironcore.domain.person.model.Person;
