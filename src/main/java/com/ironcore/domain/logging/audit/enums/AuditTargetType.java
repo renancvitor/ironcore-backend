@@ -1,6 +1,7 @@
 package com.ironcore.domain.logging.audit.enums;
 
 public enum AuditTargetType {
+    PERSON,
     USER,
     BODY_METRICS,
     EXERCISE,
