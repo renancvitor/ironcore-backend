@@ -13,6 +13,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Component
@@ -34,7 +35,7 @@ public class PersonBootstrapRunner implements ApplicationRunner {
         BootstrapPersonCommand command = new BootstrapPersonCommand(
                 properties.name(),
                 new Sex(properties.sex()),
-                new BirthDate(properties.birthDate()),
+                BirthDate.from(properties.birthDate(), LocalDate.now(clock)),
                 LocalDateTime.now(clock)
         );
 

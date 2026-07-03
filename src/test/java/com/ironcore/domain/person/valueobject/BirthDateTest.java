@@ -22,23 +22,25 @@ class BirthDateTest {
 
     @Test
     void shouldRejectNullBirthDate() {
-        assertThatThrownBy(() -> new BirthDate(null))
+        assertThatThrownBy(() -> BirthDate.from(null, null))
                 .isInstanceOf(InvalidPersonException.class);
     }
 
     @Test
     void shouldRejectFutureBirthDate() {
+        LocalDate referenceDate = LocalDate.of(2026, 7, 3);
         LocalDate invalidDate = LocalDate.of(2029, 1, 1);
 
-        assertThatThrownBy(() -> new BirthDate(invalidDate))
+        assertThatThrownBy(() -> BirthDate.from(invalidDate, referenceDate))
                 .isInstanceOf(InvalidPersonException.class);
     }
 
     @Test
     void shouldRejectBirthDateOlderThan120Years() {
-        LocalDate invalidDate = LocalDate.now().minusYears(120).minusDays(1);
+        LocalDate referenceDate = LocalDate.of(2026, 7, 3);
+        LocalDate invalidDate = referenceDate.minusYears(120).minusDays(1);
 
-        assertThatThrownBy(() -> new BirthDate(invalidDate))
+        assertThatThrownBy(() -> BirthDate.from(invalidDate, referenceDate))
                 .isInstanceOf(InvalidPersonException.class);
     }
 
@@ -49,5 +51,22 @@ class BirthDateTest {
         int age = birthDate.ageAt(LocalDate.of(2026, 6, 30));
 
         assertThat(age).isEqualTo(32);
+    }
+
+    @Test
+    void shouldCreateBirthDateWithoutTemporalValidation() {
+        LocalDate date = LocalDate.of(1800, 1, 1);
+
+        BirthDate birthDate = new BirthDate(date);
+
+        assertThat(birthDate.value()).isEqualTo(date);
+    }
+
+    @Test
+    void shouldRejectNullReferenceDate() {
+        LocalDate birthDate = LocalDate.of(1994, 4, 9);
+
+        assertThatThrownBy(() -> BirthDate.from(birthDate, null))
+                .isInstanceOf(InvalidPersonException.class);
     }
 }

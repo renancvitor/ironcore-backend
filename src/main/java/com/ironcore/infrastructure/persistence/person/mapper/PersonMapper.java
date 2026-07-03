@@ -20,7 +20,7 @@ public class PersonMapper {
                     person.getUpdatedAt()
             );
         } catch (RuntimeException exception) {
-            throw new DataMappingException("Falha ao converter user de domínio para entidade.", exception);
+            throw new DataMappingException("Falha ao converter pessoa de domínio para entidade.", exception);
         }
     }
 
@@ -35,7 +35,7 @@ public class PersonMapper {
                     entity.getUpdatedAt()
             );
         } catch (RuntimeException exception) {
-            throw new DataMappingException("Falha ao converter user de entidade para domínio.", exception);
+            throw new DataMappingException("Falha ao converter pessoa de entidade para domínio.", exception);
         }
     }
 }
