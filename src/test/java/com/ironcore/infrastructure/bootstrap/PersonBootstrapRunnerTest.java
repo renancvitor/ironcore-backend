@@ -11,10 +11,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-import java.time.Clock;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
+import java.time.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -62,7 +59,7 @@ class PersonBootstrapRunnerTest {
                     true,
                     "Renan C Vitor",
                     new Sex(SexType.MALE).type(),
-                    new BirthDate(LocalDate.of(1994, 4, 9)).value()
+                    LocalDate.of(1994, 4, 9)
             );
 
             PersonBootstrapRunner runner = new PersonBootstrapRunner(useCase, properties, clock);
@@ -79,7 +76,9 @@ class PersonBootstrapRunnerTest {
             assertThat(command.name()).isEqualTo("Renan C Vitor");
             assertThat(command.sex()).isEqualTo(new Sex(SexType.MALE));
             assertThat(command.birthDate()).isEqualTo(new BirthDate(LocalDate.of(1994, 4, 9)));
-            assertThat(command.createdAt()).isNotNull();
+            assertThat(command.createdAt()).isEqualTo(
+                    LocalDateTime.ofInstant(clock.instant(), clock.getZone())
+            );
         }
     }
 }
