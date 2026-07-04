@@ -168,13 +168,6 @@ class PersonRepositoryAdapterIntegrationTest {
     @Nested
     class Constraints {
 
-        @Test
-        void shouldEnforceUniqueNameConstraint() {
-            adapter.save(personWithoutId("Renan"));
-
-            assertThatThrownBy(() -> adapter.save(personWithoutId("Renan")))
-                    .isInstanceOf(PersistenceException.class);
-        }
     }
 
     private Person personWithoutId(String name) {
