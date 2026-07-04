@@ -6,10 +6,11 @@ import com.ironcore.application.user.usecase.getauthenticateduser.GetAuthenticat
 import com.ironcore.application.user.usecase.getauthenticateduser.UserProfileResult;
 import com.ironcore.application.user.usecase.initialchangepassword.InitialChangePasswordCommand;
 import com.ironcore.application.user.usecase.initialchangepassword.InitialChangePasswordUseCase;
+import com.ironcore.application.user.usecase.update.ChangeNicknameCommand;
+import com.ironcore.application.user.usecase.update.ChangeNicknameResult;
+import com.ironcore.application.user.usecase.update.ChangeNicknameUseCase;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
-import com.ironcore.interfaces.rest.user.dto.ChangePasswordRequest;
-import com.ironcore.interfaces.rest.user.dto.InitialChangePasswordRequest;
-import com.ironcore.interfaces.rest.user.dto.UserResponse;
+import com.ironcore.interfaces.rest.user.dto.*;
 import com.ironcore.interfaces.rest.user.mapper.UserChangePasswordMapper;
 import com.ironcore.interfaces.rest.user.mapper.UserRestMapper;
 import jakarta.validation.Valid;
@@ -26,6 +27,7 @@ public class UserController {
     private final ChangePasswordUseCase changePasswordUseCase;
     private final InitialChangePasswordUseCase initialChangePasswordUseCase;
     private final GetAuthenticatedUserUseCase getAuthenticatedUserUseCase;
+    private final ChangeNicknameUseCase changeNicknameUseCase;
 
     @PostMapping("/me/change-password")
     public ResponseEntity<Void> changePassword(
@@ -54,5 +56,17 @@ public class UserController {
     ) {
         UserProfileResult result = getAuthenticatedUserUseCase.execute(authenticatedUser.userId());
         return ResponseEntity.ok(UserRestMapper.toResponse(result));
+    }
+
+    @PutMapping("/me/change-nickname")
+    public ResponseEntity<ChangeNicknameResponse> changeNickname(
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
+            @Valid @RequestBody ChangeNicknameRequest request
+    ) {
+        ChangeNicknameCommand command = UserRestMapper.toChangeNicknameCommand(authenticatedUser, request);
+        ChangeNicknameResult result = changeNicknameUseCase.execute(command);
+        ChangeNicknameResponse response = UserRestMapper.toResponse(result);
+
+        return ResponseEntity.ok(response);
     }
 }

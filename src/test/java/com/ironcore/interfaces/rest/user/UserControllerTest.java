@@ -9,11 +9,15 @@ import com.ironcore.application.user.usecase.getauthenticateduser.GetAuthenticat
 import com.ironcore.application.user.usecase.getauthenticateduser.UserProfileResult;
 import com.ironcore.application.user.usecase.initialchangepassword.InitialChangePasswordCommand;
 import com.ironcore.application.user.usecase.initialchangepassword.InitialChangePasswordUseCase;
+import com.ironcore.application.user.usecase.update.ChangeNicknameCommand;
+import com.ironcore.application.user.usecase.update.ChangeNicknameResult;
+import com.ironcore.application.user.usecase.update.ChangeNicknameUseCase;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.RawPassword;
 import com.ironcore.domain.user.valueobject.UserId;
 import com.ironcore.infrastructure.security.jwt.JwtAccessTokenValidator;
+import com.ironcore.interfaces.rest.user.dto.ChangeNicknameRequest;
 import com.ironcore.interfaces.rest.user.dto.ChangePasswordRequest;
 import com.ironcore.interfaces.rest.user.dto.InitialChangePasswordRequest;
 import org.junit.jupiter.api.Nested;
@@ -31,6 +35,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -42,6 +47,7 @@ class UserControllerTest {
     private static final String USER_ENDPOINT = "/api/users/me/change-password";
     private static final String INITIAL_CHANGE_PASSWORD_ENDPOINT = "/api/users/change-initial-password";
     private static final String USER_PROFILE_ENDPOINT = "/api/users/me";
+    private static final String CHANGE_NICKNAME_ENDPOINT = "/api/users/me/change-nickname";
 
     @Autowired
     private MockMvc mockMvc;
@@ -57,6 +63,9 @@ class UserControllerTest {
 
     @MockitoBean
     private GetAuthenticatedUserUseCase getAuthenticatedUserUseCase;
+
+    @MockitoBean
+    private ChangeNicknameUseCase changeNicknameUseCase;
 
     @MockitoBean
     private ErrorLogPublisher errorLogPublisher;
@@ -151,6 +160,52 @@ class UserControllerTest {
 
             verify(changePasswordUseCase, never()).execute(any());
         }
+
+        @Test
+        void shouldReturnBadRequestWhenNicknameIsBlank() throws Exception {
+            ChangeNicknameRequest request = new ChangeNicknameRequest(
+                    ""
+            );
+
+            mockMvc.perform(put(CHANGE_NICKNAME_ENDPOINT)
+                            .with(authenticatedUser())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.status").value(400))
+                    .andExpect(jsonPath("$.error").value("Bad Request"))
+                    .andExpect(jsonPath("$.message").value("Erro de validação nos campos de requisição"))
+                    .andExpect(jsonPath("$.path").value(CHANGE_NICKNAME_ENDPOINT))
+                    .andExpect(jsonPath("$.fields").isArray())
+                    .andExpect(jsonPath("$.fields[*].field", containsInAnyOrder(
+                            "nickname"
+                    )));
+
+            verify(changeNicknameUseCase, never()).execute(any());
+        }
+
+        @Test
+        void shouldReturnBadRequestWhenNicknameExceedsMaxSize() throws Exception {
+            ChangeNicknameRequest request = new ChangeNicknameRequest(
+                    "a".repeat(31)
+            );
+
+            mockMvc.perform(put(CHANGE_NICKNAME_ENDPOINT)
+                            .with(authenticatedUser())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.status").value(400))
+                    .andExpect(jsonPath("$.error").value("Bad Request"))
+                    .andExpect(jsonPath("$.message").value("Erro de validação nos campos de requisição"))
+                    .andExpect(jsonPath("$.path").value(CHANGE_NICKNAME_ENDPOINT))
+                    .andExpect(jsonPath("$.fields").isArray())
+                    .andExpect(jsonPath("$.fields[*].field", containsInAnyOrder(
+                            "nickname"
+                    )));
+
+            verify(changeNicknameUseCase, never()).execute(any());
+        }
     }
 
     @Nested
@@ -210,6 +265,35 @@ class UserControllerTest {
                     .andExpect(jsonPath("$.path").value(USER_ENDPOINT));
 
             verify(changePasswordUseCase).execute(command);
+        }
+    }
+
+    @Nested
+    class SuccessfulChangeNickname {
+
+        @Test
+        void shouldChangeAuthenticatedUserNickname() throws Exception {
+            ChangeNicknameRequest request = new ChangeNicknameRequest(
+                    "Novo Apelido"
+            );
+            ChangeNicknameCommand command = new ChangeNicknameCommand(
+                    new UserId(1L),
+                    "Novo Apelido"
+            );
+            ChangeNicknameResult result = new ChangeNicknameResult(
+                    "Novo Apelido"
+            );
+
+            when(changeNicknameUseCase.execute(command)).thenReturn(result);
+
+            mockMvc.perform(put(CHANGE_NICKNAME_ENDPOINT)
+                            .with(authenticatedUser())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.nickname").value("Novo Apelido"));
+
+            verify(changeNicknameUseCase).execute(command);
         }
     }
 }

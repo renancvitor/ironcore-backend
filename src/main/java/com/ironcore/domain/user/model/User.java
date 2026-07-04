@@ -56,12 +56,12 @@ public class User {
     }
 
     public void changeNickname(String nickname, LocalDateTime updatedAt) {
-        this.nickname = requireNonBlank(nickname, "Apelido não pode ser nulo ou vazio");
+        this.nickname = requireNonBlank(nickname, "Apelido não pode ser nulo ou vazio.");
         markUpdatedAt(updatedAt);
     }
 
     public void changePasswordHash(PasswordHash passwordHash, LocalDateTime updatedAt) {
-        this.passwordHash = requireNonNull(passwordHash, "Senha hash não pode ser nulo");
+        this.passwordHash = requireNonNull(passwordHash, "Senha hash não pode ser nulo.");
         this.mustChangePassword = false;
         markUpdatedAt(updatedAt);
     }
@@ -77,7 +77,7 @@ public class User {
     }
 
     private void markUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = requireNonNull(updatedAt, "Data de atualização não pode ser nulo");
+        this.updatedAt = requireNonNull(updatedAt, "Data de atualização não pode ser nulo.");
     }
 
     private String requireNonBlank(String value, String message) {
