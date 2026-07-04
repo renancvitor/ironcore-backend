@@ -103,7 +103,7 @@ class UserTest {
 
             assertThatExceptionOfType(InvalidUserException.class)
                     .isThrownBy(() -> user.deactivate(null))
-                    .withMessage("Data de atualização não pode ser nulo");
+                    .withMessage("Data de atualização não pode ser nulo.");
         }
     }
 }
