@@ -130,18 +130,18 @@ Observação técnica do milestone: como as migrations ainda não haviam sido ap
 
 Documentação técnica principal:
 
-- `docs/persons/README.md`
-- `docs/users/README.md`
-- `docs/body-metrics/README.md`
-- `docs/database/README.md`
-- `docs/diagram/er-sql/README.md`
+- [Persons](../../persons/README.md)
+- [Users e Auth](../../users/README.md)
+- [Body Metrics](../../body-metrics/README.md)
+- [Banco de Dados e Migrations](../../database/README.md)
+- [Diagrama ER](../../diagram/er-sql/README.md)
 
-Documentacoes relacionadas:
+Documentações relacionadas:
 
-- `docs/architecture/README.md`
-- `docs/project-structure/README.md`
-- `docs/testing/README.md`
-- `docs/releases/README.md`
+- [Arquitetura](../../architecture/README.md)
+- [Estrutura do Projeto](../../project-structure/README.md)
+- [Testes Automatizados](../../testing/README.md)
+- [Releases](../README.md)
 
 ## Validação
 
