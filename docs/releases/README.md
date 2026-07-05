@@ -10,7 +10,8 @@ Cada release possui seu próprio `README.md` para facilitar navegação direta p
 |---|---|---|
 | `v0.1.0` | [Fundação técnica do backend](./v0.1.0/README.md) | Histórico |
 | `v0.2.0` | [Users, auth e security single-user](./v0.2.0/README.md) | Histórico |
-| `v0.3.0` | [User body metrics funcional](./v0.3.0/README.md) | Atual |
+| `v0.3.0` | [User body metrics funcional](./v0.3.0/README.md) | Histórico |
+| `v0.4.0` | [Person e ownership por PersonId](./v0.4.0/README.md) | Atual |
 
 ## Regra de Manutenção
 

@@ -37,6 +37,8 @@ docs
 ├── README.md
 ├── architecture
 │   └── README.md
+├── body-metrics
+│   └── README.md
 ├── database
 │   └── README.md
 ├── diagram
@@ -45,36 +47,26 @@ docs
 │   │   ├── README.md
 │   │   └── IronCoreERDiagram.png
 │   ├── general-architecture
-│   │   ├── README.md
-│   │   └── General Architecture Diagram.png
 │   ├── internal-architecture
-│   │   ├── README.md
-│   │   └── Internal Architecture Diagram of the Application.png
 │   ├── sequence-diagram
-│   │   ├── README.md
-│   │   └── Sequence Diagram.png
 │   └── sequence-log-diagram
-│       ├── README.md
-│       └── Sequence Log Diagram.png
 ├── exceptions
 │   └── README.md
 ├── logging
 │   ├── README.md
 │   ├── audit-log.md
 │   └── error-log.md
+├── persons
+│   └── README.md
 ├── project-structure
 │   └── README.md
 ├── releases
 │   ├── README.md
 │   ├── v0.1.0
-│   │   └── README.md
 │   ├── v0.2.0
-│   │   └── README.md
-│   └── v0.3.0
-│       └── README.md
+│   ├── v0.3.0
+│   └── v0.4.0
 ├── testing
-│   └── README.md
-├── user-body-metrics
 │   └── README.md
 └── users
     └── README.md
@@ -87,117 +79,72 @@ src/main/java/com/ironcore
 ├── IroncoreBackendApplication.java
 ├── application
 │   ├── auth
+│   ├── bodymetrics
+│   │   ├── component
+│   │   ├── create
+│   │   ├── delete
+│   │   ├── get
+│   │   ├── latest
+│   │   ├── list
 │   │   ├── port
-│   │   └── usecase
+│   │   ├── progress
+│   │   └── update
 │   ├── exception
 │   ├── logging
-│   │   ├── audit
-│   │   │   ├── event
-│   │   │   ├── payload
-│   │   │   ├── port
-│   │   │   └── service
-│   │   └── error
-│   │       ├── event
-│   │       ├── port
-│   │       └── service
-│   ├── shared
-│   │   └── pagination
-│   ├── user
-│   │   ├── service
+│   ├── person
 │   │   └── usecase
 │   │       ├── bootstrap
-│   │       ├── changepassword
-│   │       ├── getauthenticateduser
-│   │       └── initialchangepassword
-│   └── userbodymetrics
-│       ├── component
-│       ├── create
-│       ├── delete
-│       ├── get
-│       ├── latest
-│       ├── list
-│       ├── port
-│       ├── progress
-│       └── update
+│   │       └── update
+│   ├── shared
+│   └── user
+│       ├── service
+│       └── usecase
+│           ├── bootstrap
+│           ├── changepassword
+│           ├── getauthenticateduser
+│           ├── initialchangepassword
+│           └── update
 ├── domain
+│   ├── bodymetrics
+│   │   ├── exception
+│   │   ├── model
+│   │   ├── repository
+│   │   ├── service
+│   │   └── valueobject
 │   ├── exception
 │   ├── logging
-│   │   ├── audit
-│   │   │   ├── enums
-│   │   │   ├── exception
-│   │   │   ├── model
-│   │   │   ├── repository
-│   │   │   └── valueobject
-│   │   └── error
-│   │       ├── enums
-│   │       ├── exception
-│   │       ├── model
-│   │       ├── repository
-│   │       └── valueobject
-│   ├── user
+│   ├── person
 │   │   ├── enums
 │   │   ├── exception
 │   │   ├── model
-│   │   ├── port
 │   │   ├── repository
 │   │   └── valueobject
-│   └── userbodymetrics
+│   └── user
 │       ├── exception
 │       ├── model
+│       ├── port
 │       ├── repository
-│       ├── service
 │       └── valueobject
 ├── infrastructure
 │   ├── bootstrap
 │   │   └── config
 │   ├── config
 │   ├── events
-│   │   └── logging
-│   │       ├── audit
-│   │       └── error
 │   ├── exception
 │   ├── persistence
+│   │   ├── bodymetrics
 │   │   ├── logging
-│   │   │   ├── audit
-│   │   │   └── error
+│   │   ├── person
 │   │   ├── shared
-│   │   │   └── pagination
-│   │   ├── user
-│   │   │   ├── entity
-│   │   │   ├── mapper
-│   │   │   └── repository
-│   │   └── userbodymetrics
-│   │       ├── entity
-│   │       ├── mapper
-│   │       └── repository
+│   │   └── user
 │   └── security
-│       ├── auth
-│       ├── config
-│       ├── filter
-│       ├── jwt
-│       │   └── exception
-│       └── password
 └── interfaces
     └── rest
         ├── auth
-        │   ├── dto
-        │   └── mapper
+        ├── bodymetrics
         ├── exception
-        │   ├── factory
-        │   ├── handler
-        │   └── model
-        ├── user
-        │   ├── dto
-        │   └── mapper
-        └── userbodymetrics
-            ├── dto
-            │   ├── create
-            │   ├── get
-            │   ├── latest
-            │   ├── list
-            │   ├── progress
-            │   └── update
-            └── mapper
+        ├── person
+        └── user
 ```
 
 ## Resources
@@ -209,10 +156,11 @@ src/main/resources
 ├── application-prod.yml
 └── db
     └── migration
-        ├── V1__create_table_users.sql
-        ├── V2__create_table_user_body_metrics.sql
-        ├── V3__create_table_audit_log.sql
-        └── V4__create_table_error_log.sql
+        ├── V1__create_table_persons.sql
+        ├── V2__create_table_users.sql
+        ├── V3__create_table_body_metrics.sql
+        ├── V4__create_table_audit_log.sql
+        └── V5__create_table_error_log.sql
 ```
 
 ## Testes
@@ -222,61 +170,38 @@ src/test/java/com/ironcore
 ├── IroncoreBackendApplicationIntegrationTest.java
 ├── application
 │   ├── auth
-│   │   └── usecase
+│   ├── bodymetrics
 │   ├── logging
-│   │   ├── audit
-│   │   │   └── service
-│   │   └── error
-│   │       └── service
+│   ├── person
 │   ├── shared
-│   │   └── pagination
-│   ├── user
-│   │   ├── service
-│   │   └── usecase
-│   └── userbodymetrics
-│       ├── create
-│       ├── delete
-│       ├── get
-│       ├── latest
-│       ├── list
-│       ├── progress
-│       └── update
+│   └── user
 ├── domain
-│   ├── user
-│   │   ├── model
-│   │   └── valueobject
-│   └── userbodymetrics
-│       ├── service
-│       └── valueobject
+│   ├── bodymetrics
+│   ├── person
+│   └── user
 ├── infrastructure
 │   ├── bootstrap
-│   │   └── config
 │   ├── persistence
+│   │   ├── bodymetrics
+│   │   ├── person
 │   │   ├── shared
-│   │   │   └── pagination
-│   │   ├── user
-│   │   │   ├── mapper
-│   │   │   └── repository
-│   │   └── userbodymetrics
-│   │       ├── mapper
-│   │       └── repository
+│   │   └── user
 │   └── security
-│       ├── filter
-│       ├── jwt
-│       └── password
 └── interfaces
     └── rest
         ├── auth
-        ├── user
-        ├── userbodymetrics
-        └── support
-            └── security
+        ├── bodymetrics
+        ├── person
+        ├── support
+        └── user
 ```
 
 ## Regra de Leitura
 
-- Users/auth/security possuem fluxo funcional single-user.
-- User body metrics possui fluxo funcional autenticado com domínio, aplicação, persistência, endpoints REST, progresso e testes.
+- Persons, users/auth/security e body metrics possuem fluxo funcional implementado.
+- `Person` representa dados pessoais.
+- `User` representa autenticação/acesso.
+- `BodyMetrics` representa métricas corporais da pessoa e usa `PersonId` como ownership interna.
 - Diagramas podem conter blueprint planejado; confirmar o estado real por código, migrations e testes.
 
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>

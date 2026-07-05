@@ -19,16 +19,36 @@ A configuração base da aplicação habilita o Flyway e usa `hibernate.ddl-auto
 
 | Arquivo | Tabela | Finalidade |
 |---|---|---|
-| `V1__create_table_users.sql` | `users` | Armazena dados iniciais de usuário: nome, email, hash de senha, sexo, flags de ciclo de vida e timestamps. |
-| `V2__create_table_user_body_metrics.sql` | `user_body_metrics` | Armazena medições corporais do usuário, valores calculados de composição corporal e observações. |
-| `V3__create_table_audit_log.sql` | `audit_logs` | Armazena registros de auditoria para ações relevantes, incluindo actor, action, target e snapshots opcionais. |
-| `V4__create_table_error_log.sql` | `error_logs` | Armazena registros técnicos de erro com error code, message, exception class, contexto HTTP, user id opcional e correlation id. |
+| `V1__create_table_persons.sql` | `persons` | Armazena dados pessoais: nome, sexo, data de nascimento e timestamps. |
+| `V2__create_table_users.sql` | `users` | Armazena conta de acesso: nickname, `person_id`, email, hash de senha, flags de acesso e timestamps. |
+| `V3__create_table_body_metrics.sql` | `body_metrics` | Armazena medições corporais da pessoa, valores calculados de composição corporal e observações. |
+| `V4__create_table_audit_log.sql` | `audit_logs` | Armazena registros de auditoria para ações relevantes, incluindo actor, action, target e snapshots opcionais. |
+| `V5__create_table_error_log.sql` | `error_logs` | Armazena registros técnicos de erro com error code, message, exception class, contexto HTTP, user id opcional e correlation id. |
+
+## Modelo Implementado
+
+O schema funcional atual separa dados pessoais, acesso e medições corporais:
+
+```text
+persons
+  ↑
+  ├── users.person_id
+  └── body_metrics.person_id
+```
+
+Decisões atuais:
+
+- `persons.name` é obrigatório, mas não único.
+- `users.person_id` é obrigatório e único, representando a relação 1:1 atual entre conta de acesso e pessoa.
+- `body_metrics.person_id` é obrigatório, representando ownership das medições corporais pela pessoa.
+- `users.email` permanece único para autenticação.
+- `body_metrics` usa `ON DELETE CASCADE` a partir de `persons`.
 
 ## Observações Sobre os Diagramas
 
-Alguns diagramas descrevem um modelo de dados planejado mais amplo, incluindo exercícios, ciclos de treino, dias de treino e atividades de treino. Essas tabelas são blueprint/escopo futuro e não são criadas pelas migrations atuais.
+Alguns diagramas descrevem um modelo de dados planejado mais amplo, incluindo exercícios, grupos musculares, subgrupos, objetivos de treino, ciclos, dias e atividades de treino. Essas tabelas são blueprint/escopo futuro quando não estiverem presentes nas migrations atuais.
 
-Somente as quatro tabelas listadas acima devem ser tratadas como estado de banco implementado. A tabela `user_body_metrics` já é usada pelo fluxo funcional autenticado de métricas corporais, incluindo criação, atualização, exclusão, consultas e progresso.
+Somente as tabelas criadas pelas migrations listadas acima devem ser tratadas como estado de banco implementado.
 
 ## Serviços Locais
 

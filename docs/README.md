@@ -16,8 +16,9 @@ Alguns documentos descrevem funcionalidades já implementadas, enquanto outros r
 
 ### Módulos documentados
 
+- [Persons](persons/README.md): domínio de dados pessoais, relação com user, bootstrap e endpoint de atualização.
 - [Users e Auth](users/README.md): domínio de usuário, bootstrap, autenticação single-user, JWT e endpoints atuais.
-- [User Body Metrics](user-body-metrics/README.md): fluxo funcional de métricas corporais, endpoints REST, cálculos, progresso e limitações atuais.
+- [Body Metrics](body-metrics/README.md): fluxo funcional de métricas corporais, endpoints REST, cálculos, progresso e ownership por `PersonId`.
 
 ### Observabilidade e registros
 
@@ -35,10 +36,12 @@ Alguns documentos descrevem funcionalidades já implementadas, enquanto outros r
 - [v0.1.0](releases/v0.1.0/README.md): fundação técnica anterior ao fechamento de users.
 - [v0.2.0](releases/v0.2.0/README.md): users, auth e security single-user.
 - [v0.3.0](releases/v0.3.0/README.md): user body metrics funcional.
+- [v0.4.0](releases/v0.4.0/README.md): person, refactor para body metrics e ownership por `PersonId`.
 
 ## Observações
 
 - A documentação usa termos técnicos em inglês quando eles representam código, camadas, módulos, ferramentas ou conceitos comuns no desenvolvimento backend.
 - Funcionalidades como Swagger/OpenAPI gerado, frontend, IA, Kafka, specifications/filtros avançados, catálogo de exercícios e treinos ainda fazem parte da evolução planejada do projeto, salvo quando indicado de forma diferente em documentos específicos.
+- Releases anteriores preservam história do projeto e não devem ser reescritos para refletir o estado atual.
 
 <p align="right"><a href="../README.md">Voltar para a documentação principal</a></p>

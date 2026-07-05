@@ -6,24 +6,7 @@ Este documento descreve a estratégia atual de testes automatizados do IronCore 
 
 O projeto usa testes para proteger regras de domínio, fluxos de aplicação, adapters de infraestrutura, segurança, controllers REST e integração com contexto Spring.
 
-## Estado Atual
-
-Na última validação local, a suíte executou:
-
-- `292` testes.
-- `0` falhas.
-- `0` erros.
-- `0` ignorados.
-
-Comando usado:
-
-```bash
-./mvnw test --batch-mode
-```
-
-Validação executada em `2026-06-29`.
-
-## Organização por Camada
+## Organizacao por Camada
 
 ### `domain`
 
@@ -31,12 +14,16 @@ Cobre regras de domínio, value objects e services de cálculo.
 
 Exemplos atuais:
 
+- `PersonTest`
+- `PersonIdTest`
+- `BirthDateTest`
+- `SexTest`
 - `UserTest`
 - `EmailTest`
 - `RawPasswordTest`
 - `PasswordHashTest`
-- `SexTest`
 - `UserIdTest`
+- `BodyMetricsIdTest`
 - `BMICalculatorTest`
 - `NavyBodyFatCalculatorTest`
 - `FatMassCalculatorTest`
@@ -51,24 +38,27 @@ Cobre use cases e services de aplicação.
 Exemplos atuais:
 
 - `LoginUseCaseTest`
+- `BootstrapPersonUseCaseTest`
 - `BootstrapSingleUserUseCaseTest`
 - `InitialChangePasswordUseCaseTest`
 - `ChangePasswordUseCaseTest`
+- `ChangeNicknameUseCaseTest`
 - `GetAuthenticatedUserUseCaseTest`
+- `UpdatePersonUseCaseTest`
 - `UserPasswordChangeServiceTest`
 - `PasswordHashingServiceTest`
 - `AuditLogApplicationServiceTest`
 - `ErrorLogApplicationServiceTest`
-- `CreateUserBodyMetricsUseCaseTest`
-- `UpdateUserBodyMetricsUseCaseTest`
-- `DeleteUserBodyMetricsUseCaseTest`
-- `GetUserBodyMetricsUseCaseTest`
-- `GetLatestUserBodyMetricsUseCaseTest`
-- `ListUserBodyMetricsUseCaseTest`
+- `CreateBodyMetricsUseCaseTest`
+- `UpdateBodyMetricsUseCaseTest`
+- `DeleteBodyMetricsUseCaseTest`
+- `GetBodyMetricsUseCaseTest`
+- `GetLatestBodyMetricsUseCaseTest`
+- `ListBodyMetricsUseCaseTest`
 - `GetBodyMetricsProgressChartUseCaseTest`
 - `GetBodyMetricsProgressChangesUseCaseTest`
 
-Esses testes validam regras de orquestração, autenticação, troca de senha, bootstrap single-user, publicação de logs, métricas corporais e progresso.
+Esses testes validam regras de orquestração, autenticação, troca de senha, bootstrap, atualização de pessoa, atualização de nickname, publicação de logs, métricas corporais e progresso.
 
 ### `infrastructure`
 
@@ -76,15 +66,20 @@ Cobre adapters, segurança técnica, bootstrap e persistência.
 
 Exemplos atuais:
 
+- `PersonBootstrapRunnerTest`
 - `SingleUserBootstrapRunnerTest`
+- `PersonBootstrapPropertiesTest`
 - `SingleUserBootstrapPropertiesTest`
+- `PersonMapperTest`
+- `PersonRepositoryAdapterTest`
+- `PersonRepositoryAdapterIntegrationTest`
 - `UserMapperTest`
 - `UserRepositoryAdapterTest`
 - `UserRepositoryAdapterIntegrationTest`
-- `UserBodyMetricsRepositoryAdapterTest`
-- `ListUserBodyMetricsQueryAdapterTest`
+- `BodyMetricsRepositoryAdapterTest`
+- `ListBodyMetricsQueryAdapterTest`
 - `BodyMetricsProgressQueryAdapterTest`
-- `UserBodyMetricsMapperTest`
+- `BodyMetricsMapperTest`
 - `PageMapperTest`
 - `JwtAccessTokenGenerationTest`
 - `JwtAccessTokenValidatorTest`
@@ -102,27 +97,29 @@ Exemplos atuais:
 - `AuthControllerTest`
 - `AuthSecurityIntegrationTest`
 - `UserControllerTest`
-- `CreateUserBodyMetricsControllerTest`
-- `UpdateUserBodyMetricsControllerTest`
-- `DeleteUserBodyMetricsControllerTest`
-- `GetUserBodyMetricsControllerTest`
-- `GetLatestUserBodyMetricsControllerTest`
-- `ListUserBodyMetricsControllerTest`
+- `PersonControllerTest`
+- `CreateBodyMetricsControllerTest`
+- `UpdateBodyMetricsControllerTest`
+- `DeleteBodyMetricsControllerTest`
+- `GetBodyMetricsControllerTest`
+- `GetLatestBodyMetricsControllerTest`
+- `ListBodyMetricsControllerTest`
 - `GetBodyMetricsProgressControllerTest`
-- `UserBodyMetricsIntegrationTest`
+- `BodyMetricsIntegrationTest`
 
 Esses testes validam contratos HTTP, autenticação, logout, rotas protegidas, validação de request e respostas dos endpoints atuais.
 
 ## Testes de Integração
 
-O projeto possui testes de integração para validar comportamento além de unidades isoladas.
+O projeto possui testes de integração para validar comportamento alem de unidades isoladas.
 
 Exemplos atuais:
 
-- `IroncoreBackendApplicationIntegrationTest`: valida inicialização do contexto Spring.
-- `UserRepositoryAdapterIntegrationTest`: valida persistência real com PostgreSQL via Testcontainers.
-- `AuthSecurityIntegrationTest`: valida autenticação e proteção de rotas no contexto REST/security.
-- `UserBodyMetricsIntegrationTest`: valida fluxo REST de métricas corporais no contexto da aplicação.
+- `IroncoreBackendApplicationIntegrationTest`: válida inicializacao do contexto Spring.
+- `UserRepositoryAdapterIntegrationTest`: válida persistência real com PostgreSQL via Testcontainers.
+- `PersonRepositoryAdapterIntegrationTest`: válida persistência de `Person` com schema real.
+- `AuthSecurityIntegrationTest`: válida autenticação e proteção de rotas no contexto REST/security.
+- `BodyMetricsIntegrationTest`: válida fluxo REST de métricas corporais no contexto da aplicação.
 
 Os testes com Testcontainers aplicam as migrations Flyway em um banco PostgreSQL temporário, o que aumenta a confiança na compatibilidade entre entidade, repository e schema.
 
@@ -136,13 +133,13 @@ Esse arquivo concentra propriedades de teste e evita depender diretamente do per
 
 ## Comandos
 
-Executar a suíte padrão:
+Executar a suite padrão:
 
 ```bash
 ./mvnw test --batch-mode
 ```
 
-Executar a verificação completa usada pelo CI:
+Executar a verificacao completa usada pelo CI:
 
 ```bash
 ./mvnw clean verify --batch-mode
