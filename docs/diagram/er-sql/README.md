@@ -1,276 +1,318 @@
 # Diagrama Entidade-Relacionamento (ER)
 
 <p align="center">
-    <img src="./IronCoreERDiagram.png" alt="Diagrama entidade-relacionamento do IronCore" />
+    <img src="IronCoreERDiagram.png" alt="Diagrama entidade-relacionamento do IronCore" />
 </p>
 
 ## Visão Geral
 
-Este documento descreve o modelo relacional planejado da aplicação **IronCore**. Parte dele já existe no repositório e parte representa blueprint para módulos futuros.
+Este documento descreve o modelo relacional atual e planejado da aplicação **IronCore**.
 
-O diagrama foi organizado para priorizar a **legibilidade visual**. Portanto, a posição das tabelas na imagem **não representa** prioridade funcional, criticidade técnica ou peso no domínio.
+O diagrama representa duas camadas de leitura:
 
-### Leitura rápida do domínio
+- **implementado**: tabelas existentes nas migrations Flyway atuais;
+- **blueprint**: tabelas planejadas para módulos futuros, ainda sem migration funcional.
 
-- `users`: base cadastral dos usuários.
-- `user_body_metrics`: histórico de medições físicas.
-- `muscle_group`, `equipment_type`, `activity_type` e `training_goal`: tabelas de domínio e classificação.
+A posição visual das tabelas na imagem prioriza legibilidade e não representa prioridade funcional, criticidade técnica ou ordem de entrega.
+
+## Leitura Rapida do Domínio
+
+Modelo implementado:
+
+- `persons`: dados pessoais.
+- `users`: autenticação/acesso, com referencia para `persons`.
+- `body_metrics`: histórico de medições corporais da pessoa.
+- `audit_logs`: registros persistidos de auditoria.
+- `error_logs`: registros técnicos de erro.
+
+Modelo planejado no diagrama:
+
+- `muscle_groups`, `muscle_subgroups`, `equipment_types`, `activity_types` e `training_goals`: tabelas de domínio e classificação.
 - `exercises`: catálogo de exercícios.
-- `workout_cycles`: ciclo ou plano de treino do usuário.
+- `exercise_muscle_targets`: associação entre exercícios e subgrupos musculares.
+- `workout_cycles`: ciclos ou planos de treino da pessoa.
 - `workout_days`: divisão semanal do ciclo.
 - `workout_activities`: atividades prescritas em cada dia de treino.
 
-## Objetivo do modelo
+## Decisão Estrutural Principal
 
-O modelo foi desenhado para atender quatro frentes principais:
+O modelo atual separa dados pessoais, conta de acesso e medições corporais:
 
-1. armazenar os dados de autenticação e identificação do usuário;
-2. registrar a evolução corporal ao longo do tempo;
-3. estruturar um catálogo padronizado de exercícios e classificações;
-4. permitir a montagem de ciclos de treino com dias e atividades detalhadas.
+```text
+Person = dados pessoais
+User = autenticação/acesso
+BodyMetrics = métricas corporais da pessoa
+```
 
-## Tabelas
+Consequências:
 
-### `users`
+- `users.person_id` referencia `persons.id`.
+- `body_metrics.person_id` referencia `persons.id`.
+- A API pode continuar partindo do usuário autenticado.
+- A ownership interna de dados físicos passa a ser baseada em `PersonId`.
 
-Armazena os dados principais do usuário.
+## Tabelas Implementadas
 
-| Campo | Tipo | Obrigatório | Descrição |
-| --- | --- | --- | --- |
-| `id` | `BIGINT` | Sim | Identificador único do usuário. |
-| `name` | `VARCHAR` | Sim | Nome do usuário. |
-| `email` | `VARCHAR` | Sim | E-mail único para autenticação e contato. |
-| `password_hash` | `VARCHAR` | Sim | Hash da senha do usuário. |
-| `sex` | `VARCHAR` | Sim | Sexo utilizado em cálculos corporais, como estimativa de percentual de gordura. |
+### `persons`
+
+Armazena os dados pessoais vinculados ao usuário e aos dados corporais.
+
+| Campo | Tipo | Obrigatório | Descricao |
+|---|---|---|---|
+| `id` | `BIGINT` | Sim | Identificador único da pessoa. |
+| `name` | `VARCHAR` | Sim | Nome da pessoa. Não possui unicidade. |
+| `sex` | `VARCHAR` | Sim | Sexo usado em regras corporais, como cálculo Navy. |
+| `birth_date` | `DATE` | Sim | Data de nascimento. |
 | `created_at` | `TIMESTAMP` | Sim | Data e hora de criação do registro. |
 | `updated_at` | `TIMESTAMP` | Não | Data e hora da última atualização. |
 
-### `user_body_metrics`
+### `users`
 
-Registra o histórico de medições corporais de cada usuário, permitindo acompanhamento de evolução física.
+Armazena credenciais, identificação de conta e estado técnico de acesso.
 
-| Campo                | Tipo | Obrigatório | Descrição                                    |
-|----------------------| --- | --- |----------------------------------------------|
-| `id`                 | `BIGINT` | Sim | Identificador único da medição.              |
-| `user_id`            | `BIGINT` | Sim | Referência ao usuário dono da medição.       |
-| `measured_at`        | `TIMESTAMP` | Sim | Data e hora em que a medição foi registrada. |
-| `weight_kg`          | `NUMERIC(5,2)` | Sim | Peso corporal em quilogramas.                |
-| `height_cm`          | `NUMERIC(5,2)` | Sim | Altura em centímetros.                       |
-| `neck_cm`            | `NUMERIC(5,2)` | Não | Medida do pescoço em centímetros.            |
-| `chest_cm`           | `NUMERIC(5,2)` | Não | Medida do tórax em centímetros.              |
-| `shoulder_cm`        | `NUMERIC(5,2)` | Não | Medida do ombro em centímetros.              |
-| `arm_cm`             | `NUMERIC(5,2)` | Não | Medida do braço em centímetros.              |
-| `forearm_cm`         | `NUMERIC(5,2)` | Não | Medida do antebraço em centímetros.          |
-| `waist_cm`           | `NUMERIC(5,2)` | Não | Medida da cintura em centímetros.            |
-| `hip_cm`             | `NUMERIC(5,2)` | Não | Medida do quadril em centímetros.            |
-| `thigh_cm`           | `NUMERIC(5,2)` | Não | Medida da coxa em centímetros.               |
-| `calf_cm`            | `NUMERIC(5,2)` | Não | Medida da panturrilha em centímetros.        |
-| `bmi`                | `NUMERIC(5,2)` | Não | Índice de Massa Corporal.                    |
-| `body_fat_percentage`| `NUMERIC(5,2)` | Não | Percentual de gordura corporal.              |
-| `fat_mass_kg`        | `NUMERIC(5,2)` | Não | Percentual de massa gorda.                   |
-| `lean_mass_kg`       | `NUMERIC(5,2)` | Não | Percentual de massa magra.                   |
-| `notes`              | `TEXT` | Não | Observações livres sobre a medição.          |
+| Campo | Tipo | Obrigatório | Descricao |
+|---|---|---|---|
+| `id` | `BIGINT` | Sim | Identificador único do usuário. |
+| `nickname` | `VARCHAR` | Sim | Nome de exibição/conta. |
+| `person_id` | `BIGINT` | Sim | Pessoa vinculada ao usuário. |
+| `email` | `VARCHAR` | Sim | E-mail único para autenticação. |
+| `password_hash` | `VARCHAR` | Sim | Hash da senha do usuário. |
+| `must_change_password` | `BOOLEAN` | Sim | Indica troca obrigatória de senha inicial. |
+| `active` | `BOOLEAN` | Sim | Status técnico de acesso. |
+| `created_at` | `TIMESTAMP` | Sim | Data e hora de criação do registro. |
+| `updated_at` | `TIMESTAMP` | Não | Data e hora da última atualização. |
 
-### `muscle_group`
+### `body_metrics`
 
-Tabela de domínio para classificar o grupamento muscular principal do exercício.
+Registra o histórico de medições corporais de cada pessoa.
 
-| Campo | Tipo | Obrigatório | Descrição |
-| --- | --- | --- | --- |
-| `id` | `BIGINT` | Sim | Identificador do grupamento muscular. |
-| `name` | `VARCHAR` | Sim | Nome técnico/chave única do grupamento. |
-| `display_name` | `VARCHAR` | Sim | Nome amigável exibido para o usuário. |
+| Campo | Tipo | Obrigatório | Descricao |
+|---|---|---|---|
+| `id` | `BIGINT` | Sim | Identificador único da medição. |
+| `person_id` | `BIGINT` | Sim | Pessoa dona da medição. |
+| `measured_at` | `TIMESTAMP` | Sim | Data e hora em que a medição foi registrada. |
+| `weight_kg` | `DOUBLE PRECISION` | Sim | Peso corporal em quilogramas. |
+| `height_cm` | `DOUBLE PRECISION` | Sim | Altura em centímetros. |
+| `neck_cm` | `DOUBLE PRECISION` | Não | Medida do pescoço em centímetros. |
+| `chest_cm` | `DOUBLE PRECISION` | Não | Medida do tórax em centímetros. |
+| `shoulder_cm` | `DOUBLE PRECISION` | Não | Medida do ombro em centímetros. |
+| `arm_cm` | `DOUBLE PRECISION` | Não | Medida do braço em centímetros. |
+| `forearm_cm` | `DOUBLE PRECISION` | Não | Medida do antebraço em centímetros. |
+| `waist_cm` | `DOUBLE PRECISION` | Não | Medida da cintura em centímetros. |
+| `hip_cm` | `DOUBLE PRECISION` | Não | Medida do quadril em centímetros. |
+| `thigh_cm` | `DOUBLE PRECISION` | Não | Medida da coxa em centímetros. |
+| `calf_cm` | `DOUBLE PRECISION` | Não | Medida da panturrilha em centímetros. |
+| `bmi` | `DOUBLE PRECISION` | Não | Índice de Massa Corporal. |
+| `body_fat_percentage` | `DOUBLE PRECISION` | Não | Percentual de gordura corporal. |
+| `fat_mass_kg` | `DOUBLE PRECISION` | Não | Massa gorda em quilogramas. |
+| `lean_mass_kg` | `DOUBLE PRECISION` | Não | Massa magra em quilogramas. |
+| `updated_at` | `TIMESTAMP` | Não | Data e hora da última atualização. |
+| `notes` | `TEXT` | Não | Observações livres sobre a medição. |
 
-Valores de referência:
+### `audit_logs`
 
-- `CHEST` - Peitoral
-- `BACK` - Costas
-- `SHOULDERS` - Ombros
-- `BICEPS` - Bíceps
-- `TRICEPS` - Tríceps
-- `QUADRICEPS` - Quadríceps
-- `HAMSTRINGS` - Posterior de coxa
-- `GLUTES` - Glúteos
-- `CALVES` - Panturrilhas
-- `ABS` - Abdômen
+Armazena registros de auditoria de ações relevantes.
 
-### `equipment_type`
+A tabela existe nas migrations atuais e é documentada em [Audit Log](../../logging/audit-log.md).
 
-Tabela de domínio para classificar o tipo de equipamento exigido no exercício.
+### `error_logs`
 
-| Campo | Tipo | Obrigatório | Descrição |
-| --- | --- | --- | --- |
-| `id` | `BIGINT` | Sim | Identificador do tipo de equipamento. |
-| `name` | `VARCHAR` | Sim | Nome técnico/chave única. |
-| `display_name` | `VARCHAR` | Sim | Nome amigável exibido para o usuário. |
+Armazena registros técnicos de erro.
 
-Valores de referência:
+A tabela existe nas migrations atuais e é documentada em [Error Log](../../logging/error-log.md).
 
-- `BODYWEIGHT` - Peso corporal
-- `DUMBBELL` - Halter
-- `BARBELL` - Barra
-- `MACHINE` - Máquina
-- `CABLE` - Cabo
-- `KETTLEBELL` - Kettlebell
-- `BAND` - Elástico
+## Tabelas Planejadas no Diagrama
 
-### `activity_type`
+As tabelas abaixo aparecem no diagrama como blueprint de produto. Elas não devem ser tratadas como schema implementado enquanto não existirem migrations correspondentes.
 
-Tabela de domínio para classificar a natureza da atividade física.
+### `muscle_groups`
 
-| Campo | Tipo | Obrigatório | Descrição |
-| --- | --- | --- | --- |
-| `id` | `BIGINT` | Sim | Identificador do tipo de atividade. |
-| `name` | `VARCHAR` | Sim | Nome técnico/chave única. |
-| `display_name` | `VARCHAR` | Sim | Nome amigável exibido para o usuário. |
+Classifica grupamentos musculares principais.
 
-Valores de referência:
+Campos planejados:
 
-- `STRENGTH` - Força
-- `CARDIO` - Cárdio
-- `CORE` - Core
-- `MOBILITY` - Mobilidade
-- `RECOVERY` - Recuperação
+- `id`
+- `code`
+- `display_name`
+- `active`
+- `sort_order`
+
+### `muscle_subgroups`
+
+Classifica subgrupos musculares vinculados a um grupamento principal.
+
+Campos planejados:
+
+- `id`
+- `muscle_group_id`
+- `code`
+- `display_name`
+- `active`
+- `sort_order`
+
+### `equipment_types`
+
+Classifica o tipo de equipamento exigido no exercício.
+
+Campos planejados:
+
+- `id`
+- `code`
+- `display_name`
+- `active`
+- `sort_order`
+
+### `activity_types`
+
+Classifica a natureza da atividade física.
+
+Campos planejados:
+
+- `id`
+- `code`
+- `display_name`
+- `active`
+- `sort_order`
+
+### `training_goals`
+
+Representa o objetivo principal do ciclo de treino.
+
+Campos planejados:
+
+- `id`
+- `code`
+- `display_name`
+- `active`
+- `sort_order`
 
 ### `exercises`
 
-Catálogo central de exercícios disponíveis para composição dos treinos.
+Catalogo central de exercícios disponíveis para composição dos treinos.
 
-| Campo | Tipo | Obrigatório | Descrição |
-| --- | --- | --- | --- |
-| `id` | `BIGINT` | Sim | Identificador do exercício. |
-| `name` | `VARCHAR` | Sim | Nome do exercício. |
-| `muscle_group_id` | `BIGINT` | Sim | Grupamento muscular principal associado. |
-| `equipment_type_id` | `BIGINT` | Sim | Tipo de equipamento utilizado. |
-| `activity_type_id` | `BIGINT` | Sim | Categoria da atividade. |
-| `unilateral` | `BOOLEAN` | Sim | Indica se o exercício é executado unilateralmente. |
-| `compound` | `BOOLEAN` | Sim | Indica se o exercício é multiarticular. |
-| `suggested_rest_seconds` | `INTEGER` | Não | Tempo sugerido de descanso entre séries. |
-| `active` | `BOOLEAN` | Sim | Indica se o exercício está disponível para uso. |
+Campos planejados:
 
-### `training_goal`
+- `id`
+- `name`
+- `equipment_type_id`
+- `activity_type_id`
+- `unilateral`
+- `compound`
+- `suggested_rest_seconds`
+- `active`
+- `created_at`
+- `updated_at`
 
-Tabela de domínio para representar o objetivo principal do ciclo de treino.
+### `exercise_muscle_targets`
 
-| Campo | Tipo | Obrigatório | Descrição |
-| --- | --- | --- | --- |
-| `id` | `BIGINT` | Sim | Identificador do objetivo. |
-| `name` | `VARCHAR` | Sim | Nome técnico/chave única. |
-| `display_name` | `VARCHAR` | Sim | Nome amigável exibido para o usuário. |
+Associa exercícios a subgrupos musculares e permite diferenciar papel principal/secundário do alvo muscular.
 
-Valores de referência:
+Campos planejados:
 
-- `HYPERTROPHY` - Hipertrofia
-- `STRENGTH` - Força
-- `FAT_LOSS` - Perda de gordura
-- `MAINTENANCE` - Manutenção
-- `ENDURANCE` - Resistência
+- `id`
+- `exercise_id`
+- `muscle_subgroup_id`
+- `target_role`
+- `active`
+- `created_at`
+- `updated_at`
 
 ### `workout_cycles`
 
-Representa um ciclo de treino associado a um usuário e a um objetivo específico.
+Representa um ciclo de treino associado a uma pessoa e a um objetivo específico.
 
-| Campo | Tipo | Obrigatório | Descrição |
-| --- | --- | --- | --- |
-| `id` | `BIGINT` | Sim | Identificador do ciclo de treino. |
-| `user_id` | `BIGINT` | Sim | Usuário responsável pelo ciclo. |
-| `name` | `VARCHAR` | Sim | Nome do ciclo de treino. |
-| `training_goal_id` | `BIGINT` | Sim | Objetivo principal do ciclo. |
-| `start_date` | `DATE` | Sim | Data de início do ciclo. |
-| `end_date` | `DATE` | Sim | Data de encerramento prevista. |
-| `workout_status` | `VARCHAR` | Sim | Status atual do ciclo. |
-| `workout_origin` | `VARCHAR` | Sim | Origem da criação do ciclo. |
-| `notes` | `TEXT` | Não | Observações complementares. |
-| `created_at` | `TIMESTAMP` | Sim | Data e hora de criação do registro. |
+Campos planejados:
+
+- `id`
+- `person_id`
+- `name`
+- `training_goal_id`
+- `start_date`
+- `end_date`
+- `workout_status`
+- `workout_origin`
+- `notes`
+- `created_at`
+- `updated_at`
 
 ### `workout_days`
 
 Organiza os dias de treino vinculados a um ciclo.
 
-| Campo | Tipo | Obrigatório | Descrição |
-| --- | --- | --- | --- |
-| `id` | `BIGINT` | Sim | Identificador do dia de treino. |
-| `workout_cycle_id` | `BIGINT` | Sim | Ciclo ao qual o dia pertence. |
-| `week_day` | `VARCHAR` | Sim | Dia da semana planejado para execução. |
-| `title` | `VARCHAR` | Sim | Título descritivo do treino do dia. |
+Campos planejados:
+
+- `id`
+- `workout_cycle_id`
+- `week_day`
+- `title`
+- `order_index`
+- `created_at`
+- `updated_at`
 
 ### `workout_activities`
 
 Detalha cada atividade prescrita dentro de um dia de treino.
 
-| Campo | Tipo | Obrigatório | Descrição |
-| --- | --- | --- | --- |
-| `id` | `BIGINT` | Sim | Identificador da atividade de treino. |
-| `workout_day_id` | `BIGINT` | Sim | Dia de treino ao qual a atividade pertence. |
-| `exercise_id` | `BIGINT` | Sim | Exercício vinculado à atividade. |
-| `order_index` | `INTEGER` | Sim | Ordem de execução no treino. |
-| `sets` | `INTEGER` | Sim | Quantidade de séries planejadas. |
-| `rep_range_min` | `INTEGER` | Não | Faixa mínima de repetições. |
-| `rep_range_max` | `INTEGER` | Não | Faixa máxima de repetições. |
-| `target_load_kg` | `NUMERIC(5,2)` | Não | Carga sugerida em quilogramas. |
-| `target_load_text` | `VARCHAR` | Não | Descrição textual alternativa da carga. |
-| `duration_minutes` | `INTEGER` | Não | Duração prevista da atividade. |
-| `distance_km` | `NUMERIC(5,2)` | Não | Distância prevista, quando aplicável. |
-| `intensity_text` | `VARCHAR` | Não | Descrição qualitativa de intensidade. |
-| `rest_seconds` | `INTEGER` | Não | Descanso entre séries ou blocos. |
-| `notes` | `TEXT` | Não | Observações adicionais para execução. |
+Campos planejados:
+
+- `id`
+- `workout_day_id`
+- `exercise_id`
+- `order_index`
+- `sets`
+- `rep_range_min`
+- `rep_range_max`
+- `target_load_kg`
+- `target_load_text`
+- `duration_minutes`
+- `distance_km`
+- `intensity_text`
+- `rest_seconds`
+- `notes`
+- `created_at`
+- `updated_at`
 
 ## Relacionamentos
 
-Os relacionamentos do modelo seguem a composição abaixo:
+Relacionamentos implementados:
 
-- `users` 1:N `user_body_metrics`
-- `users` 1:N `workout_cycles`
-- `training_goal` 1:N `workout_cycles`
+- `persons` 1:1 `users`
+- `persons` 1:N `body_metrics`
+
+Relacionamentos planejados no diagrama:
+
+- `persons` 1:N `workout_cycles`
+- `training_goals` 1:N `workout_cycles`
 - `workout_cycles` 1:N `workout_days`
 - `workout_days` 1:N `workout_activities`
 - `exercises` 1:N `workout_activities`
-- `muscle_group` 1:N `exercises`
-- `equipment_type` 1:N `exercises`
-- `activity_type` 1:N `exercises`
+- `equipment_types` 1:N `exercises`
+- `activity_types` 1:N `exercises`
+- `muscle_groups` 1:N `muscle_subgroups`
+- `muscle_subgroups` 1:N `exercise_muscle_targets`
+- `exercises` 1:N `exercise_muscle_targets`
 
-## Enums e valores controlados
+## Fluxo Logico do Domínio
 
-### `WorkoutStatus`
+De forma resumida, o fluxo planejado funciona assim:
 
-- `NOT_STARTED`
-- `IN_PROGRESS`
-- `COMPLETED`
-- `CANCELLED`
+1. uma `person` possui dados pessoais;
+2. um `user` referencia uma `person` para autenticar e acessar o sistema;
+3. `body_metrics` registra medições corporais da `person`;
+4. a mesma `person` poderá possuir varios `workout_cycles`;
+5. cada `workout_cycle` será criado com base em um `training_goal`;
+6. cada ciclo será dividido em varios `workout_days`;
+7. cada dia contera varias `workout_activities`;
+8. cada atividade apontará para um item do catálogo `exercises`;
+9. cada exercício será classificado por equipamento, tipo de atividade e alvos musculares.
 
-### `WorkoutOrigin`
+## Observações de Modelagem
 
-- `MANUAL`
-- `AGENT`
-
-### `WeekDay`
-
-- `MONDAY`
-- `TUESDAY`
-- `WEDNESDAY`
-- `THURSDAY`
-- `FRIDAY`
-- `SATURDAY`
-- `SUNDAY`
-
-## Fluxo lógico do domínio
-
-De forma resumida, o fluxo do modelo funciona assim:
-
-1. um `user` pode possuir várias medições corporais em `user_body_metrics`;
-2. o mesmo `user` pode possuir vários `workout_cycles`;
-3. cada `workout_cycle` é criado com base em um `training_goal`;
-4. cada ciclo é dividido em vários `workout_days`;
-5. cada dia contém várias `workout_activities`;
-6. cada atividade aponta para um item do catálogo `exercises`;
-7. cada exercício é classificado por grupamento muscular, tipo de equipamento e tipo de atividade.
-
-## Observações de modelagem
-
-- As tabelas de domínio (`muscle_group`, `equipment_type`, `activity_type` e `training_goal`) centralizam valores controlados e evitam duplicidade semântica.
-- O detalhamento em `workout_activities` permite acomodar treinos de força, cardio e atividades híbridas com diferentes parâmetros de execução.
-- O histórico de medições em `user_body_metrics` favorece rastreabilidade e análise evolutiva do usuário ao longo do tempo.
-- A organização visual do diagrama foi pensada para facilitar a leitura humana; ela não indica ordem de processamento, dependência operacional prioritária ou relevância maior de uma tabela sobre outra.
+- `Person` é a base de dados pessoais.
+- `User` é a conta de autenticação/acesso.
+- `BodyMetrics` pertence a `PersonId`.
+- `users.person_id` é único no modelo atual.
+- `body_metrics.person_id` permite histórico N:1 de medições corporais por pessoa.
 - A imagem deste diagrama foi criada com o [dbdiagram.io](https://dbdiagram.io/).
 
-<p align="right"><a href="../../../README.md">🔄 Voltar para a documentação completa</a></p>
+<p align="right"><a href="../../../README.md">Voltar para a documentação completa</a></p>

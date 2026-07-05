@@ -79,20 +79,21 @@ O desenvolvimento do projeto busca consolidar habilidades como:
 
 <h2 id="status-atual-do-projeto" align="center">Status Atual do Projeto</h2>
 
-O <b>IronCore</b> está em fase inicial de desenvolvimento. O backend já possui uma fundação funcional para autenticação single-user, usuário autenticado, métricas corporais, persistência relacional, logging, exceptions e testes automatizados.
+O <b>IronCore</b> está em fase inicial de desenvolvimento. O backend já possui uma fundação funcional para autenticação single-user, pessoa vinculada ao usuário autenticado, métricas corporais, persistência relacional, logging, exceptions e testes automatizados.
 
 ### Já existe no projeto
 - Estrutura inicial do backend com Spring Boot.
 - Configuração Maven com Java 21.
 - Organização em camadas com abordagem pragmática inspirada em DDD.
-- Domínios iniciais de usuários, métricas corporais e logging.
-- Migrations Flyway para `users`, `user_body_metrics`, `audit_logs` e `error_logs`.
+- Domínios iniciais de pessoa, usuário, métricas corporais e logging.
+- Migrations Flyway para `persons`, `users`, `body_metrics`, `audit_logs` e `error_logs`.
 - Persistência relacional com PostgreSQL.
 - Logging persistido de auditoria e erro.
-- Bootstrap opcional de usuário único.
+- Bootstrap opcional de pessoa e usuário único vinculado.
 - Login, logout e autenticação por JWT via cookie `access_token` na base single-user.
-- Troca obrigatória de senha inicial, troca normal de senha e consulta do usuário autenticado.
-- Fluxo autenticado de métricas corporais com criação, atualização, exclusão, consulta por id, consulta do último registro, listagem paginada e progresso.
+- Troca obrigatória de senha inicial, troca normal de senha, alteração de nickname e consulta do usuário autenticado.
+- Fluxo autenticado de pessoa com atualização de dados pessoais.
+- Fluxo autenticado de métricas corporais com ownership por `PersonId`, criação, atualização, exclusão, consulta por id, consulta do último registro, listagem paginada e progresso.
 - Testes automatizados e CI executando build/test.
 - Documentação visual com diagramas de domínio, arquitetura e fluxos principais.
 
@@ -154,10 +155,11 @@ Histórico de releases: [Releases](docs/releases/README.md).
 O projeto utiliza o [Flyway](https://flywaydb.org/) para gerenciar as **migrations de banco de dados** no [PostgreSQL](https://www.postgresql.org/). Todas as alterações de estrutura no banco, como criação de tabelas e mudanças de schema, são versionadas e controladas. Isso garante consistência entre os ambientes de desenvolvimento e produção.
 
 Migrations existentes no repositório:
-- `V1__create_table_users.sql`: cria a tabela `users`.
-- `V2__create_table_user_body_metrics.sql`: cria a tabela `user_body_metrics`.
-- `V3__create_table_audit_log.sql`: cria a tabela `audit_logs`.
-- `V4__create_table_error_log.sql`: cria a tabela `error_logs`.
+- `V1__create_table_persons.sql`: cria a tabela `persons`.
+- `V2__create_table_users.sql`: cria a tabela `users`.
+- `V3__create_table_body_metrics.sql`: cria a tabela `body_metrics`.
+- `V4__create_table_audit_log.sql`: cria a tabela `audit_logs`.
+- `V5__create_table_error_log.sql`: cria a tabela `error_logs`.
 
 Documentação detalhada: [Banco de Dados e Migrations](docs/database/README.md).
 
@@ -192,11 +194,11 @@ A documentação detalhada está disponível em [Estratégia de Logging](docs/lo
 O escopo inicial do <b>IronCore</b> foi inferido a partir da modelagem de banco, dos diagramas de arquitetura e dos fluxos principais documentados.
 
 ### Núcleo do MVP
-- Provisionamento e autenticação do usuário single-user.
-- Registro e consulta de medições corporais do usuário.
+- Provisionamento de pessoa e autenticação do usuário single-user.
+- Registro e consulta de medições corporais da pessoa.
 - Catálogo de exercícios com classificação por grupo muscular, tipo de equipamento e tipo de atividade.
 - Cadastro de objetivos de treino.
-- Criação de ciclos de treino vinculados a um usuário e a um objetivo.
+- Criação de ciclos de treino vinculados a uma pessoa e a um objetivo.
 - Organização do ciclo em dias de treino.
 - Definição das atividades planejadas para cada dia, incluindo séries, repetições, carga, duração, distância, intensidade e descanso.
 - Registro da execução real de sessões de treino.
@@ -219,17 +221,23 @@ O escopo inicial do <b>IronCore</b> foi inferido a partir da modelagem de banco,
 As funcionalidades abaixo representam o escopo funcional planejado para o projeto completo. A implementação será feita de forma incremental conforme o backend evoluir.
 
 ### Autenticação e Usuários
-- Provisionamento de usuário único por bootstrap/configuração.
+- Provisionamento de pessoa e usuário único por bootstrap/configuração.
 - Login com autenticação baseada em JWT.
 - Troca obrigatória de senha inicial e troca normal de senha.
+- Alteração de nickname do usuário autenticado.
 - Consulta do usuário autenticado.
 - Proteção de rotas por usuário autenticado.
+
+### Pessoas
+- Dados pessoais separados da conta de acesso.
+- Atualização da pessoa vinculada ao usuário autenticado.
+- Uso de `PersonId` como referência para dados físicos.
 
 ### Evolução Física
 - Cadastro de medições corporais por data.
 - Histórico de peso, altura, percentual de gordura e medidas corporais.
 - Observações livres por medição.
-- Consulta da evolução do usuário ao longo do tempo.
+- Consulta da evolução da pessoa ao longo do tempo.
 
 ### Catálogo de Exercícios
 - Cadastro e manutenção de exercícios.
@@ -271,7 +279,7 @@ As funcionalidades abaixo representam o escopo funcional planejado para o projet
 
 <h3 id="api---swagger">🌐 <strong>API - Swagger</strong></h3>
 
-A documentação [Swagger/OpenAPI](https://swagger.io/specification/) será adicionada quando a dependência Springdoc/OpenAPI for configurada. O projeto já possui endpoints REST de autenticação, usuário autenticado e métricas corporais, mas ainda não possui documentação OpenAPI gerada.
+A documentação [Swagger/OpenAPI](https://swagger.io/specification/) será adicionada quando a dependência Springdoc/OpenAPI for configurada. O projeto já possui endpoints REST de autenticação, usuário autenticado, pessoa e métricas corporais, mas ainda não possui documentação OpenAPI gerada.
 
 <h3 id="documentacao-arquitetural">🗂️ <strong>Documentação Arquitetural</strong></h3>
 
@@ -327,7 +335,7 @@ Documentação detalhada: [Testes Automatizados](docs/testing/README.md).
 <h2 id="testando-a-api-via-insomnia" align="center">Testando a API via Insomnia</h2>
 
 > Esta seção será atualizada com uma coleção ou roteiro próprio quando os fluxos de API forem estabilizados.
-> O projeto já possui endpoints de autenticação, usuário autenticado e user body metrics.
+> O projeto já possui endpoints de autenticação, usuário autenticado, pessoa e body metrics.
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
@@ -360,13 +368,14 @@ src/test/java/com/ironcore
 
 docs
  ├── architecture
+ ├── body-metrics
  ├── database
  ├── diagram
  ├── exceptions
  ├── logging
+ ├── persons
  ├── project-structure
  ├── releases
- ├── user-body-metrics
  └── users
 ```
 
@@ -417,7 +426,7 @@ MONGO_USER_DEV=<usuario_local_do_mongodb>
 MONGO_PASSWORD_DEV=<senha_local_do_mongodb>
 JWT_SECRET=<segredo_local>
 ```
-Também existem variáveis opcionais para bootstrap de usuário inicial: `IRONCORE_BOOTSTRAP_USER_ENABLED`, `IRONCORE_BOOTSTRAP_USER_NAME`, `IRONCORE_BOOTSTRAP_USER_EMAIL`, `IRONCORE_BOOTSTRAP_USER_PASSWORD` e `IRONCORE_BOOTSTRAP_USER_SEX`.
+Também existem variáveis opcionais para bootstrap inicial de pessoa e usuário: `IRONCORE_BOOTSTRAP_PERSON_ENABLED`, `IRONCORE_BOOTSTRAP_PERSON_NAME`, `IRONCORE_BOOTSTRAP_PERSON_SEX`, `IRONCORE_BOOTSTRAP_PERSON_BIRTH_DATE`, `IRONCORE_BOOTSTRAP_USER_ENABLED`, `IRONCORE_BOOTSTRAP_USER_NICKNAME`, `IRONCORE_BOOTSTRAP_USER_EMAIL` e `IRONCORE_BOOTSTRAP_USER_PASSWORD`.
 
 6. Execute o backend com o Maven Wrapper no perfil de desenvolvimento:
 ```bash
@@ -428,7 +437,7 @@ SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
 ./mvnw clean verify --batch-mode
 ```
 
-8. Acesse a aplicação pela porta configurada (por padrão http://localhost:8080). O projeto possui endpoints de autenticação, usuário autenticado e user body metrics.<br>
+8. Acesse a aplicação pela porta configurada (por padrão http://localhost:8080). O projeto possui endpoints de autenticação, usuário autenticado, pessoa e body metrics.<br>
 ⚠️ **Lembre-se de manter o Docker rodando enquanto estiver utilizando a aplicação.**
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>

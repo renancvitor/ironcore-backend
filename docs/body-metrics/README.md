@@ -1,34 +1,38 @@
-# Documentação de User Body Metrics
+# Documentação de Body Metrics
 
 ## Propósito
 
-O módulo `userbodymetrics` registra medições corporais do usuário autenticado e calcula indicadores de composição corporal.
+O módulo `bodymetrics` registra medições corporais da pessoa vinculada ao usuário autenticado e calcula indicadores de composição corporal.
 
-O módulo possui fluxo funcional com domínio, use cases, persistência relacional, endpoints REST autenticados, consultas paginadas, consulta do registro mais recente e endpoints de progresso.
+A API continua partindo do usuário autenticado em `/api/users/me/body-metrics`, mas a ownership interna das medições pertence a `PersonId`.
+
+```text
+AuthenticatedUser -> UserId -> User -> PersonId -> BodyMetrics
+```
 
 ## Escopo Atual
 
 Implementado:
 
-- `UserBodyMetrics` domain model.
+- `BodyMetrics` domain model.
 - Value objects de medições corporais e valores calculados.
 - Calculadoras de BMI, percentual de gordura, massa gorda e massa magra.
-- `UserBodyMetricsRepository` como contrato de domínio.
+- `BodyMetricsRepository` como contrato de domínio.
 - Adapters JPA para persistência e consultas específicas.
 - Use cases de criação, atualização, exclusão, consulta por id, consulta do último registro, listagem paginada e progresso.
 - Controller REST autenticado em `/api/users/me/body-metrics`.
 - Auditoria para criação, atualização e exclusão.
-- Testes automatizados de domínio, aplicação, persistência e REST.
+- Testes automatizados de domínio, aplicação, persistência, REST e integração.
 
 ## Conceitos de Domínio
 
 Model principal:
 
-- `UserBodyMetrics`
+- `BodyMetrics`
 
 Value objects:
 
-- `UserBodyMetricsId`
+- `BodyMetricsId`
 - `BodyWeightKg`
 - `BodyHeightCm`
 - `BodyCircumferenceCm`
@@ -48,6 +52,18 @@ Services de domínio:
 Componente de aplicação:
 
 - `BodyFatPercentageCalculator`
+
+## Ownership
+
+`BodyMetrics` referencia `PersonId`.
+
+Essa decisão separa os conceitos:
+
+- `Person`: dados pessoais e características usadas em cálculos corporais, como `sex`.
+- `User`: autenticação, acesso, senha, email, nickname e status técnico.
+- `BodyMetrics`: medições corporais da pessoa.
+
+O cliente não envia `personId` para criar, atualizar, consultar ou excluir medições. O backend resolve a pessoa a partir do usuário autenticado.
 
 ## Campos
 
@@ -86,7 +102,7 @@ O BMI é calculado sempre que há peso e altura válidos:
 bmi = weightKg / heightMeters^2
 ```
 
-Como peso e altura são obrigatórios nos requests de criação e atualização, o BMI é parte do resultado funcional do módulo.
+Como peso e altura são obrigatórios nos requests de criação e atualização, o BMI faz parte do resultado funcional do módulo.
 
 ### Body Fat Percentage
 
@@ -94,8 +110,8 @@ O percentual de gordura corporal é opcional.
 
 O cálculo usa a fórmula Navy e depende de dados suficientes:
 
-- usuários masculinos: altura, pescoço e cintura;
-- usuários femininos: altura, pescoço, cintura e quadril.
+- pessoas masculinas: altura, pescoço e cintura;
+- pessoas femininas: altura, pescoço, cintura e quadril.
 
 Quando os dados necessários não forem informados, `bodyFatPercentage` fica `null`. Isso é comportamento esperado, pois medições parciais são permitidas.
 
@@ -112,22 +128,22 @@ Quando o percentual de gordura não puder ser calculado, `fatMassKg` e `leanMass
 
 Tabela:
 
-- `user_body_metrics`
+- `body_metrics`
 
 Migration:
 
-- `V2__create_table_user_body_metrics.sql`
+- `V3__create_table_body_metrics.sql`
 
 Componentes principais:
 
-- `UserBodyMetricsEntity`
-- `UserBodyMetricsMapper`
-- `UserBodyMetricsJpaRepository`
-- `UserBodyMetricsRepositoryAdapter`
-- `ListUserBodyMetricsQueryAdapter`
+- `BodyMetricsEntity`
+- `BodyMetricsMapper`
+- `BodyMetricsJpaRepository`
+- `BodyMetricsRepositoryAdapter`
+- `ListBodyMetricsQueryAdapter`
 - `BodyMetricsProgressQueryAdapter`
 
-O domínio depende do contrato `UserBodyMetricsRepository`. As implementações JPA permanecem em `infrastructure`.
+O domínio depende do contrato `BodyMetricsRepository`. As implementações JPA permanecem em `infrastructure`.
 
 ## Endpoints REST
 
@@ -173,7 +189,7 @@ Resposta:
 ```json
 {
   "id": 1,
-  "userId": 1,
+  "personId": 1,
   "measuredAt": "2026-06-29T08:30:00",
   "weightKg": 82.4,
   "heightCm": 178.0,
@@ -190,8 +206,8 @@ Resposta:
   },
   "bmi": 26.01,
   "bodyFatPercentage": 19.2,
-  "fatMass": 15.82,
-  "leanMass": 66.58,
+  "fatMassKg": 15.82,
+  "leanMassKg": 66.58,
   "notes": "Medição em jejum."
 }
 ```
@@ -205,7 +221,7 @@ Request mínimo válido:
 }
 ```
 
-Nesse caso, a resposta inclui `bmi`, mas `bodyFatPercentage`, `fatMass` e `leanMass` podem retornar `null`.
+Nesse caso, a resposta inclui `bmi`, mas `bodyFatPercentage`, `fatMassKg` e `leanMassKg` podem retornar `null`.
 
 ### Atualizar Medição
 
@@ -234,7 +250,7 @@ Resposta:
 ```json
 {
   "id": 1,
-  "userId": 1,
+  "personId": 1,
   "measuredAt": "2026-06-29T08:30:00",
   "weightKg": 81.9,
   "heightCm": 178.0,
@@ -268,7 +284,7 @@ Resposta:
 
 - `204 No Content`
 
-A exclusão respeita o escopo do usuário autenticado. Uma medição inexistente ou pertencente a outro usuário deve ser tratada como recurso não encontrado no fluxo de aplicação.
+A exclusão respeita o escopo da pessoa vinculada ao usuário autenticado. Uma medição inexistente ou pertencente a outra pessoa deve ser tratada como recurso não encontrado no fluxo de aplicação.
 
 ### Listar Medições
 
@@ -318,7 +334,7 @@ Resposta:
 
 - `200 OK`
 
-O payload segue o formato completo de consulta, com `id`, `userId`, `measuredAt`, peso, altura, circunferências, cálculos, observações e `updatedAt`.
+O payload segue o formato completo de consulta, com `id`, `personId`, `measuredAt`, peso, altura, circunferências, cálculos, observações e `updatedAt`.
 
 ### Buscar Última Medição
 
@@ -330,7 +346,7 @@ Resposta:
 
 - `200 OK`
 
-Retorna a medição mais recente do usuário autenticado, ordenada por `measuredAt`.
+Retorna a medição mais recente da pessoa vinculada ao usuário autenticado, ordenada por `measuredAt`.
 
 ### Progresso de Composição Corporal
 
@@ -362,35 +378,13 @@ Inclui série de:
 
 - `BODY_FAT_PERCENTAGE`
 
-### Resumo de Mudanças
+### Resumo de Mudancas
 
 ```http
 GET /api/users/me/body-metrics/progress/changes?startDate=2026-01-01&endDate=2026-06-29
 ```
 
 Calcula primeira medição, última medição, variação absoluta e variação percentual para métricas com pelo menos dois pontos válidos.
-
-Exemplo de resposta:
-
-```json
-{
-  "startDate": "2026-01-01",
-  "endDate": "2026-06-29",
-  "changes": [
-    {
-      "metric": "WEIGHT_KG",
-      "label": "Peso",
-      "unit": "kg",
-      "firstDate": "2026-01-10",
-      "firstValue": 84.0,
-      "lastDate": "2026-06-20",
-      "lastValue": 80.5,
-      "absoluteChange": -3.5,
-      "percentageChange": -4.1666666667
-    }
-  ]
-}
-```
 
 Regras comuns dos endpoints de progresso:
 
@@ -403,21 +397,32 @@ Regras comuns dos endpoints de progresso:
 
 ## Regras de Aplicação
 
-- A medição sempre pertence ao usuário autenticado.
+- A medição sempre pertence a `PersonId`.
+- O usuário autenticado é usado como ator da operação e como caminho para resolver a pessoa vinculada.
 - Usuário inexistente gera erro de recurso não encontrado.
+- Pessoa vinculada inexistente gera erro de recurso não encontrado.
 - Usuário inativo não pode operar métricas corporais.
 - Peso e altura são obrigatórios para criação e atualização.
 - Medições parciais são permitidas.
 - Composição corporal só é calculada quando houver dados suficientes.
 - Criação, atualização e exclusão publicam audit log.
 
+## Auditoria
+
+As operações de criação, atualização e exclusão mantêm a distinção entre:
+
+- `actorUserId`: usuário autenticado que executou a ação;
+- `personId`: pessoa dona das medições corporais;
+- `bodyMetricsId`: medição corporal afetada.
+
 ## Exceptions Relevantes
 
-| Cenário | Categoria |
+| Cenario | Categoria |
 |---|---|
 | Peso, altura ou circunferência inválida | `DomainException` / validação REST |
 | Usuário inexistente | `ResourceNotFoundException` |
-| Medição inexistente no escopo do usuário | `ResourceNotFoundException` |
+| Pessoa vinculada inexistente | `ResourceNotFoundException` |
+| Medição inexistente no escopo da pessoa | `ResourceNotFoundException` |
 | Usuário inativo | `UserInactiveException` |
 | Período de progresso inválido | `BusinessRuleViolationException` ou `OperationNotAllowedException` |
 | Falha técnica de persistência | `PersistenceException` |
