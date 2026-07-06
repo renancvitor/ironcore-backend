@@ -39,7 +39,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || path.startsWith("/v3/api-docs")
                 || path.startsWith("/swagger-ui")
                 || path.equals("/swagger-ui.html")
-                || isPublicAuthEndpoint(method, path);
+                || isPublicEndpoint(method, path);
     }
 
     @Override
@@ -87,8 +87,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return null;
     }
 
-    private boolean isPublicAuthEndpoint(String method, String path) {
+    private boolean isPublicEndpoint(String method, String path) {
         return method.equals(HttpMethod.POST.name())
-                && (path.equals("/api/auth/login") || path.equals("/api/auth/logout"));
+                && (path.equals("/api/auth/login")
+                || path.equals("/api/auth/logout")
+                || path.equals("/api/users/change-initial-password"));
     }
 }
