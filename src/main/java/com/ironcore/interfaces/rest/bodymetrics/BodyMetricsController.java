@@ -31,6 +31,7 @@ import com.ironcore.interfaces.rest.bodymetrics.dto.progress.BodyMetricsProgress
 import com.ironcore.interfaces.rest.bodymetrics.dto.update.UpdateBodyMetricsRequest;
 import com.ironcore.interfaces.rest.bodymetrics.dto.update.UpdateBodyMetricsResponse;
 import com.ironcore.interfaces.rest.bodymetrics.mapper.BodyMetricsRestMapper;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -41,6 +42,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Medidas corporais")
 @RestController
 @Validated
 @RequiredArgsConstructor
