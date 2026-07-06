@@ -13,12 +13,15 @@ import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
 import com.ironcore.interfaces.rest.user.dto.*;
 import com.ironcore.interfaces.rest.user.mapper.UserChangePasswordMapper;
 import com.ironcore.interfaces.rest.user.mapper.UserRestMapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Usuário")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/users")
@@ -40,6 +43,11 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(
+            summary = "Alterar senha inicial",
+            description = "Permite alterar a senha inicial do usuário antes da autenticação completa.",
+            security = {}
+    )
     @PostMapping("/change-initial-password")
     public ResponseEntity<Void>  changeInitialPassword(
             @RequestBody @Valid InitialChangePasswordRequest request

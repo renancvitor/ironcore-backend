@@ -7,6 +7,7 @@ import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
 import com.ironcore.interfaces.rest.person.dto.UpdatePersonRequest;
 import com.ironcore.interfaces.rest.person.dto.UpdatePersonResponse;
 import com.ironcore.interfaces.rest.person.mapper.PersonRestMapper;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.Clock;
 import java.time.LocalDate;
 
+@Tag(name = "Pessoa")
 @RestController
 @Validated
 @RequiredArgsConstructor

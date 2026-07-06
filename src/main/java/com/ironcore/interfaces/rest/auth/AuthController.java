@@ -7,6 +7,8 @@ import com.ironcore.application.auth.usecase.LogoutUseCase;
 import com.ironcore.interfaces.rest.auth.dto.LoginRequest;
 import com.ironcore.interfaces.rest.auth.dto.LoginResponse;
 import com.ironcore.interfaces.rest.auth.mapper.AuthRestMapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -21,6 +23,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
+@Tag(name = "Autenticação")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
@@ -30,6 +33,11 @@ public class AuthController {
     private final LogoutUseCase logoutUseCase;
     private final Clock clock;
 
+    @Operation(
+            summary = "Autenticar usuário",
+            description = "Autentica o usuário e cria o cookie HTTP-only de acesso.",
+            security = {}
+    )
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         LoginCommand command = AuthRestMapper.toCommand(request);
@@ -48,6 +56,11 @@ public class AuthController {
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).body(response);
     }
 
+    @Operation(
+            summary = "Encerrar sessão",
+            description = "Remove cookie de autenticação do usuário.",
+            security = {}
+    )
     @PostMapping("/logout")
     public ResponseEntity<Void> logout() {
         logoutUseCase.execute();
