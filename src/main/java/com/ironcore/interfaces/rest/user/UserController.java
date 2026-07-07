@@ -10,29 +10,27 @@ import com.ironcore.application.user.usecase.update.ChangeNicknameCommand;
 import com.ironcore.application.user.usecase.update.ChangeNicknameResult;
 import com.ironcore.application.user.usecase.update.ChangeNicknameUseCase;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
+import com.ironcore.interfaces.rest.user.api.UserApi;
 import com.ironcore.interfaces.rest.user.dto.*;
 import com.ironcore.interfaces.rest.user.mapper.UserChangePasswordMapper;
 import com.ironcore.interfaces.rest.user.mapper.UserRestMapper;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirements;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Usuário")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/users")
-public class UserController {
+public class UserController implements UserApi {
 
     private final ChangePasswordUseCase changePasswordUseCase;
     private final InitialChangePasswordUseCase initialChangePasswordUseCase;
     private final GetAuthenticatedUserUseCase getAuthenticatedUserUseCase;
     private final ChangeNicknameUseCase changeNicknameUseCase;
 
+    @Override
     @PostMapping("/me/change-password")
     public ResponseEntity<Void> changePassword(
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
@@ -44,11 +42,7 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(
-            summary = "Alterar senha inicial",
-            description = "Permite alterar a senha inicial do usuário antes da autenticação completa."
-    )
-    @SecurityRequirements
+    @Override
     @PostMapping("/change-initial-password")
     public ResponseEntity<Void>  changeInitialPassword(
             @RequestBody @Valid InitialChangePasswordRequest request
@@ -59,6 +53,7 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    @Override
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getAuthenticatedUser(
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser
@@ -67,6 +62,7 @@ public class UserController {
         return ResponseEntity.ok(UserRestMapper.toResponse(result));
     }
 
+    @Override
     @PutMapping("/me/change-nickname")
     public ResponseEntity<ChangeNicknameResponse> changeNickname(
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
