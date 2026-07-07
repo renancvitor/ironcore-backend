@@ -8,6 +8,7 @@ import com.ironcore.interfaces.rest.auth.dto.LoginRequest;
 import com.ironcore.interfaces.rest.auth.dto.LoginResponse;
 import com.ironcore.interfaces.rest.auth.mapper.AuthRestMapper;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -35,9 +36,9 @@ public class AuthController {
 
     @Operation(
             summary = "Autenticar usuário",
-            description = "Autentica o usuário e cria o cookie HTTP-only de acesso.",
-            security = {}
+            description = "Autentica o usuário e cria o cookie HTTP-only de acesso."
     )
+    @SecurityRequirements
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         LoginCommand command = AuthRestMapper.toCommand(request);
@@ -58,9 +59,9 @@ public class AuthController {
 
     @Operation(
             summary = "Encerrar sessão",
-            description = "Remove cookie de autenticação do usuário.",
-            security = {}
+            description = "Remove cookie de autenticação do usuário."
     )
+    @SecurityRequirements
     @PostMapping("/logout")
     public ResponseEntity<Void> logout() {
         logoutUseCase.execute();
