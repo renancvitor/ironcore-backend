@@ -8,6 +8,7 @@ import com.ironcore.interfaces.rest.openapi.InternalServerErrorResponse;
 import com.ironcore.interfaces.rest.openapi.UnauthorizedResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,9 +25,10 @@ public interface AuthApi {
     @SecurityRequirements
     @ApiResponse(
             responseCode = "200",
-            description = "Usuário autenticado com sucesso",
+            description = "Usuário autenticado com sucesso.",
             content = @Content(
-                    mediaType = MediaType.APPLICATION_JSON_VALUE
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = LoginResponse.class)
             )
     )
     @BadRequestResponse
@@ -42,7 +44,8 @@ public interface AuthApi {
     @SecurityRequirements
     @ApiResponse(
             responseCode = "204",
-            description = "Sessão encerrada com sucesso"
+            description = "Sessão encerrada com sucesso."
     )
+    @InternalServerErrorResponse
     ResponseEntity<Void> logout();
 }
