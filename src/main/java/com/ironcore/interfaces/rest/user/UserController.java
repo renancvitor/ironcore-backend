@@ -14,6 +14,7 @@ import com.ironcore.interfaces.rest.user.dto.*;
 import com.ironcore.interfaces.rest.user.mapper.UserChangePasswordMapper;
 import com.ironcore.interfaces.rest.user.mapper.UserRestMapper;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -45,9 +46,9 @@ public class UserController {
 
     @Operation(
             summary = "Alterar senha inicial",
-            description = "Permite alterar a senha inicial do usuário antes da autenticação completa.",
-            security = {}
+            description = "Permite alterar a senha inicial do usuário antes da autenticação completa."
     )
+    @SecurityRequirements
     @PostMapping("/change-initial-password")
     public ResponseEntity<Void>  changeInitialPassword(
             @RequestBody @Valid InitialChangePasswordRequest request
