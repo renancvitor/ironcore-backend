@@ -19,6 +19,7 @@ import com.ironcore.application.bodymetrics.update.UpdateBodyMetricsCommand;
 import com.ironcore.application.bodymetrics.update.UpdateBodyMetricsResult;
 import com.ironcore.application.bodymetrics.update.UpdateBodyMetricsUseCase;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
+import com.ironcore.interfaces.rest.bodymetrics.api.BodyMetricsApi;
 import com.ironcore.interfaces.rest.bodymetrics.dto.create.CreateBodyMetricsRequest;
 import com.ironcore.interfaces.rest.bodymetrics.dto.create.CreateBodyMetricsResponse;
 import com.ironcore.interfaces.rest.bodymetrics.dto.get.GetBodyMetricsResponse;
@@ -31,7 +32,6 @@ import com.ironcore.interfaces.rest.bodymetrics.dto.progress.BodyMetricsProgress
 import com.ironcore.interfaces.rest.bodymetrics.dto.update.UpdateBodyMetricsRequest;
 import com.ironcore.interfaces.rest.bodymetrics.dto.update.UpdateBodyMetricsResponse;
 import com.ironcore.interfaces.rest.bodymetrics.mapper.BodyMetricsRestMapper;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -42,12 +42,11 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Medidas corporais")
 @RestController
 @Validated
 @RequiredArgsConstructor
 @RequestMapping("/api/users/me/body-metrics")
-public class BodyMetricsController {
+public class BodyMetricsController implements BodyMetricsApi {
 
     private final CreateBodyMetricsUseCase createBodyMetricsUseCase;
     private final UpdateBodyMetricsUseCase updateBodyMetricsUseCase;
