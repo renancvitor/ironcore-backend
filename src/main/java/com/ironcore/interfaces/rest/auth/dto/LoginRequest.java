@@ -1,5 +1,6 @@
 package com.ironcore.interfaces.rest.auth.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
@@ -9,6 +10,7 @@ public record LoginRequest(
         String email,
 
         @NotBlank(message = "A senha não pode estar em branco.")
+        @Schema(format = "password")
         String password
 ) {
 }
