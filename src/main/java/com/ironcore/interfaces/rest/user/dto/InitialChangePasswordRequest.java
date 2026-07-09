@@ -1,5 +1,6 @@
 package com.ironcore.interfaces.rest.user.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
@@ -9,12 +10,15 @@ public record InitialChangePasswordRequest(
         String email,
 
         @NotBlank(message = "A senha atual não pode estar em branco.")
+        @Schema(format = "password")
         String currentPassword,
 
         @NotBlank(message = "A nova senha não pode estar em branco.")
+        @Schema(format = "password")
         String newPassword,
 
         @NotBlank(message = "A confirmação da nova senha não pode estar em branco.")
-        String confirmPassword
+        @Schema(format = "password")
+        String confirmNewPassword
 ) {
 }

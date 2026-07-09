@@ -31,7 +31,7 @@ public final class UserChangePasswordMapper {
                 new Email(request.email()),
                 new RawPassword(request.currentPassword()),
                 new RawPassword(request.newPassword()),
-                new RawPassword(request.confirmPassword())
+                new RawPassword(request.confirmNewPassword())
         );
     }
 }
