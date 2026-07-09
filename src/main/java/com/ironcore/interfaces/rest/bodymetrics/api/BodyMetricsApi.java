@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
@@ -176,7 +177,7 @@ public interface BodyMetricsApi {
     @InternalServerErrorResponse
     ResponseEntity<BodyMetricsProgressChartResponse> getBodyComposition(
             AuthenticatedUser authenticatedUser,
-            @Valid BodyMetricsProgressChartRequest request
+            @Valid @ParameterObject BodyMetricsProgressChartRequest request
     );
 
     @Operation(
@@ -200,7 +201,7 @@ public interface BodyMetricsApi {
     @InternalServerErrorResponse
     ResponseEntity<BodyMetricsProgressChartResponse> getCircumferences(
             AuthenticatedUser authenticatedUser,
-            @Valid BodyMetricsProgressChartRequest request
+            @Valid @ParameterObject BodyMetricsProgressChartRequest request
     );
 
     @Operation(
@@ -224,7 +225,7 @@ public interface BodyMetricsApi {
     @InternalServerErrorResponse
     ResponseEntity<BodyMetricsProgressChartResponse> getBodyFat(
             AuthenticatedUser authenticatedUser,
-            @Valid BodyMetricsProgressChartRequest request
+            @Valid @ParameterObject BodyMetricsProgressChartRequest request
     );
 
     @Operation(
@@ -248,6 +249,6 @@ public interface BodyMetricsApi {
     @InternalServerErrorResponse
     ResponseEntity<BodyMetricsProgressChangesResponse> getChanges(
             AuthenticatedUser authenticatedUser,
-            @Valid BodyMetricsProgressChangesRequest request
+            @Valid @ParameterObject BodyMetricsProgressChangesRequest request
     );
 }
