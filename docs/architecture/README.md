@@ -70,6 +70,7 @@ Status atual:
 - O tratamento global de exceptions REST existe.
 - Models e factories de resposta de erro da API existem.
 - Controllers REST de autenticação, usuário autenticado, pessoa e body metrics existem.
+- Interfaces documentais OpenAPI existem para concentrar documentação dos contratos REST sem poluir os controllers.
 - Os controllers recebem HTTP, constroem commands e delegam regras aos use cases.
 
 ## Direção das Dependências
@@ -108,7 +109,7 @@ Decisões arquiteturais:
 - Body metrics possui fluxo funcional autenticado com CRUD, consulta, listagem, progresso, auditoria e testes.
 - Cadastro público, recuperação de senha, refresh token, blacklist JWT e roles ficam fora do modelo single-user do IronCore.
 - Ativação/desativação de usuário permanece como suporte técnico interno e não possui endpoint funcional no modelo atual.
-- Swagger/OpenAPI ainda não está implementado.
+- Swagger/OpenAPI está implementado para os contratos REST atuais via Springdoc.
 - MongoDB está disponível como dependência/serviço local, mas ainda não há módulo funcional de persistência documental.
 - Fluxos maiores de treino, catálogo de exercícios e IA estão planejados, não implementados.
 

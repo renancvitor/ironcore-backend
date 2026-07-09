@@ -37,7 +37,7 @@ public class SpringDocConfiguration {
                         .description("Ambiente local"))
                 .info(new Info()
                         .title("IronCore Backend API")
-                        .version("v0.4.0")
+                        .version("v0.5.0")
                         .description("""
                                 API REST do IronCore para autenticação single-user, gerenciamento do usuário autenticado,
                                 pessoa vinculada e métricas corporais.

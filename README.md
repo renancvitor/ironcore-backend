@@ -94,6 +94,7 @@ O <b>IronCore</b> está em fase inicial de desenvolvimento. O backend já possui
 - Troca obrigatória de senha inicial, troca normal de senha, alteração de nickname e consulta do usuário autenticado.
 - Fluxo autenticado de pessoa com atualização de dados pessoais.
 - Fluxo autenticado de métricas corporais com ownership por `PersonId`, criação, atualização, exclusão, consulta por id, consulta do último registro, listagem paginada e progresso.
+- Documentação Swagger/OpenAPI para os contratos REST atuais.
 - Testes automatizados e CI executando build/test.
 - Documentação visual com diagramas de domínio, arquitetura e fluxos principais.
 
@@ -103,7 +104,6 @@ O <b>IronCore</b> está em fase inicial de desenvolvimento. O backend já possui
 
 ### Planejado para as próximas etapas
 - Fluxos REST para exercícios e treinos.
-- Swagger/OpenAPI conforme os endpoints forem criados.
 - Integração futura com frontend Angular.
 - Fluxo de geração de treino com apoio de IA.
 - Persistência documental para artefatos/contexto de IA, caso necessária.
@@ -122,8 +122,8 @@ Histórico de releases: [Releases](docs/releases/README.md).
   - 📦 [JPA](https://spring.io/projects/spring-data-jpa) + 🛠️ [Hibernate](https://hibernate.org/)
   - ✅ Validações ([Bean Validation](https://docs.spring.io/spring-framework/reference/core/validation/beanvalidation.html))
   - 🔄 [Spring Boot DevTools](https://docs.spring.io/spring-boot/reference/using/devtools.html)
+  - 📄 [Springdoc OpenAPI](https://springdoc.org/) + [Swagger UI](https://swagger.io/tools/swagger-ui/)
   - 🔧 Lombok
-  <!-- - 📄 [Swagger (OpenAPI)](https://swagger.io/specification/) - planejado para quando a dependência Springdoc/OpenAPI for configurada -->
 
 - 🗄️ **Banco de Dados**
   - 🛠️ Controle de versionamento de banco com [Flyway](https://flywaydb.org/)
@@ -279,7 +279,16 @@ As funcionalidades abaixo representam o escopo funcional planejado para o projet
 
 <h3 id="api---swagger">🌐 <strong>API - Swagger</strong></h3>
 
-A documentação [Swagger/OpenAPI](https://swagger.io/specification/) será adicionada quando a dependência Springdoc/OpenAPI for configurada. O projeto já possui endpoints REST de autenticação, usuário autenticado, pessoa e métricas corporais, mas ainda não possui documentação OpenAPI gerada.
+O projeto possui documentação [Swagger/OpenAPI](https://swagger.io/specification/) gerada com Springdoc para os contratos REST atuais de autenticação, usuário autenticado, pessoa e métricas corporais.
+
+A documentação técnica está disponível em [Swagger/OpenAPI](./docs/swagger/README.md).
+
+URLs locais principais:
+
+```text
+http://localhost:8080/swagger-ui/index.html
+http://localhost:8080/v3/api-docs
+```
 
 <h3 id="documentacao-arquitetural">🗂️ <strong>Documentação Arquitetural</strong></h3>
 
@@ -376,6 +385,7 @@ docs
  ├── persons
  ├── project-structure
  ├── releases
+ ├── swagger
  └── users
 ```
 
@@ -437,7 +447,7 @@ SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
 ./mvnw clean verify --batch-mode
 ```
 
-8. Acesse a aplicação pela porta configurada (por padrão http://localhost:8080). O projeto possui endpoints de autenticação, usuário autenticado, pessoa e body metrics.<br>
+8. Acesse a aplicação pela porta configurada (por padrão http://localhost:8080). O projeto possui endpoints de autenticação, usuário autenticado, pessoa e body metrics. A documentação Swagger UI fica disponível em `http://localhost:8080/swagger-ui/index.html`.<br>
 ⚠️ **Lembre-se de manter o Docker rodando enquanto estiver utilizando a aplicação.**
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
