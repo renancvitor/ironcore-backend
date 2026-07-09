@@ -6,6 +6,10 @@ import com.ironcore.interfaces.rest.bodymetrics.dto.create.CreateBodyMetricsResp
 import com.ironcore.interfaces.rest.bodymetrics.dto.get.GetBodyMetricsResponse;
 import com.ironcore.interfaces.rest.bodymetrics.dto.latest.GetLatestBodyMetricsResponse;
 import com.ironcore.interfaces.rest.bodymetrics.dto.list.ListBodyMetricsResponse;
+import com.ironcore.interfaces.rest.bodymetrics.dto.progress.BodyMetricsProgressChangesRequest;
+import com.ironcore.interfaces.rest.bodymetrics.dto.progress.BodyMetricsProgressChangesResponse;
+import com.ironcore.interfaces.rest.bodymetrics.dto.progress.BodyMetricsProgressChartRequest;
+import com.ironcore.interfaces.rest.bodymetrics.dto.progress.BodyMetricsProgressChartResponse;
 import com.ironcore.interfaces.rest.bodymetrics.dto.update.UpdateBodyMetricsRequest;
 import com.ironcore.interfaces.rest.bodymetrics.dto.update.UpdateBodyMetricsResponse;
 import com.ironcore.interfaces.rest.openapi.*;
@@ -150,4 +154,100 @@ public interface BodyMetricsApi {
     @UnauthorizedResponse
     @InternalServerErrorResponse
     ResponseEntity<GetLatestBodyMetricsResponse> getLatest(AuthenticatedUser authenticatedUser);
+
+    @Operation(
+            summary = "Gráfico de composições corporais em quilograma (kg)",
+            description = "Retorna gráfico de período com as composições corporais em kg referente às medidas " +
+                    "corporais do usuário autenticado."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Sucesso ao retornar dados.",
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = BodyMetricsProgressChartResponse.class)
+            )
+    )
+    @BadRequestResponse
+    @NotFoundResponse
+    @ForbiddenResponse
+    @UnprocessableEntityResponse
+    @UnauthorizedResponse
+    @InternalServerErrorResponse
+    ResponseEntity<BodyMetricsProgressChartResponse> getBodyComposition(
+            AuthenticatedUser authenticatedUser,
+            @Valid BodyMetricsProgressChartRequest request
+    );
+
+    @Operation(
+            summary = "Gráfico de circunferências corporais em centímetros (cm)",
+            description = "Retorna gráfico de período com as circunferências corporais em cm referente às medidas " +
+                    "corporais do usuário autenticado."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Sucesso ao retornar dados.",
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = BodyMetricsProgressChartResponse.class)
+            )
+    )
+    @BadRequestResponse
+    @NotFoundResponse
+    @ForbiddenResponse
+    @UnprocessableEntityResponse
+    @UnauthorizedResponse
+    @InternalServerErrorResponse
+    ResponseEntity<BodyMetricsProgressChartResponse> getCircumferences(
+            AuthenticatedUser authenticatedUser,
+            @Valid BodyMetricsProgressChartRequest request
+    );
+
+    @Operation(
+            summary = "Gráfico de percentual de gordura corporal",
+            description = "Retorna gráfico de período com percentual de gordura corporal referente às medidas " +
+                    "corporais do usuário autenticado."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Sucesso ao retornar dados.",
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = BodyMetricsProgressChartResponse.class)
+            )
+    )
+    @BadRequestResponse
+    @NotFoundResponse
+    @ForbiddenResponse
+    @UnprocessableEntityResponse
+    @UnauthorizedResponse
+    @InternalServerErrorResponse
+    ResponseEntity<BodyMetricsProgressChartResponse> getBodyFat(
+            AuthenticatedUser authenticatedUser,
+            @Valid BodyMetricsProgressChartRequest request
+    );
+
+    @Operation(
+            summary = "Tabela das diferenças entre medidas corporais",
+            description = "Retorna tabela de período com as diferenças entre as medidas corporais " +
+                    "do usuário autenticado."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Sucesso ao retornar dados.",
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = BodyMetricsProgressChangesResponse.class)
+            )
+    )
+    @BadRequestResponse
+    @NotFoundResponse
+    @ForbiddenResponse
+    @UnprocessableEntityResponse
+    @UnauthorizedResponse
+    @InternalServerErrorResponse
+    ResponseEntity<BodyMetricsProgressChangesResponse> getChanges(
+            AuthenticatedUser authenticatedUser,
+            @Valid BodyMetricsProgressChangesRequest request
+    );
 }
