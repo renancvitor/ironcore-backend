@@ -12,6 +12,7 @@ Alguns documentos descrevem funcionalidades já implementadas, enquanto outros r
 - [Estrutura do Projeto](project-structure/README.md): esqueleto completo de diretórios, código, resources, testes e documentação.
 - [Banco de dados e migrations](database/README.md): PostgreSQL, Flyway e leitura das migrations do projeto.
 - [Exceptions](exceptions/README.md): estratégia de exceptions e tratamento global de erros REST.
+- [Swagger/OpenAPI](swagger/README.md): documentação gerada dos contratos REST, Swagger UI e `/v3/api-docs`.
 - [Testes Automatizados](testing/README.md): estratégia de testes unitários, integração, segurança e CI.
 
 ### Módulos documentados
@@ -37,11 +38,12 @@ Alguns documentos descrevem funcionalidades já implementadas, enquanto outros r
 - [v0.2.0](releases/v0.2.0/README.md): users, auth e security single-user.
 - [v0.3.0](releases/v0.3.0/README.md): user body metrics funcional.
 - [v0.4.0](releases/v0.4.0/README.md): person, refactor para body metrics e ownership por `PersonId`.
+- [v0.5.0](releases/v0.5.0/README.md): Swagger/OpenAPI dos contratos REST atuais.
 
 ## Observações
 
 - A documentação usa termos técnicos em inglês quando eles representam código, camadas, módulos, ferramentas ou conceitos comuns no desenvolvimento backend.
-- Funcionalidades como Swagger/OpenAPI gerado, frontend, IA, Kafka, specifications/filtros avançados, catálogo de exercícios e treinos ainda fazem parte da evolução planejada do projeto, salvo quando indicado de forma diferente em documentos específicos.
+- Funcionalidades como frontend, IA, Kafka, specifications/filtros avançados, catálogo de exercícios e treinos ainda fazem parte da evolução planejada do projeto, salvo quando indicado de forma diferente em documentos específicos.
 - Releases anteriores preservam história do projeto e não devem ser reescritos para refletir o estado atual.
 
 <p align="right"><a href="../README.md">Voltar para a documentação principal</a></p>
