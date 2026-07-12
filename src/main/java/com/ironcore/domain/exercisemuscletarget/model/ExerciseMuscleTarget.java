@@ -1,4 +1,4 @@
-package com.ironcore.domain.exercisemuscletarget;
+package com.ironcore.domain.exercisemuscletarget.model;
 
 import com.ironcore.domain.exercise.valueobject.ExerciseId;
 import com.ironcore.domain.exercisemuscletarget.enums.TargetRoleType;
