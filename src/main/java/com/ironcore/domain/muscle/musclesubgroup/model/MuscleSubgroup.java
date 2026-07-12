@@ -28,7 +28,7 @@ public class MuscleSubgroup {
 
     public static MuscleSubgroup restore(MuscleSubgroupId id, MuscleGroupId muscleGroupId, MuscleSubgroupCode code,
                                          String displayName, Boolean active, Integer sortOrder) {
-        return new MuscleSubgroup(id,  muscleGroupId, code, displayName, active, sortOrder);
+        return new MuscleSubgroup(id, muscleGroupId, code, displayName, active, sortOrder);
     }
 
     private String requireNonBlank(String value, String message) {
