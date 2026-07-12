@@ -1,9 +1,8 @@
-package com.ironcore.domain.exercisemuscletarget;
+package com.ironcore.domain.exercisemuscletarget.model;
 
 import com.ironcore.domain.exercise.valueobject.ExerciseId;
 import com.ironcore.domain.exercisemuscletarget.enums.TargetRoleType;
 import com.ironcore.domain.exercisemuscletarget.exception.InvalidExerciseMuscleTargetException;
-import com.ironcore.domain.exercisemuscletarget.model.ExerciseMuscleTarget;
 import com.ironcore.domain.exercisemuscletarget.valueobject.ExerciseMuscleTargetId;
 import com.ironcore.domain.muscle.musclesubgroup.valueobject.MuscleSubgroupId;
 import org.junit.jupiter.api.Nested;
