@@ -14,7 +14,7 @@ public class ActivityType {
     private final Boolean active;
     private final Integer sortOrder;
 
-    private ActivityType(ActivityTypeId id, ActivityTypeCode code, String displayName, Boolean active,
+    public ActivityType(ActivityTypeId id, ActivityTypeCode code, String displayName, Boolean active,
                          Integer sortOrder) {
         this.id = requireNonNull(id, "Id não pode ser nulo.");
         this.code = requireNonNull(code, "Código não pode ser nulo.");
