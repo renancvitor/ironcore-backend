@@ -14,7 +14,7 @@ public class EquipmentType {
     private final Boolean active;
     private final Integer sortOrder;
 
-    private EquipmentType(EquipmentTypeId id, EquipmentTypeCode code, String displayName, Boolean active,
+    public EquipmentType(EquipmentTypeId id, EquipmentTypeCode code, String displayName, Boolean active,
                           Integer sortOrder) {
         this.id = requireNonNull(id, "Id não pode ser nulo.");
         this.code = requireNonNull(code, "Código não pode ser nulo.");
