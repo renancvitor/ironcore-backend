@@ -22,7 +22,7 @@ public class Exercise {
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
 
-    private Exercise(ExerciseId id, String name, EquipmentTypeId equipmentTypeId, ActivityTypeId activityTypeId,
+    public Exercise(ExerciseId id, String name, EquipmentTypeId equipmentTypeId, ActivityTypeId activityTypeId,
                     Boolean unilateral, Boolean compound, Integer suggestedRestSeconds, Boolean active,
                     LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = requireNonNull(id, "Id não pode ser nulo.");
