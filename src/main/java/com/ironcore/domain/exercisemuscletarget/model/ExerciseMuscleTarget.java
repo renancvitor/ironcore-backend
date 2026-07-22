@@ -20,7 +20,7 @@ public class ExerciseMuscleTarget {
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
 
-    private ExerciseMuscleTarget(ExerciseMuscleTargetId id, ExerciseId exerciseId, MuscleSubgroupId muscleSubgroupId,
+    public ExerciseMuscleTarget(ExerciseMuscleTargetId id, ExerciseId exerciseId, MuscleSubgroupId muscleSubgroupId,
                                  TargetRoleType targetRole, Boolean active, LocalDateTime createdAt,
                                  LocalDateTime updatedAt) {
         this.id = requireNonNull(id, "Id não pode ser nulo.");
