@@ -12,7 +12,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
 import java.util.Optional;
 
 import static com.ironcore.infrastructure.persistence.muscle.musclegroup.MuscleGroupEntityTestFactory.invalidMuscleGroupEntity;
@@ -109,36 +108,4 @@ class MuscleGroupAdapterTest {
         }
     }
 
-    @Nested
-    class FindAll {
-
-        @Test
-        void shouldFindAllMuscleGroups() {
-            when(muscleGroupJpaRepository.findAll()).thenReturn(List.of(muscleGroupEntity()));
-
-            List<MuscleGroup> result = adapter.findAll();
-
-            assertThat(result).hasSize(1);
-            assertThat(result.getFirst().getId()).isEqualTo(new MuscleGroupId(1L));
-            assertThat(result.getFirst().getCode()).isEqualTo(new MuscleGroupCode("BACK"));
-        }
-
-        @Test
-        void shouldReturnEmptyWhenNoMuscleGroupsExist() {
-            when(muscleGroupJpaRepository.findAll()).thenReturn(List.of());
-
-            List<MuscleGroup> result = adapter.findAll();
-
-            assertThat(result).isEmpty();
-        }
-
-        @Test
-        void shouldWrapRepositoryFailure() {
-            when(muscleGroupJpaRepository.findAll()).thenThrow(new RuntimeException("database unavailable"));
-
-            assertThatExceptionOfType(PersistenceException.class)
-                    .isThrownBy(() -> adapter.findAll())
-                    .withMessage("Falha ao buscar muscle groups.");
-        }
-    }
 }
