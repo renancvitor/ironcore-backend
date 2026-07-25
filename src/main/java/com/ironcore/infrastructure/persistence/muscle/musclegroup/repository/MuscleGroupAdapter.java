@@ -11,7 +11,6 @@ import com.ironcore.infrastructure.persistence.muscle.musclegroup.mapper.MuscleG
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -58,22 +57,6 @@ public class MuscleGroupAdapter implements MuscleGroupRepository {
             return entity.map(MuscleGroupMapper::toDomain);
         } catch (RuntimeException exception) {
             throw new DataMappingException("Falha ao converter grupo muscular de entidade para domínio.", exception);
-        }
-    }
-
-    @Override
-    public List<MuscleGroup> findAll() {
-        List<MuscleGroupEntity> entities;
-        try {
-            entities = muscleGroupJpaRepository.findAll();
-        } catch (RuntimeException exception) {
-            throw new PersistenceException("Falha ao buscar muscle groups.", exception);
-        }
-
-        try {
-            return entities.stream().map(MuscleGroupMapper::toDomain).toList();
-        } catch (RuntimeException exception) {
-            throw new DataMappingException("Falha ao converter muscle groups.", exception);
         }
     }
 }

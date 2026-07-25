@@ -11,7 +11,6 @@ import com.ironcore.infrastructure.persistence.activitytype.mapper.ActivityTypeM
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -58,22 +57,6 @@ public class ActivityTypeAdapter implements ActivityTypeRepository {
             return entity.map(ActivityTypeMapper::toDomain);
         } catch (RuntimeException exception) {
             throw new DataMappingException("Falha ao converter activity type por code para domínio.", exception);
-        }
-    }
-
-    @Override
-    public List<ActivityType> findAll() {
-        List<ActivityTypeEntity> entities;
-        try {
-            entities = activityTypeJpaRepository.findAll();
-        } catch (RuntimeException exception) {
-            throw new PersistenceException("Falha ao buscar activity types.", exception);
-        }
-
-        try {
-            return entities.stream().map(ActivityTypeMapper::toDomain).toList();
-        } catch (RuntimeException exception) {
-            throw new DataMappingException("Falha ao converter activity types.", exception);
         }
     }
 }
