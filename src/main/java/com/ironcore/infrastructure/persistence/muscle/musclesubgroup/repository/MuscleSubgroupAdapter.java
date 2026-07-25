@@ -1,6 +1,5 @@
 package com.ironcore.infrastructure.persistence.muscle.musclesubgroup.repository;
 
-import com.ironcore.domain.muscle.musclegroup.valueobject.MuscleGroupId;
 import com.ironcore.domain.muscle.musclesubgroup.model.MuscleSubgroup;
 import com.ironcore.domain.muscle.musclesubgroup.repository.MuscleSubgroupRepository;
 import com.ironcore.domain.muscle.musclesubgroup.valueobject.MuscleSubgroupCode;
@@ -12,7 +11,6 @@ import com.ironcore.infrastructure.persistence.muscle.musclesubgroup.mapper.Musc
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -59,42 +57,6 @@ public class MuscleSubgroupAdapter implements MuscleSubgroupRepository {
             return entity.map(MuscleSubgroupMapper::toDomain);
         } catch (RuntimeException exception) {
             throw new DataMappingException("Falha ao converter subgrupo muscular de entidade para domínio.", exception);
-        }
-    }
-
-    @Override
-    public List<MuscleSubgroup> findByMuscleGroupId(MuscleGroupId id) {
-        List<MuscleSubgroupEntity> entity;
-        try {
-            Long muscleGroupId = Objects.requireNonNull(
-                    id.value(),
-                    "Id do grupo muscular não pode ser nulo."
-            );
-            entity = muscleSubgroupJpaRepository.findByMuscleGroup_Id(muscleGroupId);
-        } catch (RuntimeException exception) {
-            throw new PersistenceException("Falha ao buscar muscle subgroup por muscle group id.", exception);
-        }
-
-        try {
-            return entity.stream().map(MuscleSubgroupMapper::toDomain).toList();
-        } catch (RuntimeException exception) {
-            throw new DataMappingException("Falha ao converter subgrupo muscular de entidade para domínio.", exception);
-        }
-    }
-
-    @Override
-    public List<MuscleSubgroup> findAll() {
-        List<MuscleSubgroupEntity> entity;
-        try {
-            entity = muscleSubgroupJpaRepository.findAll();
-        } catch (RuntimeException exception) {
-            throw new PersistenceException("Falha ao buscar muscle subgroups.", exception);
-        }
-
-        try {
-            return entity.stream().map(MuscleSubgroupMapper::toDomain).toList();
-        } catch (RuntimeException exception) {
-            throw new DataMappingException("Falha ao converter muscle subgroups.", exception);
         }
     }
 }

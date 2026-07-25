@@ -12,7 +12,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
 import java.util.Optional;
 
 import static com.ironcore.infrastructure.persistence.equipmenttype.EquipmentTypeEntityTestFactory.equipmentTypeEntity;
@@ -109,36 +108,4 @@ class EquipmentTypeAdapterTest {
         }
     }
 
-    @Nested
-    class FindAll {
-
-        @Test
-        void shouldFindAllEquipmentTypes() {
-            when(equipmentTypeJpaRepository.findAll()).thenReturn(List.of(equipmentTypeEntity()));
-
-            List<EquipmentType> result = adapter.findAll();
-
-            assertThat(result).hasSize(1);
-            assertThat(result.getFirst().getId()).isEqualTo(new EquipmentTypeId(1L));
-            assertThat(result.getFirst().getCode()).isEqualTo(new EquipmentTypeCode("CABLE"));
-        }
-
-        @Test
-        void shouldReturnEmptyWhenNoEquipmentTypesExist() {
-            when(equipmentTypeJpaRepository.findAll()).thenReturn(List.of());
-
-            List<EquipmentType> result = adapter.findAll();
-
-            assertThat(result).isEmpty();
-        }
-
-        @Test
-        void shouldWrapRepositoryFailure() {
-            when(equipmentTypeJpaRepository.findAll()).thenThrow(new RuntimeException("database unavailable"));
-
-            assertThatExceptionOfType(PersistenceException.class)
-                    .isThrownBy(() -> adapter.findAll())
-                    .withMessage("Falha ao buscar equipment types.");
-        }
-    }
 }

@@ -10,5 +10,9 @@ public interface MuscleSubgroupJpaRepository extends JpaRepository<MuscleSubgrou
 
     Optional<MuscleSubgroupEntity> findByCode(String code);
 
-    List<MuscleSubgroupEntity> findByMuscleGroup_Id(Long muscleGroupId);
+    List<MuscleSubgroupEntity> findAllByActiveTrueOrderBySortOrderAscDisplayNameAsc();
+
+    List<MuscleSubgroupEntity> findAllByMuscleGroup_IdAndActiveTrueOrderBySortOrderAscDisplayNameAsc(
+            Long muscleGroupId
+    );
 }

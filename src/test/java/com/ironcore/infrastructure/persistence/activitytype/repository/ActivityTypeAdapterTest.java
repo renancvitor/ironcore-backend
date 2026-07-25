@@ -12,7 +12,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
 import java.util.Optional;
 
 import static com.ironcore.infrastructure.persistence.activitytype.ActivityTypeEntityTestFactory.activityTypeEntity;
@@ -109,36 +108,4 @@ class ActivityTypeAdapterTest {
         }
     }
 
-    @Nested
-    class FindAll {
-
-        @Test
-        void shouldFindAllActivityTypes() {
-            when(activityTypeJpaRepository.findAll()).thenReturn(List.of(activityTypeEntity()));
-
-            List<ActivityType> result = adapter.findAll();
-
-            assertThat(result).hasSize(1);
-            assertThat(result.getFirst().getId()).isEqualTo(new ActivityTypeId(1L));
-            assertThat(result.getFirst().getCode()).isEqualTo(new ActivityTypeCode("STRENGTH"));
-        }
-
-        @Test
-        void shouldReturnEmptyWhenNoActivityTypesExist() {
-            when(activityTypeJpaRepository.findAll()).thenReturn(List.of());
-
-            List<ActivityType> result = adapter.findAll();
-
-            assertThat(result).isEmpty();
-        }
-
-        @Test
-        void shouldWrapRepositoryFailure() {
-            when(activityTypeJpaRepository.findAll()).thenThrow(new RuntimeException("database unavailable"));
-
-            assertThatExceptionOfType(PersistenceException.class)
-                    .isThrownBy(() -> adapter.findAll())
-                    .withMessage("Falha ao buscar activity types.");
-        }
-    }
 }

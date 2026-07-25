@@ -11,7 +11,6 @@ import com.ironcore.infrastructure.persistence.equipmenttype.mapper.EquipmentTyp
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -58,22 +57,6 @@ public class EquipmentTypeAdapter implements EquipmentTypeRepository {
             return entity.map(EquipmentTypeMapper::toDomain);
         } catch (RuntimeException exception) {
             throw new DataMappingException("Falha ao converter tipo de equipamento de domínio para entidade.", exception);
-        }
-    }
-
-    @Override
-    public List<EquipmentType> findAll() {
-        List<EquipmentTypeEntity> entities;
-        try {
-            entities = equipmentTypeJpaRepository.findAll();
-        } catch (RuntimeException exception) {
-            throw new PersistenceException("Falha ao buscar equipment types.", exception);
-        }
-
-        try {
-            return entities.stream().map(EquipmentTypeMapper::toDomain).toList();
-        } catch (RuntimeException exception) {
-            throw new DataMappingException("Falha ao converter equipment types.", exception);
         }
     }
 }
