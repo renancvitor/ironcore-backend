@@ -1,7 +1,7 @@
 package com.ironcore.application.exercise.usecase;
 
 import com.ironcore.application.exercise.catalog.port.ExerciseFilterCatalogQueryPort;
-import com.ironcore.application.exercise.catalog.result.MuscleGroupItemResult;
+import com.ironcore.application.exercise.catalog.usecase.MuscleGroupItemResult;
 import com.ironcore.application.exercise.catalog.usecase.ListMuscleGroupsUseCase;
 import com.ironcore.domain.muscle.musclegroup.valueobject.MuscleGroupCode;
 import com.ironcore.domain.muscle.musclegroup.valueobject.MuscleGroupId;

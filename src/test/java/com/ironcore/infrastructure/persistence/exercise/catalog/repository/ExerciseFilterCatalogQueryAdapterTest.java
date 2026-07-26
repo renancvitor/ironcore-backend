@@ -1,9 +1,9 @@
 package com.ironcore.infrastructure.persistence.exercise.catalog.repository;
 
-import com.ironcore.application.exercise.catalog.result.ActivityTypeItemResult;
-import com.ironcore.application.exercise.catalog.result.EquipmentTypeItemResult;
-import com.ironcore.application.exercise.catalog.result.MuscleGroupItemResult;
-import com.ironcore.application.exercise.catalog.result.MuscleSubgroupItemResult;
+import com.ironcore.application.exercise.catalog.usecase.ActivityTypeItemResult;
+import com.ironcore.application.exercise.catalog.usecase.EquipmentTypeItemResult;
+import com.ironcore.application.exercise.catalog.usecase.MuscleGroupItemResult;
+import com.ironcore.application.exercise.catalog.usecase.MuscleSubgroupItemResult;
 import com.ironcore.domain.activitytype.valueobject.ActivityTypeCode;
 import com.ironcore.domain.activitytype.valueobject.ActivityTypeId;
 import com.ironcore.domain.equipmenttype.valueobject.EquipmentTypeCode;

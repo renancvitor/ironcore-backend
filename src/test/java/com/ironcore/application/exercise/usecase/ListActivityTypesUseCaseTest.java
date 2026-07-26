@@ -1,7 +1,7 @@
 package com.ironcore.application.exercise.usecase;
 
 import com.ironcore.application.exercise.catalog.port.ExerciseFilterCatalogQueryPort;
-import com.ironcore.application.exercise.catalog.result.ActivityTypeItemResult;
+import com.ironcore.application.exercise.catalog.usecase.ActivityTypeItemResult;
 import com.ironcore.application.exercise.catalog.usecase.ListActivityTypesUseCase;
 import com.ironcore.domain.activitytype.valueobject.ActivityTypeCode;
 import com.ironcore.domain.activitytype.valueobject.ActivityTypeId;
