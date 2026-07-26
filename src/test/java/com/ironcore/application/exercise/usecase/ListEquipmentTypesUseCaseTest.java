@@ -1,7 +1,7 @@
 package com.ironcore.application.exercise.usecase;
 
 import com.ironcore.application.exercise.catalog.port.ExerciseFilterCatalogQueryPort;
-import com.ironcore.application.exercise.catalog.result.EquipmentTypeItemResult;
+import com.ironcore.application.exercise.catalog.usecase.EquipmentTypeItemResult;
 import com.ironcore.application.exercise.catalog.usecase.ListEquipmentTypesUseCase;
 import com.ironcore.domain.equipmenttype.valueobject.EquipmentTypeCode;
 import com.ironcore.domain.equipmenttype.valueobject.EquipmentTypeId;

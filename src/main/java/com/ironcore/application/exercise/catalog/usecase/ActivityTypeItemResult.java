@@ -1,4 +1,4 @@
-package com.ironcore.application.exercise.catalog.result;
+package com.ironcore.application.exercise.catalog.usecase;
 
 import com.ironcore.domain.activitytype.valueobject.ActivityTypeCode;
 import com.ironcore.domain.activitytype.valueobject.ActivityTypeId;
