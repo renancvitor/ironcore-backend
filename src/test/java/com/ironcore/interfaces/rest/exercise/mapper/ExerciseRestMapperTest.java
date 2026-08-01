@@ -31,7 +31,7 @@ class ExerciseRestMapperTest {
         void shouldMapExerciseDetailFields() {
             GetExerciseByIdResult result = getExerciseByIdResult();
 
-            GetExerciseByIdResponse response = ExerciseRestMapper.toResponse(result);
+            GetExerciseByIdResponse response = ExerciseRestMapper.toGetByIdResponse(result);
 
             assertThat(response.id()).isEqualTo(1L);
             assertThat(response.name()).isEqualTo("Supino reto");

@@ -7,6 +7,7 @@ import com.ironcore.application.exercise.catalog.usecase.MuscleSubgroupItemResul
 import com.ironcore.application.exercise.usecase.ExerciseMuscleTargetItemResult;
 import com.ironcore.application.exercise.usecase.GetExerciseByIdResult;
 import com.ironcore.application.exercise.usecase.GetExerciseByIdUseCase;
+import com.ironcore.application.exercise.usecase.ListExercisesUseCase;
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
 import com.ironcore.domain.activitytype.valueobject.ActivityTypeCode;
 import com.ironcore.domain.activitytype.valueobject.ActivityTypeId;
@@ -46,6 +47,9 @@ class ExerciseControllerTest {
 
     @MockitoBean
     private GetExerciseByIdUseCase getExerciseByIdUseCase;
+
+    @MockitoBean
+    private ListExercisesUseCase listExercisesUseCase;
 
     @MockitoBean
     private ErrorLogPublisher errorLogPublisher;
