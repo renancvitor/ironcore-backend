@@ -7,6 +7,7 @@ import com.ironcore.application.exercise.catalog.usecase.MuscleSubgroupItemResul
 import com.ironcore.application.exercise.usecase.ExerciseMuscleTargetItemResult;
 import com.ironcore.application.exercise.usecase.GetExerciseByIdResult;
 import com.ironcore.application.exercise.usecase.GetExerciseByIdUseCase;
+import com.ironcore.application.exercise.usecase.ListExercisesUseCase;
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
 import com.ironcore.domain.activitytype.valueobject.ActivityTypeCode;
 import com.ironcore.domain.activitytype.valueobject.ActivityTypeId;
@@ -19,7 +20,6 @@ import com.ironcore.domain.muscle.musclesubgroup.valueobject.MuscleSubgroupCode;
 import com.ironcore.domain.muscle.musclesubgroup.valueobject.MuscleSubgroupId;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.infrastructure.security.jwt.JwtAccessTokenValidator;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -29,15 +29,14 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ExerciseController.class)
 @AutoConfigureMockMvc(addFilters = false)
-class ExerciseControllerTest {
+class GetExerciseByIdControllerTest {
 
     private static final String EXERCISES_ENDPOINT = "/api/exercise-catalog/exercises";
 
@@ -48,6 +47,9 @@ class ExerciseControllerTest {
     private GetExerciseByIdUseCase getExerciseByIdUseCase;
 
     @MockitoBean
+    private ListExercisesUseCase listExercisesUseCase;
+
+    @MockitoBean
     private ErrorLogPublisher errorLogPublisher;
 
     @MockitoBean
@@ -56,55 +58,64 @@ class ExerciseControllerTest {
     @MockitoBean
     private UserRepository userRepository;
 
-    @Nested
-    class GetExerciseById {
+    @Test
+    void shouldReturnExerciseDetailById() throws Exception {
+        ExerciseId exerciseId = new ExerciseId(1L);
+        when(getExerciseByIdUseCase.execute(exerciseId)).thenReturn(getExerciseByIdResult());
 
-        @Test
-        void shouldReturnExerciseDetailById() throws Exception {
-            ExerciseId exerciseId = new ExerciseId(1L);
-            when(getExerciseByIdUseCase.execute(exerciseId)).thenReturn(getExerciseByIdResult());
+        mockMvc.perform(get(EXERCISES_ENDPOINT + "/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.name").value("Supino reto"))
+                .andExpect(jsonPath("$.equipmentType.id").value(2L))
+                .andExpect(jsonPath("$.equipmentType.code").value("BARBELL"))
+                .andExpect(jsonPath("$.equipmentType.name").value("Barra"))
+                .andExpect(jsonPath("$.activityType.id").value(3L))
+                .andExpect(jsonPath("$.activityType.code").value("STRENGTH"))
+                .andExpect(jsonPath("$.activityType.name").value("Força"))
+                .andExpect(jsonPath("$.unilateral").value(false))
+                .andExpect(jsonPath("$.compound").value(true))
+                .andExpect(jsonPath("$.suggestedRestSeconds").value(90))
+                .andExpect(jsonPath("$.active").value(true))
+                .andExpect(jsonPath("$.muscleTargets").isArray())
+                .andExpect(jsonPath("$.muscleTargets.length()").value(1))
+                .andExpect(jsonPath("$.muscleTargets[0].muscleSubgroup.id").value(4L))
+                .andExpect(jsonPath("$.muscleTargets[0].muscleSubgroup.code").value("PECTORALIS_MAJOR"))
+                .andExpect(jsonPath("$.muscleTargets[0].muscleSubgroup.muscleGroupId").value(5L))
+                .andExpect(jsonPath("$.muscleTargets[0].muscleSubgroup.name").value("Peitoral maior"))
+                .andExpect(jsonPath("$.muscleTargets[0].targetRole").value("PRIMARY"));
 
-            mockMvc.perform(get(EXERCISES_ENDPOINT + "/1"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.id").value(1L))
-                    .andExpect(jsonPath("$.name").value("Supino reto"))
-                    .andExpect(jsonPath("$.equipmentType.id").value(2L))
-                    .andExpect(jsonPath("$.equipmentType.code").value("BARBELL"))
-                    .andExpect(jsonPath("$.equipmentType.name").value("Barra"))
-                    .andExpect(jsonPath("$.activityType.id").value(3L))
-                    .andExpect(jsonPath("$.activityType.code").value("STRENGTH"))
-                    .andExpect(jsonPath("$.activityType.name").value("Força"))
-                    .andExpect(jsonPath("$.unilateral").value(false))
-                    .andExpect(jsonPath("$.compound").value(true))
-                    .andExpect(jsonPath("$.suggestedRestSeconds").value(90))
-                    .andExpect(jsonPath("$.active").value(true))
-                    .andExpect(jsonPath("$.muscleTargets").isArray())
-                    .andExpect(jsonPath("$.muscleTargets.length()").value(1))
-                    .andExpect(jsonPath("$.muscleTargets[0].muscleSubgroup.id").value(4L))
-                    .andExpect(jsonPath("$.muscleTargets[0].muscleSubgroup.code").value("PECTORALIS_MAJOR"))
-                    .andExpect(jsonPath("$.muscleTargets[0].muscleSubgroup.muscleGroupId").value(5L))
-                    .andExpect(jsonPath("$.muscleTargets[0].muscleSubgroup.name").value("Peitoral maior"))
-                    .andExpect(jsonPath("$.muscleTargets[0].targetRole").value("PRIMARY"));
+        verify(getExerciseByIdUseCase).execute(exerciseId);
+    }
 
-            verify(getExerciseByIdUseCase).execute(exerciseId);
-        }
+    @Test
+    void shouldReturnNotFoundWhenExerciseDoesNotExist() throws Exception {
+        ExerciseId exerciseId = new ExerciseId(99L);
+        when(getExerciseByIdUseCase.execute(exerciseId))
+                .thenThrow(new ResourceNotFoundException("Exercício não encontrado."));
 
-        @Test
-        void shouldReturnNotFoundWhenExerciseDoesNotExist() throws Exception {
-            ExerciseId exerciseId = new ExerciseId(99L);
-            when(getExerciseByIdUseCase.execute(exerciseId))
-                    .thenThrow(new ResourceNotFoundException("Exercício não encontrado."));
+        mockMvc.perform(get(EXERCISES_ENDPOINT + "/99"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("Exercício não encontrado."))
+                .andExpect(jsonPath("$.path").value(EXERCISES_ENDPOINT + "/99"))
+                .andExpect(jsonPath("$.fields").isArray());
 
-            mockMvc.perform(get(EXERCISES_ENDPOINT + "/99"))
-                    .andExpect(status().isNotFound())
-                    .andExpect(jsonPath("$.status").value(404))
-                    .andExpect(jsonPath("$.error").value("Not Found"))
-                    .andExpect(jsonPath("$.message").value("Exercício não encontrado."))
-                    .andExpect(jsonPath("$.path").value(EXERCISES_ENDPOINT + "/99"))
-                    .andExpect(jsonPath("$.fields").isArray());
+        verify(getExerciseByIdUseCase).execute(exerciseId);
+    }
 
-            verify(getExerciseByIdUseCase).execute(exerciseId);
-        }
+    @Test
+    void shouldReturnBadRequestWhenExerciseIdIsInvalid() throws Exception {
+        mockMvc.perform(get(EXERCISES_ENDPOINT + "/0"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Id do exercício deve ser positivo."))
+                .andExpect(jsonPath("$.path").value(EXERCISES_ENDPOINT + "/0"))
+                .andExpect(jsonPath("$.fields").isArray());
+
+        verify(getExerciseByIdUseCase, never()).execute(any());
     }
 
     private static GetExerciseByIdResult getExerciseByIdResult() {
