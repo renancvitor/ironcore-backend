@@ -1,3 +1,11 @@
+---
+name: Issue
+about: Planejar uma funcionalidade, correção, documentação, refatoração ou tarefa técnica
+title: ""
+labels: ""
+assignees: "renancvitor"
+---
+
 <!--
 Título recomendado:
 
@@ -15,26 +23,26 @@ Antes de publicar:
 - não publique vulnerabilidades, credenciais, tokens ou dados pessoais.
 -->
 
-Contexto
+### Contexto
 
 <!--
 Descreva brevemente o problema, necessidade ou etapa do projeto que motivou esta Issue.
 Explique o estado atual e por que a alteração é necessária.
 -->
 
-Objetivo
+### Objetivo
 
 <!--
 Descreva de forma direta o que deve ser implementado, ajustado, corrigido ou documentado.
 Evite incluir trabalhos paralelos que não façam parte do escopo.
 -->
 
-Critérios de Aceite
+### Critérios de Aceite
 
-- [ ]  A entrega principal foi implementada conforme o objetivo
-- [ ]  O comportamento esperado foi validado localmente
-- [ ]  A estrutura segue o padrão arquitetural do projeto
-- [ ]  A integração com o GitHub Project está funcionando, se aplicável
+- [ ] A entrega principal foi implementada conforme o objetivo
+- [ ] O comportamento esperado foi validado localmente
+- [ ] A estrutura segue o padrão arquitetural do projeto
+- [ ] A integração com o GitHub Project está funcionando, se aplicável
 
 <!--
 Adicione abaixo os critérios específicos da entrega.
@@ -48,7 +56,7 @@ Exemplos:
 - [ ] Atualizar documentação técnica
 -->
 
-Observações
+### Observações
 
 <!--
 Adicione decisões técnicas, limitações, dependências, regras de domínio,
