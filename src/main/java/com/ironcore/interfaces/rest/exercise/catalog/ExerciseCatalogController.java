@@ -2,6 +2,7 @@ package com.ironcore.interfaces.rest.exercise.catalog;
 
 import com.ironcore.application.exercise.catalog.usecase.*;
 import com.ironcore.domain.muscle.musclegroup.valueobject.MuscleGroupId;
+import com.ironcore.interfaces.rest.exercise.catalog.api.ExerciseCatalogApi;
 import com.ironcore.interfaces.rest.exercise.catalog.dto.ActivityTypeItemResponse;
 import com.ironcore.interfaces.rest.exercise.catalog.dto.EquipmentTypeItemResponse;
 import com.ironcore.interfaces.rest.exercise.catalog.dto.MuscleGroupItemResponse;
@@ -19,7 +20,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/exercise-catalog")
-public class ExerciseCatalogController {
+public class ExerciseCatalogController implements ExerciseCatalogApi {
 
     private final ListActivityTypesUseCase listActivityTypesUseCase;
     private final ListEquipmentTypesUseCase listEquipmentTypesUseCase;
