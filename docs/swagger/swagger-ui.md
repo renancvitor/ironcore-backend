@@ -20,6 +20,8 @@ A interface agrupa os endpoints pelas tags configuradas no contrato OpenAPI:
 - `Usuário`: dados e operações do usuário autenticado.
 - `Pessoa`: atualização da pessoa vinculada ao usuário autenticado.
 - `Medidas corporais`: registros, consultas, listagem e progresso de métricas corporais.
+- `Catálogo de exercícios`: catálogos auxiliares globais.
+- `Exercício`: listagem filtrada e detalhe do catálogo de exercises.
 
 ## Autenticação
 
@@ -45,7 +47,7 @@ Endpoints públicos aparecem sem exigência de autenticação no contrato:
 O Swagger UI mostra:
 
 - path params, como `id`;
-- query params, como `page`, `size`, `startDate` e `endDate`;
+- query params, como `page`, `size`, `startDate`, `endDate`, `name`, `activityTypeId`, `equipmentTypeId`, `muscleGroupId`, `muscleSubgroupId` e `targetRole`;
 - request bodies de endpoints `POST`, `PUT` e `PATCH`;
 - response schemas de sucesso;
 - schemas padronizados de erro.
@@ -56,6 +58,6 @@ Campos de senha são documentados com `format: password`.
 
 A documentação visual por GIFs não foi criada nesta etapa.
 
-Como o projeto ainda está em expansão, demonstrações por endpoint tenderiam a gerar alto custo de manutenção e pouco valor técnico. Quando os fluxos funcionais estiverem mais maduros, a documentação visual poderá ser adicionada por jornadas completas, como autenticação, atualização de dados do usuário e ciclo de métricas corporais.
+Como o projeto ainda está em expansão, demonstrações por endpoint tenderiam a gerar alto custo de manutenção e pouco valor técnico. Quando os fluxos funcionais estiverem mais maduros, a documentação visual poderá ser adicionada por jornadas completas, como autenticação, atualização de dados do usuário, ciclo de métricas corporais e consulta do exercise catalog.
 
 <p align="right"><a href="README.md">Voltar para Swagger/OpenAPI</a></p>

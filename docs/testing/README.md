@@ -24,12 +24,18 @@ Exemplos atuais:
 - `PasswordHashTest`
 - `UserIdTest`
 - `BodyMetricsIdTest`
+- `ActivityTypeTest`
+- `EquipmentTypeTest`
+- `ExerciseTest`
+- `ExerciseMuscleTargetTest`
+- `MuscleGroupTest`
+- `MuscleSubgroupTest`
 - `BMICalculatorTest`
 - `NavyBodyFatCalculatorTest`
 - `FatMassCalculatorTest`
 - `LeanMassCalculatorTest`
 
-Esses testes validam invariantes, entradas inválidas, criação de objetos de valor e cálculos de composição corporal.
+Esses testes validam invariantes, entradas inválidas, criação de objetos de valor, catálogos de exercise e cálculos de composição corporal.
 
 ### `application`
 
@@ -57,8 +63,14 @@ Exemplos atuais:
 - `ListBodyMetricsUseCaseTest`
 - `GetBodyMetricsProgressChartUseCaseTest`
 - `GetBodyMetricsProgressChangesUseCaseTest`
+- `ListActivityTypesUseCaseTest`
+- `ListEquipmentTypesUseCaseTest`
+- `ListMuscleGroupsUseCaseTest`
+- `ListMuscleSubgroupsUseCaseTest`
+- `ListExercisesUseCaseTest`
+- `GetExerciseByIdUseCaseTest`
 
-Esses testes validam regras de orquestração, autenticação, troca de senha, bootstrap, atualização de pessoa, atualização de nickname, publicação de logs, métricas corporais e progresso.
+Esses testes validam regras de orquestração, autenticação, troca de senha, bootstrap, atualização de pessoa, atualização de nickname, publicação de logs, métricas corporais, progresso e consultas do exercise catalog.
 
 ### `infrastructure`
 
@@ -80,6 +92,14 @@ Exemplos atuais:
 - `ListBodyMetricsQueryAdapterTest`
 - `BodyMetricsProgressQueryAdapterTest`
 - `BodyMetricsMapperTest`
+- `ActivityTypeAdapterTest`
+- `EquipmentTypeAdapterTest`
+- `MuscleGroupAdapterTest`
+- `MuscleSubgroupAdapterTest`
+- `ExerciseAdapterTest`
+- `ListExercisesQueryAdapterTest`
+- `GetExerciseByIdAdapterTest`
+- `ExerciseFilterCatalogQueryAdapterTest`
 - `PageMapperTest`
 - `JwtAccessTokenGenerationTest`
 - `JwtAccessTokenValidatorTest`
@@ -106,6 +126,10 @@ Exemplos atuais:
 - `ListBodyMetricsControllerTest`
 - `GetBodyMetricsProgressControllerTest`
 - `BodyMetricsIntegrationTest`
+- `ExerciseCatalogControllerTest`
+- `ListExercisesControllerTest`
+- `GetExerciseByIdControllerTest`
+- `ExerciseCatalogIntegrationTest`
 
 Esses testes validam contratos HTTP, autenticação, logout, rotas protegidas, validação de request e respostas dos endpoints atuais.
 
@@ -120,6 +144,7 @@ Exemplos atuais:
 - `PersonRepositoryAdapterIntegrationTest`: válida persistência de `Person` com schema real.
 - `AuthSecurityIntegrationTest`: válida autenticação e proteção de rotas no contexto REST/security.
 - `BodyMetricsIntegrationTest`: válida fluxo REST de métricas corporais no contexto da aplicação.
+- `ExerciseCatalogIntegrationTest`: valida consultas REST do catálogo de exercises no contexto da aplicação.
 
 Os testes com Testcontainers aplicam as migrations Flyway em um banco PostgreSQL temporário, o que aumenta a confiança na compatibilidade entre entidade, repository e schema.
 

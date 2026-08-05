@@ -17,6 +17,11 @@ Exemplos atuais:
 - `domain.person`
 - `domain.user`
 - `domain.bodymetrics`
+- `domain.activitytype`
+- `domain.equipmenttype`
+- `domain.exercise`
+- `domain.exercisemuscletarget`
+- `domain.muscle`
 - `domain.logging.audit`
 - `domain.logging.error`
 
@@ -37,6 +42,7 @@ Exemplos atuais:
 - `GetAuthenticatedUserUseCase`
 - `UpdatePersonUseCase`
 - body metrics use cases para create, update, delete, get, latest, list e progress
+- exercise catalog use cases para catálogos auxiliares, listagem e detalhe
 - `PasswordHashingService`
 - audit e error logging application services
 - application exceptions
@@ -70,6 +76,7 @@ Status atual:
 - O tratamento global de exceptions REST existe.
 - Models e factories de resposta de erro da API existem.
 - Controllers REST de autenticação, usuário autenticado, pessoa e body metrics existem.
+- Controllers REST de exercise catalog existem para consultas de catálogo e exercises.
 - Interfaces documentais OpenAPI existem para concentrar documentação dos contratos REST sem poluir os controllers.
 - Os controllers recebem HTTP, constroem commands e delegam regras aos use cases.
 
@@ -107,10 +114,11 @@ Decisões arquiteturais:
 - O baseline single-user cobre bootstrap, autenticação e usuário autenticado.
 - O módulo `Person` cobre dados pessoais e atualização da pessoa vinculada ao usuário autenticado.
 - Body metrics possui fluxo funcional autenticado com CRUD, consulta, listagem, progresso, auditoria e testes.
+- Exercise catalog possui fluxo funcional de consulta com catálogos auxiliares, listagem paginada, filtros combinados, detalhe por id, seeds, OpenAPI e testes.
 - Cadastro público, recuperação de senha, refresh token, blacklist JWT e roles ficam fora do modelo single-user do IronCore.
 - Ativação/desativação de usuário permanece como suporte técnico interno e não possui endpoint funcional no modelo atual.
 - Swagger/OpenAPI está implementado para os contratos REST atuais via Springdoc.
 - MongoDB está disponível como dependência/serviço local, mas ainda não há módulo funcional de persistência documental.
-- Fluxos maiores de treino, catálogo de exercícios e IA estão planejados, não implementados.
+- Fluxos maiores de treino e IA estão planejados, não implementados.
 
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>

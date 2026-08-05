@@ -24,12 +24,13 @@ Modelo implementado:
 - `body_metrics`: histórico de medições corporais da pessoa.
 - `audit_logs`: registros persistidos de auditoria.
 - `error_logs`: registros técnicos de erro.
+- `activity_types`, `equipment_types`, `muscle_groups` e `muscle_subgroups`: catálogos auxiliares globais.
+- `exercises`: catálogo de exercícios.
+- `exercise_muscle_targets`: associação entre exercícios e subgrupos musculares.
 
 Modelo planejado no diagrama:
 
-- `muscle_groups`, `muscle_subgroups`, `equipment_types`, `activity_types` e `training_goals`: tabelas de domínio e classificação.
-- `exercises`: catálogo de exercícios.
-- `exercise_muscle_targets`: associação entre exercícios e subgrupos musculares.
+- `training_goals`: catálogo de objetivos de treino.
 - `workout_cycles`: ciclos ou planos de treino da pessoa.
 - `workout_days`: divisão semanal do ciclo.
 - `workout_activities`: atividades prescritas em cada dia de treino.
@@ -121,58 +122,89 @@ Armazena registros técnicos de erro.
 
 A tabela existe nas migrations atuais e é documentada em [Error Log](../../logging/error-log.md).
 
-## Tabelas Planejadas no Diagrama
+### `activity_types`
 
-As tabelas abaixo aparecem no diagrama como blueprint de produto. Elas não devem ser tratadas como schema implementado enquanto não existirem migrations correspondentes.
+Classifica a natureza da atividade física.
 
-### `muscle_groups`
-
-Classifica grupamentos musculares principais.
-
-Campos planejados:
-
-- `id`
-- `code`
-- `display_name`
-- `active`
-- `sort_order`
-
-### `muscle_subgroups`
-
-Classifica subgrupos musculares vinculados a um grupamento principal.
-
-Campos planejados:
-
-- `id`
-- `muscle_group_id`
-- `code`
-- `display_name`
-- `active`
-- `sort_order`
+| Campo | Tipo | Obrigatório | Descricao |
+|---|---|---|---|
+| `id` | `BIGINT` | Sim | Identificador único do tipo de atividade. |
+| `code` | `VARCHAR` | Sim | Código estável do catálogo. |
+| `display_name` | `VARCHAR` | Sim | Nome para apresentação. |
+| `active` | `BOOLEAN` | Sim | Indica se o item está ativo. |
+| `sort_order` | `INTEGER` | Sim | Ordem de exibição. |
 
 ### `equipment_types`
 
 Classifica o tipo de equipamento exigido no exercício.
 
-Campos planejados:
+| Campo | Tipo | Obrigatório | Descricao |
+|---|---|---|---|
+| `id` | `BIGINT` | Sim | Identificador único do tipo de equipamento. |
+| `code` | `VARCHAR` | Sim | Código estável do catálogo. |
+| `display_name` | `VARCHAR` | Sim | Nome para apresentação. |
+| `active` | `BOOLEAN` | Sim | Indica se o item está ativo. |
+| `sort_order` | `INTEGER` | Sim | Ordem de exibição. |
 
-- `id`
-- `code`
-- `display_name`
-- `active`
-- `sort_order`
+### `muscle_groups`
 
-### `activity_types`
+Classifica grupamentos musculares principais.
 
-Classifica a natureza da atividade física.
+| Campo | Tipo | Obrigatório | Descricao |
+|---|---|---|---|
+| `id` | `BIGINT` | Sim | Identificador único do grupo muscular. |
+| `code` | `VARCHAR` | Sim | Código estável do catálogo. |
+| `display_name` | `VARCHAR` | Sim | Nome para apresentação. |
+| `active` | `BOOLEAN` | Sim | Indica se o item está ativo. |
+| `sort_order` | `INTEGER` | Sim | Ordem de exibição. |
 
-Campos planejados:
+### `muscle_subgroups`
 
-- `id`
-- `code`
-- `display_name`
-- `active`
-- `sort_order`
+Classifica subgrupos musculares vinculados a um grupamento principal.
+
+| Campo | Tipo | Obrigatório | Descricao |
+|---|---|---|---|
+| `id` | `BIGINT` | Sim | Identificador único do subgrupo muscular. |
+| `muscle_group_id` | `BIGINT` | Sim | Grupo muscular vinculado. |
+| `code` | `VARCHAR` | Sim | Código estável do catálogo. |
+| `display_name` | `VARCHAR` | Sim | Nome para apresentação. |
+| `active` | `BOOLEAN` | Sim | Indica se o item está ativo. |
+| `sort_order` | `INTEGER` | Sim | Ordem de exibição. |
+
+### `exercises`
+
+Catalogo central de exercícios disponíveis para composição futura dos treinos.
+
+| Campo | Tipo | Obrigatório | Descricao |
+|---|---|---|---|
+| `id` | `BIGINT` | Sim | Identificador único do exercise. |
+| `name` | `VARCHAR` | Sim | Nome do exercício. |
+| `equipment_type_id` | `BIGINT` | Sim | Tipo de equipamento vinculado. |
+| `activity_type_id` | `BIGINT` | Sim | Tipo de atividade vinculado. |
+| `unilateral` | `BOOLEAN` | Sim | Indica exercício unilateral. |
+| `compound` | `BOOLEAN` | Sim | Indica exercício composto. |
+| `suggested_rest_seconds` | `INTEGER` | Não | Descanso sugerido em segundos. |
+| `active` | `BOOLEAN` | Sim | Indica se o exercise está ativo. |
+| `created_at` | `TIMESTAMP` | Sim | Data e hora de criação. |
+| `updated_at` | `TIMESTAMP` | Não | Data e hora da última atualização. |
+
+### `exercise_muscle_targets`
+
+Associa exercises a subgrupos musculares e diferencia o papel do alvo muscular.
+
+| Campo | Tipo | Obrigatório | Descricao |
+|---|---|---|---|
+| `id` | `BIGINT` | Sim | Identificador único da associação. |
+| `exercise_id` | `BIGINT` | Sim | Exercise vinculado. |
+| `muscle_subgroup_id` | `BIGINT` | Sim | Subgrupo muscular vinculado. |
+| `target_role` | `VARCHAR` | Sim | Papel do alvo muscular: `PRIMARY`, `SECONDARY` ou `STABILIZER`. |
+| `active` | `BOOLEAN` | Sim | Indica se a associação está ativa. |
+| `created_at` | `TIMESTAMP` | Sim | Data e hora de criação. |
+| `updated_at` | `TIMESTAMP` | Não | Data e hora da última atualização. |
+
+## Tabelas Planejadas no Diagrama
+
+As tabelas abaixo aparecem no diagrama como blueprint de produto. Elas não devem ser tratadas como schema implementado enquanto não existirem migrations correspondentes.
 
 ### `training_goals`
 
@@ -185,37 +217,6 @@ Campos planejados:
 - `display_name`
 - `active`
 - `sort_order`
-
-### `exercises`
-
-Catalogo central de exercícios disponíveis para composição dos treinos.
-
-Campos planejados:
-
-- `id`
-- `name`
-- `equipment_type_id`
-- `activity_type_id`
-- `unilateral`
-- `compound`
-- `suggested_rest_seconds`
-- `active`
-- `created_at`
-- `updated_at`
-
-### `exercise_muscle_targets`
-
-Associa exercícios a subgrupos musculares e permite diferenciar papel principal/secundário do alvo muscular.
-
-Campos planejados:
-
-- `id`
-- `exercise_id`
-- `muscle_subgroup_id`
-- `target_role`
-- `active`
-- `created_at`
-- `updated_at`
 
 ### `workout_cycles`
 
@@ -278,6 +279,11 @@ Relacionamentos implementados:
 
 - `persons` 1:1 `users`
 - `persons` 1:N `body_metrics`
+- `equipment_types` 1:N `exercises`
+- `activity_types` 1:N `exercises`
+- `muscle_groups` 1:N `muscle_subgroups`
+- `muscle_subgroups` 1:N `exercise_muscle_targets`
+- `exercises` 1:N `exercise_muscle_targets`
 
 Relacionamentos planejados no diagrama:
 
@@ -286,11 +292,6 @@ Relacionamentos planejados no diagrama:
 - `workout_cycles` 1:N `workout_days`
 - `workout_days` 1:N `workout_activities`
 - `exercises` 1:N `workout_activities`
-- `equipment_types` 1:N `exercises`
-- `activity_types` 1:N `exercises`
-- `muscle_groups` 1:N `muscle_subgroups`
-- `muscle_subgroups` 1:N `exercise_muscle_targets`
-- `exercises` 1:N `exercise_muscle_targets`
 
 ## Fluxo Logico do Domínio
 
@@ -299,12 +300,13 @@ De forma resumida, o fluxo planejado funciona assim:
 1. uma `person` possui dados pessoais;
 2. um `user` referencia uma `person` para autenticar e acessar o sistema;
 3. `body_metrics` registra medições corporais da `person`;
-4. a mesma `person` poderá possuir varios `workout_cycles`;
-5. cada `workout_cycle` será criado com base em um `training_goal`;
-6. cada ciclo será dividido em varios `workout_days`;
-7. cada dia contera varias `workout_activities`;
-8. cada atividade apontará para um item do catálogo `exercises`;
-9. cada exercício será classificado por equipamento, tipo de atividade e alvos musculares.
+4. `exercises` registra o catálogo global controlado pelo sistema;
+5. cada exercise é classificado por equipamento, tipo de atividade e alvos musculares;
+6. a mesma `person` poderá possuir varios `workout_cycles` quando o módulo de treinos for implementado;
+7. cada `workout_cycle` será criado com base em um `training_goal`;
+8. cada ciclo será dividido em varios `workout_days`;
+9. cada dia contera varias `workout_activities`;
+10. cada atividade apontará para um item do catálogo `exercises`.
 
 ## Observações de Modelagem
 
@@ -313,6 +315,8 @@ De forma resumida, o fluxo planejado funciona assim:
 - `BodyMetrics` pertence a `PersonId`.
 - `users.person_id` é único no modelo atual.
 - `body_metrics.person_id` permite histórico N:1 de medições corporais por pessoa.
+- Catálogos de exercises são globais e controlados pelo sistema.
+- A API atual do catálogo expõe consultas e não CRUD público.
 - A imagem deste diagrama foi criada com o [dbdiagram.io](https://dbdiagram.io/).
 
 <p align="right"><a href="../../../README.md">Voltar para a documentação completa</a></p>

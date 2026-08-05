@@ -41,6 +41,8 @@ docs
 │   └── README.md
 ├── database
 │   └── README.md
+├── exercises
+│   └── README.md
 ├── diagram
 │   ├── README.md
 │   ├── er-sql
@@ -51,6 +53,8 @@ docs
 │   ├── sequence-diagram
 │   └── sequence-log-diagram
 ├── exceptions
+│   └── README.md
+├── filtering
 │   └── README.md
 ├── logging
 │   ├── README.md
@@ -66,7 +70,8 @@ docs
 │   ├── v0.2.0
 │   ├── v0.3.0
 │   ├── v0.4.0
-│   └── v0.5.0
+│   ├── v0.5.0
+│   └── v0.6.0
 ├── swagger
 │   ├── README.md
 │   ├── api-docs.md
@@ -95,6 +100,10 @@ src/main/java/com/ironcore
 │   │   ├── progress
 │   │   └── update
 │   ├── exception
+│   ├── exercise
+│   │   ├── catalog
+│   │   ├── port
+│   │   └── usecase
 │   ├── logging
 │   ├── person
 │   │   └── usecase
@@ -110,14 +119,38 @@ src/main/java/com/ironcore
 │           ├── initialchangepassword
 │           └── update
 ├── domain
+│   ├── activitytype
+│   │   ├── exception
+│   │   ├── model
+│   │   ├── repository
+│   │   └── valueobject
 │   ├── bodymetrics
 │   │   ├── exception
 │   │   ├── model
 │   │   ├── repository
 │   │   ├── service
 │   │   └── valueobject
+│   ├── equipmenttype
+│   │   ├── exception
+│   │   ├── model
+│   │   ├── repository
+│   │   └── valueobject
+│   ├── exercise
+│   │   ├── exception
+│   │   ├── model
+│   │   ├── repository
+│   │   └── valueobject
+│   ├── exercisemuscletarget
+│   │   ├── enums
+│   │   ├── exception
+│   │   ├── model
+│   │   ├── repository
+│   │   └── valueobject
 │   ├── exception
 │   ├── logging
+│   ├── muscle
+│   │   ├── musclegroup
+│   │   └── musclesubgroup
 │   ├── person
 │   │   ├── enums
 │   │   ├── exception
@@ -138,7 +171,12 @@ src/main/java/com/ironcore
 │   ├── exception
 │   ├── persistence
 │   │   ├── bodymetrics
+│   │   ├── activitytype
+│   │   ├── equipmenttype
+│   │   ├── exercise
+│   │   ├── exercisemuscletarget
 │   │   ├── logging
+│   │   ├── muscle
 │   │   ├── person
 │   │   ├── shared
 │   │   └── user
@@ -147,6 +185,7 @@ src/main/java/com/ironcore
     └── rest
         ├── auth
         ├── bodymetrics
+        ├── exercise
         ├── exception
         ├── person
         └── user
@@ -165,7 +204,19 @@ src/main/resources
         ├── V2__create_table_users.sql
         ├── V3__create_table_body_metrics.sql
         ├── V4__create_table_audit_log.sql
-        └── V5__create_table_error_log.sql
+        ├── V5__create_table_error_log.sql
+        ├── V6__create_tabela_activity_types.sql
+        ├── V7__create_table_equipment_types.sql
+        ├── V8__create_table_muscle_groups.sql
+        ├── V9__create_table_muscle_subgroups.sql
+        ├── V10__create_table_exercises.sql
+        ├── V11__create_table_exercise_muscle_targets.sql
+        ├── V12__seed_activity_types.sql
+        ├── V13__seed_equipment_types.sql
+        ├── V14__seed_muscle_groups.sql
+        ├── V15__seed_muscle_subgroups.sql
+        ├── V16__seed_exercises.sql
+        └── V17__seed_exercise_muscle_targets.sql
 ```
 
 ## Testes
@@ -176,18 +227,29 @@ src/test/java/com/ironcore
 ├── application
 │   ├── auth
 │   ├── bodymetrics
+│   ├── exercise
 │   ├── logging
 │   ├── person
 │   ├── shared
 │   └── user
 ├── domain
 │   ├── bodymetrics
+│   ├── activitytype
+│   ├── equipmenttype
+│   ├── exercise
+│   ├── exercisemuscletarget
+│   ├── muscle
 │   ├── person
 │   └── user
 ├── infrastructure
 │   ├── bootstrap
 │   ├── persistence
 │   │   ├── bodymetrics
+│   │   ├── activitytype
+│   │   ├── equipmenttype
+│   │   ├── exercise
+│   │   ├── exercisemuscletarget
+│   │   ├── muscle
 │   │   ├── person
 │   │   ├── shared
 │   │   └── user
@@ -196,6 +258,7 @@ src/test/java/com/ironcore
     └── rest
         ├── auth
         ├── bodymetrics
+        ├── exercise
         ├── person
         ├── support
         └── user
@@ -207,6 +270,7 @@ src/test/java/com/ironcore
 - `Person` representa dados pessoais.
 - `User` representa autenticação/acesso.
 - `BodyMetrics` representa métricas corporais da pessoa e usa `PersonId` como ownership interna.
+- `Exercise Catalog` representa catálogo global controlado pelo sistema, com consulta por endpoints REST e carga por migrations/seeds.
 - Diagramas podem conter blueprint planejado; confirmar o estado real por código, migrations e testes.
 
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>
