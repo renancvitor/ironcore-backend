@@ -2,6 +2,7 @@ package com.ironcore.interfaces.rest.exercise;
 
 import com.ironcore.application.exercise.usecase.*;
 import com.ironcore.domain.exercise.valueobject.ExerciseId;
+import com.ironcore.interfaces.rest.exercise.api.ExerciseApi;
 import com.ironcore.interfaces.rest.exercise.dto.GetExerciseByIdResponse;
 import com.ironcore.interfaces.rest.exercise.dto.ListExercisesRequest;
 import com.ironcore.interfaces.rest.exercise.dto.ListExercisesResponse;
@@ -17,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 @RequestMapping("/api/exercise-catalog/exercises")
 @RequiredArgsConstructor
-public class ExerciseController {
+public class ExerciseController implements ExerciseApi {
 
     private final GetExerciseByIdUseCase getExerciseByIdUseCase;
     private final ListExercisesUseCase listExercisesUseCase;
