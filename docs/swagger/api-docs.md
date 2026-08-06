@@ -76,5 +76,6 @@ Pontos principais de validação:
 - endpoints protegidos cobertos pelo security scheme global;
 - schemas de senha com `format: password`;
 - parâmetros de progresso expostos como `startDate` e `endDate`.
+- parâmetros de listagem de exercises expostos como `page`, `size`, `name`, `activityTypeId`, `equipmentTypeId`, `muscleGroupId`, `muscleSubgroupId` e `targetRole`.
 
 <p align="right"><a href="README.md">Voltar para Swagger/OpenAPI</a></p>

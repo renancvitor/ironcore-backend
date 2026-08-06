@@ -79,14 +79,14 @@ O desenvolvimento do projeto busca consolidar habilidades como:
 
 <h2 id="status-atual-do-projeto" align="center">Status Atual do Projeto</h2>
 
-O <b>IronCore</b> está em fase inicial de desenvolvimento. O backend já possui uma fundação funcional para autenticação single-user, pessoa vinculada ao usuário autenticado, métricas corporais, persistência relacional, logging, exceptions e testes automatizados.
+O <b>IronCore</b> está em fase inicial de desenvolvimento. O backend já possui uma fundação funcional para autenticação single-user, pessoa vinculada ao usuário autenticado, métricas corporais, catálogo global de exercícios, persistência relacional, logging, exceptions e testes automatizados.
 
 ### Já existe no projeto
 - Estrutura inicial do backend com Spring Boot.
 - Configuração Maven com Java 21.
 - Organização em camadas com abordagem pragmática inspirada em DDD.
-- Domínios iniciais de pessoa, usuário, métricas corporais e logging.
-- Migrations Flyway para `persons`, `users`, `body_metrics`, `audit_logs` e `error_logs`.
+- Domínios iniciais de pessoa, usuário, métricas corporais, exercise catalog e logging.
+- Migrations Flyway para `persons`, `users`, `body_metrics`, `audit_logs`, `error_logs`, catálogos auxiliares, `exercises` e `exercise_muscle_targets`.
 - Persistência relacional com PostgreSQL.
 - Logging persistido de auditoria e erro.
 - Bootstrap opcional de pessoa e usuário único vinculado.
@@ -94,6 +94,7 @@ O <b>IronCore</b> está em fase inicial de desenvolvimento. O backend já possui
 - Troca obrigatória de senha inicial, troca normal de senha, alteração de nickname e consulta do usuário autenticado.
 - Fluxo autenticado de pessoa com atualização de dados pessoais.
 - Fluxo autenticado de métricas corporais com ownership por `PersonId`, criação, atualização, exclusão, consulta por id, consulta do último registro, listagem paginada e progresso.
+- Catálogo global de exercises controlado pelo sistema, com catálogos auxiliares, seeds iniciais, listagem paginada, filtros combinados e detalhe por id.
 - Documentação Swagger/OpenAPI para os contratos REST atuais.
 - Testes automatizados e CI executando build/test.
 - Documentação visual com diagramas de domínio, arquitetura e fluxos principais.
@@ -103,7 +104,7 @@ O <b>IronCore</b> está em fase inicial de desenvolvimento. O backend já possui
 - MongoDB sobe localmente via Docker Compose, mas ainda não há uso funcional de domínio/documentos.
 
 ### Planejado para as próximas etapas
-- Fluxos REST para exercícios e treinos.
+- Fluxos REST para treinos.
 - Integração futura com frontend Angular.
 - Fluxo de geração de treino com apoio de IA.
 - Persistência documental para artefatos/contexto de IA, caso necessária.
@@ -160,6 +161,13 @@ Migrations existentes no repositório:
 - `V3__create_table_body_metrics.sql`: cria a tabela `body_metrics`.
 - `V4__create_table_audit_log.sql`: cria a tabela `audit_logs`.
 - `V5__create_table_error_log.sql`: cria a tabela `error_logs`.
+- `V6__create_tabela_activity_types.sql`: cria a tabela `activity_types`.
+- `V7__create_table_equipment_types.sql`: cria a tabela `equipment_types`.
+- `V8__create_table_muscle_groups.sql`: cria a tabela `muscle_groups`.
+- `V9__create_table_muscle_subgroups.sql`: cria a tabela `muscle_subgroups`.
+- `V10__create_table_exercises.sql`: cria a tabela `exercises`.
+- `V11__create_table_exercise_muscle_targets.sql`: cria a tabela `exercise_muscle_targets`.
+- `V12__seed_activity_types.sql` a `V17__seed_exercise_muscle_targets.sql`: carregam seeds iniciais do catálogo de exercises.
 
 Documentação detalhada: [Banco de Dados e Migrations](docs/database/README.md).
 
@@ -181,7 +189,15 @@ A documentação detalhada está disponível em [Estratégia de Logging](docs/lo
 
 <h2 id="estrategia-de-filtragem-nas-listagens" align="center">Estratégia de Filtragem nas Listagens</h2>
 
-> Esta seção será implementada por completo conforme o projeto evoluir.
+O projeto usa estratégias diferentes de consulta conforme a complexidade da listagem.
+
+- Derived queries do Spring Data JPA são usadas para consultas simples e expressivas, como busca por id ativo, listagem de catálogos ativos ordenados por `sortOrder` e listagem de body metrics por pessoa.
+- JPQL é usado quando a consulta precisa de projection explícita, como nos dados de progresso de body metrics.
+- Specifications são usadas quando a listagem possui filtros opcionais combináveis, como em `GET /api/exercise-catalog/exercises`.
+
+Na listagem de exercises, a `Specification` combina filtros por `name`, `activityTypeId`, `equipmentTypeId`, `muscleGroupId`, `muscleSubgroupId` e `targetRole`, mantendo a regra base de retornar apenas exercises ativos. Filtros musculares usam subquery `exists` sobre `exercise_muscle_targets`.
+
+Documentação detalhada: [Estratégia de Filtragem](docs/filtering/README.md).
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
@@ -240,12 +256,13 @@ As funcionalidades abaixo representam o escopo funcional planejado para o projet
 - Consulta da evolução da pessoa ao longo do tempo.
 
 ### Catálogo de Exercícios
-- Cadastro e manutenção de exercícios.
-- Classificação por grupo muscular.
-- Classificação por tipo de equipamento.
-- Classificação por tipo de atividade, como força, cárdio, core, mobilidade e recuperação.
-- Controle de exercícios ativos/inativos.
-- Informações auxiliares como descanso sugerido e indicação de exercício unilateral ou composto.
+- Catálogo global controlado pelo sistema, sem CRUD público na API atual.
+- Catálogos auxiliares de tipo de atividade, tipo de equipamento, grupo muscular e subgrupo muscular.
+- Classificação por tipo de atividade, tipo de equipamento e músculos-alvo.
+- Associação de músculos-alvo com papéis `PRIMARY`, `SECONDARY` e `STABILIZER`.
+- Listagem paginada de exercises ativos com filtros combinados.
+- Consulta detalhada por id com targets musculares.
+- Seeds iniciais versionados por Flyway.
 
 ### Planejamento de Treinos
 - Criação de ciclos de treino por usuário.
@@ -279,7 +296,7 @@ As funcionalidades abaixo representam o escopo funcional planejado para o projet
 
 <h3 id="api---swagger">🌐 <strong>API - Swagger</strong></h3>
 
-O projeto possui documentação [Swagger/OpenAPI](https://swagger.io/specification/) gerada com Springdoc para os contratos REST atuais de autenticação, usuário autenticado, pessoa e métricas corporais.
+O projeto possui documentação [Swagger/OpenAPI](https://swagger.io/specification/) gerada com Springdoc para os contratos REST atuais de autenticação, usuário autenticado, pessoa, métricas corporais e exercise catalog.
 
 A documentação técnica está disponível em [Swagger/OpenAPI](./docs/swagger/README.md).
 
@@ -326,7 +343,7 @@ Esse índice central reúne os principais documentos sobre arquitetura, banco de
 
 O projeto possui testes automatizados cobrindo domínio, aplicação, infraestrutura, interfaces REST, segurança e integração com contexto Spring.
 
-A suíte atual inclui testes unitários de models, value objects, use cases, services, mappers, JWT, filtros de segurança e cálculos de métricas corporais. Também há testes de integração para contexto Spring, autenticação/security e persistência com PostgreSQL via Testcontainers.
+A suíte atual inclui testes unitários de models, value objects, use cases, services, mappers, JWT, filtros de segurança, cálculos de métricas corporais e consultas do exercise catalog. Também há testes de integração para contexto Spring, autenticação/security, catálogo de exercises e persistência com PostgreSQL via Testcontainers.
 
 Para executar a validação local:
 ```bash
@@ -344,7 +361,7 @@ Documentação detalhada: [Testes Automatizados](docs/testing/README.md).
 <h2 id="testando-a-api-via-insomnia" align="center">Testando a API via Insomnia</h2>
 
 > Esta seção será atualizada com uma coleção ou roteiro próprio quando os fluxos de API forem estabilizados.
-> O projeto já possui endpoints de autenticação, usuário autenticado, pessoa e body metrics.
+> O projeto já possui endpoints de autenticação, usuário autenticado, pessoa, body metrics e exercise catalog.
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
@@ -380,7 +397,9 @@ docs
  ├── body-metrics
  ├── database
  ├── diagram
+ ├── exercises
  ├── exceptions
+ ├── filtering
  ├── logging
  ├── persons
  ├── project-structure
@@ -447,7 +466,7 @@ SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
 ./mvnw clean verify --batch-mode
 ```
 
-8. Acesse a aplicação pela porta configurada (por padrão http://localhost:8080). O projeto possui endpoints de autenticação, usuário autenticado, pessoa e body metrics. A documentação Swagger UI fica disponível em `http://localhost:8080/swagger-ui/index.html`.<br>
+8. Acesse a aplicação pela porta configurada (por padrão http://localhost:8080). O projeto possui endpoints de autenticação, usuário autenticado, pessoa, body metrics e exercise catalog. A documentação Swagger UI fica disponível em `http://localhost:8080/swagger-ui/index.html`.<br>
 ⚠️ **Lembre-se de manter o Docker rodando enquanto estiver utilizando a aplicação.**
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
