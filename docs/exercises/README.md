@@ -100,6 +100,8 @@ Base path:
 /api/exercise-catalog
 ```
 
+Os endpoints abaixo seguem a configuração global de segurança do backend e exigem autenticação por cookie JWT `access_token`. Eles são endpoints de consulta do catálogo, não endpoints públicos anônimos.
+
 Catálogos auxiliares:
 
 - `GET /api/exercise-catalog/activity-types`
@@ -194,6 +196,8 @@ O seed atual inclui:
 Como `exercises` ainda não possui um código natural estável, o seed de `exercise_muscle_targets` resolve cada exercise pela combinação exata de `name`, `equipment_type.code` e `activity_type.code`.
 
 A migration `V17` possui validações estruturais para impedir target role inválido, associações duplicadas, referências não resolvidas e exercises sem pelo menos um alvo `PRIMARY`.
+
+Durante o planejamento do módulo, a carga temporária por `INSERT` manual era uma alternativa aceitável para desenvolvimento local. No estado final desta release, essa estratégia foi substituída por migrations de seed versionadas, mantendo a carga inicial reprodutível em banco limpo e rastreável pelo histórico do Flyway.
 
 ## Auditoria
 

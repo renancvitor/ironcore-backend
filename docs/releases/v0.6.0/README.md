@@ -34,7 +34,7 @@ Esta release está associada ao milestone GitHub `v9.0.0`, cujo foco foi entrega
 
 - O catálogo é global e controlado pelo sistema.
 - Não há CRUD público para catálogos auxiliares, exercises ou exercise muscle targets.
-- A API atual expõe apenas endpoints de consulta.
+- A API atual expõe apenas endpoints de consulta, protegidos pela autenticação global por cookie JWT `access_token`.
 - Registros expostos pelas listagens são filtrados por `active = true`.
 - Catálogos auxiliares usam `code` estável e `displayName` para apresentação.
 - Catálogos auxiliares usam `sortOrder` para ordenação previsível.
@@ -52,6 +52,8 @@ Base path:
 ```http
 /api/exercise-catalog
 ```
+
+Os endpoints do catálogo exigem autenticação por cookie JWT `access_token`.
 
 Catálogos auxiliares:
 
@@ -107,6 +109,8 @@ Migrations relacionadas:
 - `V15__seed_muscle_subgroups.sql`
 - `V16__seed_exercises.sql`
 - `V17__seed_exercise_muscle_targets.sql`
+
+A estratégia temporária de carga por `INSERT` manual, prevista durante o planejamento do módulo, foi substituída nesta release por seeds versionados via Flyway. Assim, o catálogo inicial passa a ser aplicado de forma reprodutível junto das migrations.
 
 Modelo central:
 
