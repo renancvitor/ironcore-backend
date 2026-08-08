@@ -108,12 +108,18 @@ public class WorkoutCycle {
             String notes,
             LocalDateTime updatedAt
     ) {
-        this.name = requireNonBlank(name, "Nome não pode ser nulo ou vazio.");
-        this.trainingGoalId = requireNonNull(trainingGoalId, "Objetivo de treino é obrigatório.");
-        this.desiredDurationMonths = requirePositiveIfPresent(desiredDurationMonths,
+        String validatedName = requireNonBlank(name, "Nome não pode ser nulo ou vazio.");
+        TrainingGoalId validatedTrainingGoalId = requireNonNull(trainingGoalId,
+                "Objetivo de treino é obrigatório.");
+        Integer validatedDesiredDurationMonths = requirePositiveIfPresent(desiredDurationMonths,
                 "Duração desejada deve ser positiva.");
+        LocalDateTime validatedUpdatedAt = requireNonNull(updatedAt, "Data de atualização é obrigatória.");
+
+        this.name = validatedName;
+        this.trainingGoalId = validatedTrainingGoalId;
+        this.desiredDurationMonths = validatedDesiredDurationMonths;
         this.notes = notes;
-        markUpdatedAt(updatedAt);
+        markUpdatedAt(validatedUpdatedAt);
     }
 
     public void startCycle(LocalDate startDate) {
