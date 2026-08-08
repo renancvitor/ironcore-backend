@@ -33,7 +33,7 @@ class LeanMassCalculatorTest {
 
         @Test
         void shouldCalculateLeanMassFromBodyMetrics() {
-            BodyMetrics metrics = new BodyMetrics(
+            BodyMetrics metrics = BodyMetrics.restore(
                     null,
                     personId(1L),
                     LocalDateTime.now(),

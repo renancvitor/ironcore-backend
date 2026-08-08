@@ -24,7 +24,7 @@ public class ActivityTypeMapper {
 
     public static ActivityType toDomain(ActivityTypeEntity entity) {
         try {
-            return new ActivityType(
+            return ActivityType.restore(
                     new ActivityTypeId(entity.getId()),
                     new ActivityTypeCode(entity.getCode()),
                     entity.getDisplayName(),

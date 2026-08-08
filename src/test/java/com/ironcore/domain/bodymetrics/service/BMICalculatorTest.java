@@ -32,7 +32,7 @@ class BMICalculatorTest {
 
         @Test
         void shouldCalculateBmiFromBodyMetrics() {
-            BodyMetrics metrics = new BodyMetrics(
+            BodyMetrics metrics = BodyMetrics.restore(
                     null,
                     personId(1L),
                     LocalDateTime.now(),

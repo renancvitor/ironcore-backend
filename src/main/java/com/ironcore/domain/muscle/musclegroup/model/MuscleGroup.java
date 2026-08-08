@@ -14,7 +14,7 @@ public class MuscleGroup {
     private final Boolean active;
     private final Integer sortOrder;
 
-    public MuscleGroup(MuscleGroupId id, MuscleGroupCode code, String displayName, Boolean active, Integer sortOrder) {
+    private MuscleGroup(MuscleGroupId id, MuscleGroupCode code, String displayName, Boolean active, Integer sortOrder) {
         this.id = requireNonNull(id, "Id não pode ser nulo.");
         this.code = requireNonNull(code, "Código não pode ser nulo.");
         this.displayName = requireNonBlank(displayName, "Nome de exibição não pode ser nulo ou vazio.");

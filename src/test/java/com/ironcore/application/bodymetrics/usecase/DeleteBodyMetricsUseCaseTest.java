@@ -77,7 +77,7 @@ public class DeleteBodyMetricsUseCaseTest {
             User user = activeUser();
             BodyMetricsId bodyMetricsId = new BodyMetricsId(1L);
             DeleteBodyMetricsCommand command = new DeleteBodyMetricsCommand(bodyMetricsId, user.getId());
-            BodyMetrics bodyMetrics = new BodyMetrics(
+            BodyMetrics bodyMetrics = BodyMetrics.restore(
                     bodyMetricsId,
                     user.getPersonId(),
                     LocalDateTime.of(2026, 5, 14, 10, 0),

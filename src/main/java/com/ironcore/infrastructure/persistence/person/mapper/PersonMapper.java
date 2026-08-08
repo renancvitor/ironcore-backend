@@ -26,7 +26,7 @@ public class PersonMapper {
 
     public static Person toDomain(PersonEntity entity) {
         try {
-            return new Person(
+            return Person.restore(
                     new PersonId(entity.getId()),
                     entity.getName(),
                     new Sex(entity.getSex()),

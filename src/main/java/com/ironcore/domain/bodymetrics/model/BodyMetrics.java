@@ -23,7 +23,7 @@ public class BodyMetrics {
     private LocalDateTime updatedAt;
     private String notes;
 
-    public BodyMetrics(BodyMetricsId id, PersonId personId, LocalDateTime measuredAt, BodyWeightKg weight,
+    private BodyMetrics(BodyMetricsId id, PersonId personId, LocalDateTime measuredAt, BodyWeightKg weight,
                        BodyHeightCm height, BodyCircumferences circumferences, BMI bmi,
                        BodyFatPercentage bodyFatPercentage, FatMassKg fatMassKg,
                        LeanMassKg leanMassKg, LocalDateTime updatedAt, String notes) {
