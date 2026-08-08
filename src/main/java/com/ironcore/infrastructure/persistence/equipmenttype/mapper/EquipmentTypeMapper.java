@@ -24,7 +24,7 @@ public class EquipmentTypeMapper {
 
     public static EquipmentType toDomain(EquipmentTypeEntity equipmentTypeEntity) {
         try {
-            return new EquipmentType(
+            return EquipmentType.restore(
                     new EquipmentTypeId(equipmentTypeEntity.getId()),
                     new EquipmentTypeCode(equipmentTypeEntity.getCode()),
                     equipmentTypeEntity.getDisplayName(),

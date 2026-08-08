@@ -14,7 +14,7 @@ public class TrainingGoal {
     private final Boolean active;
     private final Integer sortOrder;
 
-    public TrainingGoal(TrainingGoalId id, TrainingGoalCode code, String displayName, Boolean active,
+    private TrainingGoal(TrainingGoalId id, TrainingGoalCode code, String displayName, Boolean active,
                         Integer sortOrder) {
         this.id = requireNonNull(id, "Id não pode ser nulo.");
         this.code = requireNonNull(code, "Código não pode ser nulo.");

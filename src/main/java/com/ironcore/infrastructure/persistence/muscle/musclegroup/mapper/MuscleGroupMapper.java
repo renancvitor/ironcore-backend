@@ -24,7 +24,7 @@ public class MuscleGroupMapper {
 
     public static MuscleGroup toDomain(MuscleGroupEntity muscleGroupEntity) {
         try {
-            return new MuscleGroup(
+            return MuscleGroup.restore(
                     new MuscleGroupId(muscleGroupEntity.getId()),
                     new MuscleGroupCode(muscleGroupEntity.getCode()),
                     muscleGroupEntity.getDisplayName(),

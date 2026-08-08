@@ -18,7 +18,7 @@ public class Person {
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public Person(PersonId id, String name, Sex sex, BirthDate birthDate, LocalDateTime createdAt,
+    private Person(PersonId id, String name, Sex sex, BirthDate birthDate, LocalDateTime createdAt,
                   LocalDateTime updatedAt) {
         this.id = id;
         this.name = requireNonBlank(name, "Nome não pode ser nulo ou vazio.");

@@ -36,7 +36,7 @@ public class ExerciseMuscleTargetMapper {
 
     public static ExerciseMuscleTarget toDomain(ExerciseMuscleTargetEntity exerciseMuscleTargetEntity) {
         try {
-            return new ExerciseMuscleTarget(
+            return ExerciseMuscleTarget.restore(
                     new ExerciseMuscleTargetId(exerciseMuscleTargetEntity.getId()),
                     new ExerciseId(exerciseMuscleTargetEntity.getExercise().getId()),
                     new MuscleSubgroupId(exerciseMuscleTargetEntity.getMuscleSubgroup().getId()),

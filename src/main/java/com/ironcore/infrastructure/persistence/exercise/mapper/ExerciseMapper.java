@@ -36,7 +36,7 @@ public class ExerciseMapper {
 
     public static Exercise toDomain(ExerciseEntity exerciseEntity) {
         try {
-            return new Exercise(
+            return Exercise.restore(
                 new ExerciseId(exerciseEntity.getId()),
                 exerciseEntity.getName(),
                 new EquipmentTypeId(exerciseEntity.getEquipmentType().getId()),
