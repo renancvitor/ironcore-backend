@@ -15,17 +15,17 @@ public class WorkoutDay {
     private final WorkoutCycleId workoutCycleId;
     private WeekDay weekDay;
     private String title;
-    private Integer sortOrder;
+    private Integer orderIndex;
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    private WorkoutDay(WorkoutDayId id,  WorkoutCycleId workoutCycleId, WeekDay weekDay, String title,
-            Integer sortOrder, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    private WorkoutDay(WorkoutDayId id, WorkoutCycleId workoutCycleId, WeekDay weekDay, String title,
+                       Integer orderIndex, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.workoutCycleId = requireNonNull(workoutCycleId, "Ciclo de treino não pode ser nulo.");
         this.weekDay = requireNonNull(weekDay, "Dia da semana não pode ser nulo.");
         this.title = requireNonBlank(title, "Título não pode ser nulo ou vazio.");
-        this.sortOrder = requirePositive(sortOrder, "Ordem de exibição deve ser maior que zero.");
+        this.orderIndex = requirePositive(orderIndex, "Ordem de exibição deve ser maior que zero.");
         this.createdAt = requireNonNull(createdAt, "Data de criação é obrigatória.");
         this.updatedAt = updatedAt;
     }
@@ -81,7 +81,7 @@ public class WorkoutDay {
 
         this.weekDay = validatedWeekDay;
         this.title = validatedTitle;
-        this.sortOrder = validatedSortOrder;
+        this.orderIndex = validatedSortOrder;
         markUpdatedAt(validatedUpdatedAt);
     }
 
