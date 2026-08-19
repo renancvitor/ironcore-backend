@@ -28,7 +28,7 @@ class WorkoutDayTest {
             assertThat(workoutDay.getWorkoutCycleId()).isEqualTo(WORKOUT_CYCLE_ID);
             assertThat(workoutDay.getWeekDay()).isEqualTo(WeekDay.MONDAY);
             assertThat(workoutDay.getTitle()).isEqualTo("Treino de membros superiores");
-            assertThat(workoutDay.getOrderIndex()).isEqualTo(1);
+            assertThat(workoutDay.getSortOrder()).isEqualTo(1);
             assertThat(workoutDay.getCreatedAt()).isEqualTo(CREATED_AT);
             assertThat(workoutDay.getUpdatedAt()).isNull();
         }
@@ -41,7 +41,7 @@ class WorkoutDayTest {
             assertThat(workoutDay.getWorkoutCycleId()).isEqualTo(WORKOUT_CYCLE_ID);
             assertThat(workoutDay.getWeekDay()).isEqualTo(WeekDay.WEDNESDAY);
             assertThat(workoutDay.getTitle()).isEqualTo("Treino de membros inferiores");
-            assertThat(workoutDay.getOrderIndex()).isEqualTo(2);
+            assertThat(workoutDay.getSortOrder()).isEqualTo(2);
             assertThat(workoutDay.getCreatedAt()).isEqualTo(CREATED_AT);
             assertThat(workoutDay.getUpdatedAt()).isEqualTo(UPDATED_AT);
         }
@@ -63,7 +63,7 @@ class WorkoutDayTest {
 
             assertThat(workoutDay.getWeekDay()).isEqualTo(WeekDay.FRIDAY);
             assertThat(workoutDay.getTitle()).isEqualTo("Treino de corpo inteiro");
-            assertThat(workoutDay.getOrderIndex()).isEqualTo(3);
+            assertThat(workoutDay.getSortOrder()).isEqualTo(3);
             assertThat(workoutDay.getUpdatedAt()).isEqualTo(UPDATED_AT);
         }
     }
@@ -106,7 +106,7 @@ class WorkoutDayTest {
         private void assertInitialEditableState(WorkoutDay workoutDay) {
             assertThat(workoutDay.getWeekDay()).isEqualTo(WeekDay.MONDAY);
             assertThat(workoutDay.getTitle()).isEqualTo("Treino de membros superiores");
-            assertThat(workoutDay.getOrderIndex()).isEqualTo(1);
+            assertThat(workoutDay.getSortOrder()).isEqualTo(1);
             assertThat(workoutDay.getUpdatedAt()).isNull();
         }
     }

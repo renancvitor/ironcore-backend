@@ -30,7 +30,7 @@ class WorkoutDayMapperTest {
             assertThat(entity.getWorkoutCycle().getId()).isEqualTo(1L);
             assertThat(entity.getWeekDay()).isEqualTo(WeekDay.WEDNESDAY);
             assertThat(entity.getTitle()).isEqualTo("Treino de membros inferiores");
-            assertThat(entity.getOrderIndex()).isEqualTo(2);
+            assertThat(entity.getSortOrder()).isEqualTo(2);
             assertThat(entity.getCreatedAt()).isEqualTo(CREATED_AT);
             assertThat(entity.getUpdatedAt()).isEqualTo(UPDATED_AT);
         }
@@ -49,7 +49,7 @@ class WorkoutDayMapperTest {
             assertThat(workoutDay.getWorkoutCycleId()).isEqualTo(new WorkoutCycleId(1L));
             assertThat(workoutDay.getWeekDay()).isEqualTo(WeekDay.WEDNESDAY);
             assertThat(workoutDay.getTitle()).isEqualTo("Treino de membros inferiores");
-            assertThat(workoutDay.getOrderIndex()).isEqualTo(2);
+            assertThat(workoutDay.getSortOrder()).isEqualTo(2);
             assertThat(workoutDay.getCreatedAt()).isEqualTo(CREATED_AT);
             assertThat(workoutDay.getUpdatedAt()).isEqualTo(UPDATED_AT);
         }

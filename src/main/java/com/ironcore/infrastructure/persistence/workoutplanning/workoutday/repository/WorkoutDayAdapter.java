@@ -93,7 +93,7 @@ public class WorkoutDayAdapter implements WorkoutDayRepository {
                     "Id do ciclo de treino não pode ser nulo."
             );
 
-            entities = workoutDayJpaRepository.findByWorkoutCycle_IdOrderByOrderIndexAsc(workoutCycleIdValue);
+            entities = workoutDayJpaRepository.findByWorkoutCycle_IdOrderByWeekDayAscSortOrderAsc(workoutCycleIdValue);
         } catch (RuntimeException exception) {
             throw new PersistenceException("Falha ao buscar workout days por workout cycle id.", exception);
         }
