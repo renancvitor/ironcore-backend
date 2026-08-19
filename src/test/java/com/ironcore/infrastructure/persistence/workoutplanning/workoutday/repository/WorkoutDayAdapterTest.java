@@ -153,19 +153,19 @@ class WorkoutDayAdapterTest {
 
         @Test
         void shouldFindWorkoutDaysByWorkoutCycleId() {
-            when(workoutDayJpaRepository.findByWorkoutCycle_IdOrderByOrderIndexAsc(1L))
+            when(workoutDayJpaRepository.findByWorkoutCycle_IdOrderByWeekDayAscSortOrderAsc(1L))
                     .thenReturn(List.of(workoutDayEntity()));
 
             List<WorkoutDay> result = adapter.findByWorkoutCycleId(new WorkoutCycleId(1L));
 
             assertThat(result).hasSize(1);
             assertThat(result.getFirst().getWorkoutCycleId()).isEqualTo(new WorkoutCycleId(1L));
-            verify(workoutDayJpaRepository).findByWorkoutCycle_IdOrderByOrderIndexAsc(1L);
+            verify(workoutDayJpaRepository).findByWorkoutCycle_IdOrderByWeekDayAscSortOrderAsc(1L);
         }
 
         @Test
         void shouldWrapRepositoryFailure() {
-            when(workoutDayJpaRepository.findByWorkoutCycle_IdOrderByOrderIndexAsc(1L))
+            when(workoutDayJpaRepository.findByWorkoutCycle_IdOrderByWeekDayAscSortOrderAsc(1L))
                     .thenThrow(new RuntimeException("database unavailable"));
             WorkoutCycleId workoutCycleId = new WorkoutCycleId(1L);
 
@@ -176,7 +176,7 @@ class WorkoutDayAdapterTest {
 
         @Test
         void shouldWrapMappingFailure() {
-            when(workoutDayJpaRepository.findByWorkoutCycle_IdOrderByOrderIndexAsc(1L))
+            when(workoutDayJpaRepository.findByWorkoutCycle_IdOrderByWeekDayAscSortOrderAsc(1L))
                     .thenReturn(List.of(invalidWorkoutDayEntity()));
             WorkoutCycleId workoutCycleId = new WorkoutCycleId(1L);
 
