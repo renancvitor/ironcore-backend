@@ -10,5 +10,5 @@ public interface WorkoutDayJpaRepository extends JpaRepository<WorkoutDayEntity,
 
     Optional<WorkoutDayEntity> findByIdAndWorkoutCycle_Person_Id(Long id, Long personId);
 
-    List<WorkoutDayEntity> findByWorkoutCycle_IdOrderByOrderIndexAsc(Long workoutCycleId);
+    List<WorkoutDayEntity> findByWorkoutCycle_IdOrderByWeekDayAscSortOrderAsc(Long workoutCycleId);
 }

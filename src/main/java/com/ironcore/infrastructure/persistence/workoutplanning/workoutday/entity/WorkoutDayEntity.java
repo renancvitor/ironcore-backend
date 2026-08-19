@@ -2,6 +2,7 @@ package com.ironcore.infrastructure.persistence.workoutplanning.workoutday.entit
 
 import com.ironcore.domain.workoutplanning.workoutday.enums.WeekDay;
 import com.ironcore.infrastructure.persistence.workoutplanning.workoutcycle.entity.WorkoutCycleEntity;
+import com.ironcore.infrastructure.persistence.workoutplanning.workoutday.converter.WeekDayConverter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -26,15 +27,15 @@ public class WorkoutDayEntity {
     @JoinColumn(name = "workout_cycle_id", nullable = false)
     private WorkoutCycleEntity workoutCycle;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "week_day", nullable = false, length = 20)
+    @Convert(converter = WeekDayConverter.class)
+    @Column(name = "week_day", nullable = false)
     private WeekDay weekDay;
 
     @Column(nullable = false, length = 100)
     private String title;
 
-    @Column(name = "order_index", nullable = false)
-    private Integer orderIndex;
+    @Column(name = "sort_order", nullable = false)
+    private Integer sortOrder;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

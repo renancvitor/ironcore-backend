@@ -16,7 +16,7 @@ public class WorkoutDayMapper {
                     workoutCycle,
                     workoutDay.getWeekDay(),
                     workoutDay.getTitle(),
-                    workoutDay.getOrderIndex(),
+                    workoutDay.getSortOrder(),
                     workoutDay.getCreatedAt(),
                     workoutDay.getUpdatedAt()
             );
@@ -32,7 +32,7 @@ public class WorkoutDayMapper {
                     new WorkoutCycleId(entity.getWorkoutCycle().getId()),
                     entity.getWeekDay(),
                     entity.getTitle(),
-                    entity.getOrderIndex(),
+                    entity.getSortOrder(),
                     entity.getCreatedAt(),
                     entity.getUpdatedAt()
             );
