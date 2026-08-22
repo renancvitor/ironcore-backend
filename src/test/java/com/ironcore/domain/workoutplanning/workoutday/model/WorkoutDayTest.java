@@ -55,14 +55,25 @@ class WorkoutDayTest {
             WorkoutDay workoutDay = workoutDayWithoutId();
 
             workoutDay.updateDay(
-                    WeekDay.FRIDAY,
                     " Treino de corpo inteiro ",
+                    UPDATED_AT
+            );
+
+            assertThat(workoutDay.getTitle()).isEqualTo("Treino de corpo inteiro");
+            assertThat(workoutDay.getUpdatedAt()).isEqualTo(UPDATED_AT);
+        }
+
+        @Test
+        void shouldReorderWorkoutDay() {
+            WorkoutDay workoutDay = workoutDayWithoutId();
+
+            workoutDay.reorder(
+                    WeekDay.FRIDAY,
                     3,
                     UPDATED_AT
             );
 
             assertThat(workoutDay.getWeekDay()).isEqualTo(WeekDay.FRIDAY);
-            assertThat(workoutDay.getTitle()).isEqualTo("Treino de corpo inteiro");
             assertThat(workoutDay.getSortOrder()).isEqualTo(3);
             assertThat(workoutDay.getUpdatedAt()).isEqualTo(UPDATED_AT);
         }
@@ -76,9 +87,8 @@ class WorkoutDayTest {
             WorkoutDay workoutDay = workoutDayWithoutId();
 
             assertThatExceptionOfType(InvalidWorkoutDayException.class)
-                    .isThrownBy(() -> workoutDay.updateDay(
+                    .isThrownBy(() -> workoutDay.reorder(
                             WeekDay.FRIDAY,
-                            "Treino de corpo inteiro",
                             0,
                             UPDATED_AT
                     ))
@@ -93,9 +103,7 @@ class WorkoutDayTest {
 
             assertThatExceptionOfType(InvalidWorkoutDayException.class)
                     .isThrownBy(() -> workoutDay.updateDay(
-                            WeekDay.FRIDAY,
                             "Treino de corpo inteiro",
-                            3,
                             null
                     ))
                     .withMessage("Data de atualização é obrigatória.");
