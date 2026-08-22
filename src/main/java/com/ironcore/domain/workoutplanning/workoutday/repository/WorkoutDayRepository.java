@@ -15,4 +15,6 @@ public interface WorkoutDayRepository {
     Optional<WorkoutDay> findByIdAndPersonId(WorkoutDayId id, PersonId personId);
 
     List<WorkoutDay> findByWorkoutCycleId(WorkoutCycleId workoutCycleId);
+
+    void deleteById(WorkoutDayId id);
 }
