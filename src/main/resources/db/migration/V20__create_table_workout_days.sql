@@ -9,7 +9,7 @@ CREATE TABLE workout_days(
 
     CONSTRAINT fk_workout_day_workout_cycle FOREIGN KEY (workout_cycle_id) REFERENCES workout_cycles(id),
 
-    CONSTRAINT uk_workout_days_association UNIQUE (workout_cycle_id, week_day, sort_order),
+    CONSTRAINT uk_workout_days_association UNIQUE (workout_cycle_id, week_day, sort_order) DEFERRABLE INITIALLY DEFERRED,
 
     CONSTRAINT ck_workout_days_week_day CHECK (week_day BETWEEN 1 AND 7),
 
