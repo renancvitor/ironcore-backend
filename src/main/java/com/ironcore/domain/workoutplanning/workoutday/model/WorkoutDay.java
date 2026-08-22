@@ -69,18 +69,26 @@ public class WorkoutDay {
     }
 
     public void updateDay(
-            WeekDay weekDay,
             String title,
+            LocalDateTime updatedAt
+    ) {
+        String validatedTitle = requireNonBlank(title, "Título não pode ser nulo ou vazio.");
+        LocalDateTime validatedUpdatedAt = requireNonNull(updatedAt, "Data de atualização é obrigatória.");
+
+        this.title = validatedTitle;
+        markUpdatedAt(validatedUpdatedAt);
+    }
+
+    public void reorder(
+            WeekDay weekDay,
             Integer sortOrder,
             LocalDateTime updatedAt
     ) {
         WeekDay validatedWeekDay = requireNonNull(weekDay, "Dia da semana não pode ser nulo.");
-        String validatedTitle = requireNonBlank(title, "Título não pode ser nulo ou vazio.");
         Integer validatedSortOrder = requirePositive(sortOrder, "Ordem de exibição deve ser maior que zero.");
         LocalDateTime validatedUpdatedAt = requireNonNull(updatedAt, "Data de atualização é obrigatória.");
 
         this.weekDay = validatedWeekDay;
-        this.title = validatedTitle;
         this.sortOrder = validatedSortOrder;
         markUpdatedAt(validatedUpdatedAt);
     }
