@@ -104,4 +104,18 @@ public class WorkoutDayAdapter implements WorkoutDayRepository {
             throw new DataMappingException("Falha ao converter workout days por workout cycle id para domínio.", exception);
         }
     }
+
+    @Override
+    public void deleteById(WorkoutDayId id) {
+        try {
+            Long workoutDayId = Objects.requireNonNull(
+                    id.value(),
+                    "Id do dia de treino não pode ser nulo."
+            );
+
+            workoutDayJpaRepository.deleteById(workoutDayId);
+        } catch (RuntimeException exception) {
+            throw new PersistenceException("Falha ao excluir dia de treino por id.", exception);
+        }
+    }
 }
