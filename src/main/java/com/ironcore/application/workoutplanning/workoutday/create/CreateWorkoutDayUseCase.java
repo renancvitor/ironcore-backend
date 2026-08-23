@@ -60,7 +60,7 @@ public class CreateWorkoutDayUseCase {
         LocalDateTime createdAt = LocalDateTime.now(clock);
 
         WorkoutDay newWorkoutDay = WorkoutDay.register(
-                command.workoutCycleId(),
+                workoutCycle.getId(),
                 command.weekDay(),
                 command.title(),
                 sortOrder,

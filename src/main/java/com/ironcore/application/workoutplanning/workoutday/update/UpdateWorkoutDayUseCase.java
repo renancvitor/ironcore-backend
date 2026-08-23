@@ -66,7 +66,10 @@ public class UpdateWorkoutDayUseCase {
 
         return new UpdateWorkoutDayResult(
                 savedWorkoutDay.getId(),
+                savedWorkoutDay.getWorkoutCycleId(),
+                savedWorkoutDay.getWeekDay(),
                 savedWorkoutDay.getTitle(),
+                savedWorkoutDay.getSortOrder(),
                 savedWorkoutDay.getUpdatedAt()
         );
     }
