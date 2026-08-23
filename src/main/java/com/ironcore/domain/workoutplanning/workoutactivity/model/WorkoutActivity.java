@@ -14,7 +14,7 @@ public class WorkoutActivity {
 
     private final WorkoutActivityId id;
     private final WorkoutDayId workoutDayId;
-    private final ExerciseId exerciseId;
+    private ExerciseId exerciseId;
     private Integer orderIndex;
     private Integer sets;
     private Integer repRangeMin;
@@ -32,12 +32,12 @@ public class WorkoutActivity {
     private WorkoutActivity(WorkoutActivityId id, WorkoutDayId workoutDayId, ExerciseId exerciseId, Integer orderIndex,
                             Integer sets, Integer repRangeMin, Integer repRangeMax, BigDecimal targetLoadKg,
                             String targetLoadText, Integer durationMinutes, BigDecimal distanceKm, String intensityText,
-                            Integer restSeconds, String notes,  LocalDateTime createdAt, LocalDateTime updatedAt) {
+                            Integer restSeconds, String notes, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.workoutDayId = requireNonNull(workoutDayId, "Dia de treino não pode ser nulo.");
         this.exerciseId = requireNonNull(exerciseId, "Exercício não pode ser nulo.");
         this.orderIndex = requirePositive(orderIndex, "Ordem deve ser maior que zero.");
-        this.sets = requirePositive(sets, "Quantidade de séries deve ser maior que zero.");
+        this.sets = requirePositiveIfPresent(sets, "Quantidade de séries deve ser maior que zero.");
         this.repRangeMin = requirePositiveIfPresent(repRangeMin,
                 "Mínimo de repetições desejadas deve ser maior do que zero.");
         this.repRangeMax = requirePositiveIfPresent(repRangeMax,
@@ -78,7 +78,7 @@ public class WorkoutActivity {
             String notes,
             LocalDateTime createdAt
     ) {
-        return new  WorkoutActivity(
+        return new WorkoutActivity(
                 null,
                 workoutDayId,
                 exerciseId,
@@ -116,7 +116,7 @@ public class WorkoutActivity {
             LocalDateTime createdAt,
             LocalDateTime updatedAt
     ) {
-        return new  WorkoutActivity(
+        return new WorkoutActivity(
                 id,
                 workoutDayId,
                 exerciseId,
@@ -137,7 +137,7 @@ public class WorkoutActivity {
     }
 
     public void updateActivity(
-            Integer orderIndex,
+            ExerciseId exerciseId,
             Integer sets,
             Integer repRangeMin,
             Integer repRangeMax,
@@ -150,8 +150,8 @@ public class WorkoutActivity {
             String notes,
             LocalDateTime updatedAt
     ) {
-        Integer validatedOrderIndex = requirePositive(orderIndex, "Ordem deve ser maior que zero.");
-        Integer validatedSets = requirePositive(sets, "Quantidade de séries deve ser maior que zero.");
+        ExerciseId validatedExerciseId = requireNonNull(exerciseId, "Exercício não pode ser nulo.");
+        Integer validatedSets = requirePositiveIfPresent(sets, "Quantidade de séries deve ser maior que zero.");
         Integer validatedRepRangeMin = requirePositiveIfPresent(repRangeMin,
                 "Mínimo de repetições desejadas deve ser maior do que zero.");
         Integer validatedRepRangeMax = requirePositiveIfPresent(repRangeMax,
@@ -175,7 +175,7 @@ public class WorkoutActivity {
                 "Anotações não podem ser vazias.");
         LocalDateTime validatedUpdatedAt = requireNonNull(updatedAt, "Data de atualização é obrigatória.");
 
-        this.orderIndex = validatedOrderIndex;
+        this.exerciseId = validatedExerciseId;
         this.sets = validatedSets;
         this.repRangeMin = validatedRepRangeMin;
         this.repRangeMax = validatedRepRangeMax;
@@ -186,6 +186,14 @@ public class WorkoutActivity {
         this.intensityText = validatedIntensityText;
         this.restSeconds = validatedRestSeconds;
         this.notes = validatedNotes;
+        markUpdatedAt(validatedUpdatedAt);
+    }
+
+    public void reorder(Integer orderIndex, LocalDateTime updatedAt) {
+        Integer validatedOrderIndex = requirePositive(orderIndex, "Ordem deve ser maior que zero.");
+        LocalDateTime validatedUpdatedAt = requireNonNull(updatedAt, "Data de atualização é obrigatória.");
+
+        this.orderIndex = validatedOrderIndex;
         markUpdatedAt(validatedUpdatedAt);
     }
 
