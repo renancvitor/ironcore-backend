@@ -15,9 +15,16 @@ public interface WorkoutActivityJpaRepository extends JpaRepository<WorkoutActiv
             Long workoutDayId
     );
 
-    Boolean existsByWorkoutDay_WorkoutCycle_Person_IdAndWorkoutDay_IdAndExercise_Id(
+    boolean existsByWorkoutDay_WorkoutCycle_Person_IdAndWorkoutDay_IdAndExercise_Id(
             Long personId,
             Long workoutDayId,
             Long exerciseId
+    );
+
+    boolean existsByWorkoutDay_WorkoutCycle_Person_IdAndWorkoutDay_IdAndExercise_IdAndIdNot(
+            Long personId,
+            Long workoutDayId,
+            Long exerciseId,
+            Long id
     );
 }

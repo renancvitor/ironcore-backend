@@ -125,7 +125,7 @@ public class WorkoutActivityAdapter implements WorkoutActivityRepository {
     }
 
     @Override
-    public Boolean existsByPersonIdAndWorkoutDayIdAndExerciseId(
+    public boolean existsByPersonIdAndWorkoutDayIdAndExerciseId(
             PersonId personId,
             WorkoutDayId workoutDayId,
             ExerciseId exerciseId
@@ -151,6 +151,57 @@ public class WorkoutActivityAdapter implements WorkoutActivityRepository {
                     "Falha ao verificar existência de workout activity por person id, workout day id e exercise id.",
                     exception
             );
+        }
+    }
+
+    @Override
+    public boolean existsByPersonIdAndWorkoutDayIdAndExerciseIdExcludingId(
+            PersonId personId,
+            WorkoutDayId workoutDayId,
+            ExerciseId exerciseId,
+            WorkoutActivityId id
+    ) {
+        try {
+            Long personIdValue = Objects.requireNonNull(personId.value(), "Id da pessoa não pode ser nulo.");
+            Long workoutDayIdValue = Objects.requireNonNull(
+                    workoutDayId.value(),
+                    "Id do dia de treino não pode ser nulo."
+            );
+            Long exerciseIdValue = Objects.requireNonNull(
+                    exerciseId.value(),
+                    "Id do exercício não pode ser nulo."
+            );
+            Long workoutActivityId = Objects.requireNonNull(
+                    id.value(),
+                    "Id da atividade de treino não pode ser nulo."
+            );
+
+            return workoutActivityJpaRepository
+                    .existsByWorkoutDay_WorkoutCycle_Person_IdAndWorkoutDay_IdAndExercise_IdAndIdNot(
+                            personIdValue,
+                            workoutDayIdValue,
+                            exerciseIdValue,
+                            workoutActivityId
+            );
+        } catch (RuntimeException exception) {
+            throw new PersistenceException(
+                    "Falha ao verificar existência de workout activity por person id, workout day id e exercise id e pelo próprio id.",
+                    exception
+            );
+        }
+    }
+
+    @Override
+    public void deleteById(WorkoutActivityId id) {
+        try {
+            Long workoutActivityId = Objects.requireNonNull(
+                    id.value(),
+                    "Id da atividade de treino não pode ser nulo."
+            );
+
+            workoutActivityJpaRepository.deleteById(workoutActivityId);
+        } catch (RuntimeException exception) {
+            throw new PersistenceException("Falha ao excluir atividade de treino por id.", exception);
         }
     }
 }
