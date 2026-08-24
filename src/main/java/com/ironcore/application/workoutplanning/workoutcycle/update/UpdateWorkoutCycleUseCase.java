@@ -76,7 +76,6 @@ public class UpdateWorkoutCycleUseCase {
                 savedWorkoutCycle.getName(),
                 savedWorkoutCycle.getTrainingGoalId(),
                 savedWorkoutCycle.getStartDate(),
-                savedWorkoutCycle.getEndDate(),
                 savedWorkoutCycle.getWorkoutStatus(),
                 savedWorkoutCycle.getWorkoutOrigin(),
                 savedWorkoutCycle.getDesiredDurationMonths(),
