@@ -17,9 +17,18 @@ public interface WorkoutActivityRepository {
 
     List<WorkoutActivity> findByPersonIdAndWorkoutDayId(PersonId personId, WorkoutDayId workoutDayId);
 
-    Boolean existsByPersonIdAndWorkoutDayIdAndExerciseId(
+    boolean existsByPersonIdAndWorkoutDayIdAndExerciseId(
             PersonId personId,
             WorkoutDayId workoutDayId,
             ExerciseId exerciseId
     );
+
+    boolean existsByPersonIdAndWorkoutDayIdAndExerciseIdExcludingId(
+            PersonId personId,
+            WorkoutDayId workoutDayId,
+            ExerciseId exerciseId,
+            WorkoutActivityId id
+    );
+
+    void deleteById(WorkoutActivityId id);
 }

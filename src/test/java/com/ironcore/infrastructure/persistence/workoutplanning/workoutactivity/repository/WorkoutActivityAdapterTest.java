@@ -1,5 +1,17 @@
 package com.ironcore.infrastructure.persistence.workoutplanning.workoutactivity.repository;
 
+import static com.ironcore.domain.workoutplanning.workoutactivity.WorkoutActivityTestFactory.restoredWorkoutActivity;
+import static com.ironcore.infrastructure.persistence.exercise.ExerciseEntityTestFactory.exerciseEntity;
+import static com.ironcore.infrastructure.persistence.workoutplanning.workoutactivity.WorkoutActivityEntityTestFactory.invalidWorkoutActivityEntity;
+import static com.ironcore.infrastructure.persistence.workoutplanning.workoutactivity.WorkoutActivityEntityTestFactory.workoutActivityEntity;
+import static com.ironcore.infrastructure.persistence.workoutplanning.workoutday.WorkoutDayEntityTestFactory.workoutDayEntity;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.ironcore.domain.exercise.valueobject.ExerciseId;
 import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.workoutplanning.workoutactivity.model.WorkoutActivity;
@@ -10,26 +22,14 @@ import com.ironcore.infrastructure.exception.PersistenceException;
 import com.ironcore.infrastructure.persistence.exercise.repository.ExerciseJpaRepository;
 import com.ironcore.infrastructure.persistence.workoutplanning.workoutactivity.entity.WorkoutActivityEntity;
 import com.ironcore.infrastructure.persistence.workoutplanning.workoutday.repository.WorkoutDayJpaRepository;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.Optional;
-
-import static com.ironcore.domain.workoutplanning.workoutactivity.WorkoutActivityTestFactory.restoredWorkoutActivity;
-import static com.ironcore.infrastructure.persistence.exercise.ExerciseEntityTestFactory.exerciseEntity;
-import static com.ironcore.infrastructure.persistence.workoutplanning.workoutactivity.WorkoutActivityEntityTestFactory.invalidWorkoutActivityEntity;
-import static com.ironcore.infrastructure.persistence.workoutplanning.workoutactivity.WorkoutActivityEntityTestFactory.workoutActivityEntity;
-import static com.ironcore.infrastructure.persistence.workoutplanning.workoutday.WorkoutDayEntityTestFactory.workoutDayEntity;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class WorkoutActivityAdapterTest {
@@ -112,10 +112,8 @@ class WorkoutActivityAdapterTest {
             when(workoutActivityJpaRepository.findByIdAndWorkoutDay_WorkoutCycle_Person_Id(1L, 1L))
                     .thenReturn(Optional.of(workoutActivityEntity()));
 
-            Optional<WorkoutActivity> result = adapter.findByIdAndPersonId(
-                    new WorkoutActivityId(1L),
-                    new PersonId(1L)
-            );
+            Optional<WorkoutActivity> result =
+                    adapter.findByIdAndPersonId(new WorkoutActivityId(1L), new PersonId(1L));
 
             assertThat(result).isPresent();
             assertThat(result.get().getId()).isEqualTo(new WorkoutActivityId(1L));
@@ -128,10 +126,8 @@ class WorkoutActivityAdapterTest {
             when(workoutActivityJpaRepository.findByIdAndWorkoutDay_WorkoutCycle_Person_Id(1L, 99L))
                     .thenReturn(Optional.empty());
 
-            Optional<WorkoutActivity> result = adapter.findByIdAndPersonId(
-                    new WorkoutActivityId(1L),
-                    new PersonId(99L)
-            );
+            Optional<WorkoutActivity> result =
+                    adapter.findByIdAndPersonId(new WorkoutActivityId(1L), new PersonId(99L));
 
             assertThat(result).isEmpty();
         }
@@ -167,13 +163,11 @@ class WorkoutActivityAdapterTest {
         @Test
         void shouldFindWorkoutActivitiesByPersonIdAndWorkoutDayId() {
             when(workoutActivityJpaRepository
-                    .findByWorkoutDay_WorkoutCycle_Person_IdAndWorkoutDay_IdOrderByOrderIndexAsc(1L, 1L))
+                            .findByWorkoutDay_WorkoutCycle_Person_IdAndWorkoutDay_IdOrderByOrderIndexAsc(1L, 1L))
                     .thenReturn(List.of(workoutActivityEntity()));
 
-            List<WorkoutActivity> result = adapter.findByPersonIdAndWorkoutDayId(
-                    new PersonId(1L),
-                    new WorkoutDayId(1L)
-            );
+            List<WorkoutActivity> result =
+                    adapter.findByPersonIdAndWorkoutDayId(new PersonId(1L), new WorkoutDayId(1L));
 
             assertThat(result).hasSize(1);
             assertThat(result.getFirst().getWorkoutDayId()).isEqualTo(new WorkoutDayId(1L));
@@ -184,7 +178,7 @@ class WorkoutActivityAdapterTest {
         @Test
         void shouldWrapRepositoryFailure() {
             when(workoutActivityJpaRepository
-                    .findByWorkoutDay_WorkoutCycle_Person_IdAndWorkoutDay_IdOrderByOrderIndexAsc(1L, 1L))
+                            .findByWorkoutDay_WorkoutCycle_Person_IdAndWorkoutDay_IdOrderByOrderIndexAsc(1L, 1L))
                     .thenThrow(new RuntimeException("database unavailable"));
             PersonId personId = new PersonId(1L);
             WorkoutDayId workoutDayId = new WorkoutDayId(1L);
@@ -197,14 +191,15 @@ class WorkoutActivityAdapterTest {
         @Test
         void shouldWrapMappingFailure() {
             when(workoutActivityJpaRepository
-                    .findByWorkoutDay_WorkoutCycle_Person_IdAndWorkoutDay_IdOrderByOrderIndexAsc(1L, 1L))
+                            .findByWorkoutDay_WorkoutCycle_Person_IdAndWorkoutDay_IdOrderByOrderIndexAsc(1L, 1L))
                     .thenReturn(List.of(invalidWorkoutActivityEntity()));
             PersonId personId = new PersonId(1L);
             WorkoutDayId workoutDayId = new WorkoutDayId(1L);
 
             assertThatExceptionOfType(DataMappingException.class)
                     .isThrownBy(() -> adapter.findByPersonIdAndWorkoutDayId(personId, workoutDayId))
-                    .withMessage("Falha ao converter workout activities por person id e workout day id para domínio.");
+                    .withMessage(
+                            "Falha ao converter workout activities por person id e workout day id para domínio.");
         }
     }
 
@@ -214,14 +209,12 @@ class WorkoutActivityAdapterTest {
         @Test
         void shouldReturnTrueWhenWorkoutActivityExists() {
             when(workoutActivityJpaRepository
-                    .existsByWorkoutDay_WorkoutCycle_Person_IdAndWorkoutDay_IdAndExercise_Id(1L, 1L, 1L))
+                            .existsByWorkoutDay_WorkoutCycle_Person_IdAndWorkoutDay_IdAndExercise_Id(1L, 1L, 1L))
                     .thenReturn(true);
 
-            Boolean result = adapter.existsByPersonIdAndWorkoutDayIdAndExerciseId(
-                    new PersonId(1L),
-                    new WorkoutDayId(1L),
-                    new ExerciseId(1L)
-            );
+            boolean result =
+                    adapter.existsByPersonIdAndWorkoutDayIdAndExerciseId(
+                            new PersonId(1L), new WorkoutDayId(1L), new ExerciseId(1L));
 
             assertThat(result).isTrue();
         }
@@ -229,14 +222,12 @@ class WorkoutActivityAdapterTest {
         @Test
         void shouldReturnFalseWhenWorkoutActivityDoesNotExist() {
             when(workoutActivityJpaRepository
-                    .existsByWorkoutDay_WorkoutCycle_Person_IdAndWorkoutDay_IdAndExercise_Id(1L, 1L, 99L))
+                            .existsByWorkoutDay_WorkoutCycle_Person_IdAndWorkoutDay_IdAndExercise_Id(1L, 1L, 99L))
                     .thenReturn(false);
 
-            Boolean result = adapter.existsByPersonIdAndWorkoutDayIdAndExerciseId(
-                    new PersonId(1L),
-                    new WorkoutDayId(1L),
-                    new ExerciseId(99L)
-            );
+            boolean result =
+                    adapter.existsByPersonIdAndWorkoutDayIdAndExerciseId(
+                            new PersonId(1L), new WorkoutDayId(1L), new ExerciseId(99L));
 
             assertThat(result).isFalse();
         }
@@ -244,22 +235,102 @@ class WorkoutActivityAdapterTest {
         @Test
         void shouldWrapRepositoryFailure() {
             when(workoutActivityJpaRepository
-                    .existsByWorkoutDay_WorkoutCycle_Person_IdAndWorkoutDay_IdAndExercise_Id(1L, 1L, 1L))
+                            .existsByWorkoutDay_WorkoutCycle_Person_IdAndWorkoutDay_IdAndExercise_Id(1L, 1L, 1L))
                     .thenThrow(new RuntimeException("database unavailable"));
             PersonId personId = new PersonId(1L);
             WorkoutDayId workoutDayId = new WorkoutDayId(1L);
             ExerciseId exerciseId = new ExerciseId(1L);
 
             assertThatExceptionOfType(PersistenceException.class)
-                    .isThrownBy(() -> adapter.existsByPersonIdAndWorkoutDayIdAndExerciseId(
-                            personId,
-                            workoutDayId,
-                            exerciseId
-                    ))
+                    .isThrownBy(
+                            () ->
+                                    adapter.existsByPersonIdAndWorkoutDayIdAndExerciseId(
+                                            personId, workoutDayId, exerciseId))
                     .withMessage(
                             "Falha ao verificar existência de workout activity por person id, "
-                                    + "workout day id e exercise id."
-                    );
+                                    + "workout day id e exercise id.");
+        }
+    }
+
+    @Nested
+    class ExistsByPersonIdAndWorkoutDayIdAndExerciseIdExcludingId {
+
+        @Test
+        void shouldReturnTrueWhenAnotherWorkoutActivityUsesExercise() {
+            when(workoutActivityJpaRepository
+                            .existsByWorkoutDay_WorkoutCycle_Person_IdAndWorkoutDay_IdAndExercise_IdAndIdNot(
+                                    1L, 1L, 1L, 2L))
+                    .thenReturn(true);
+
+            boolean result =
+                    adapter.existsByPersonIdAndWorkoutDayIdAndExerciseIdExcludingId(
+                            new PersonId(1L),
+                            new WorkoutDayId(1L),
+                            new ExerciseId(1L),
+                            new WorkoutActivityId(2L));
+
+            assertThat(result).isTrue();
+        }
+
+        @Test
+        void shouldReturnFalseWhenNoOtherWorkoutActivityUsesExercise() {
+            when(workoutActivityJpaRepository
+                            .existsByWorkoutDay_WorkoutCycle_Person_IdAndWorkoutDay_IdAndExercise_IdAndIdNot(
+                                    1L, 1L, 1L, 2L))
+                    .thenReturn(false);
+
+            boolean result =
+                    adapter.existsByPersonIdAndWorkoutDayIdAndExerciseIdExcludingId(
+                            new PersonId(1L),
+                            new WorkoutDayId(1L),
+                            new ExerciseId(1L),
+                            new WorkoutActivityId(2L));
+
+            assertThat(result).isFalse();
+        }
+
+        @Test
+        void shouldWrapRepositoryFailure() {
+            when(workoutActivityJpaRepository
+                            .existsByWorkoutDay_WorkoutCycle_Person_IdAndWorkoutDay_IdAndExercise_IdAndIdNot(
+                                    1L, 1L, 1L, 2L))
+                    .thenThrow(new RuntimeException("database unavailable"));
+
+            assertThatExceptionOfType(PersistenceException.class)
+                    .isThrownBy(
+                            () ->
+                                    adapter.existsByPersonIdAndWorkoutDayIdAndExerciseIdExcludingId(
+                                            new PersonId(1L),
+                                            new WorkoutDayId(1L),
+                                            new ExerciseId(1L),
+                                            new WorkoutActivityId(2L)))
+                    .withMessage(
+                            "Falha ao verificar existência de workout activity por person id, "
+                                    + "workout day id e exercise id e pelo próprio id.");
+        }
+    }
+
+    @Nested
+    class DeleteById {
+
+        @Test
+        void shouldDeleteWorkoutActivityById() {
+            WorkoutActivityId workoutActivityId = new WorkoutActivityId(1L);
+
+            adapter.deleteById(workoutActivityId);
+
+            verify(workoutActivityJpaRepository).deleteById(1L);
+        }
+
+        @Test
+        void shouldWrapRepositoryFailure() {
+            doThrow(new RuntimeException("database unavailable"))
+                    .when(workoutActivityJpaRepository)
+                    .deleteById(1L);
+
+            assertThatExceptionOfType(PersistenceException.class)
+                    .isThrownBy(() -> adapter.deleteById(new WorkoutActivityId(1L)))
+                    .withMessage("Falha ao excluir atividade de treino por id.");
         }
     }
 }

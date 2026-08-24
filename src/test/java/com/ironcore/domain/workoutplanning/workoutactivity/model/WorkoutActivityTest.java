@@ -86,7 +86,7 @@ class WorkoutActivityTest {
             WorkoutActivity workoutActivity = workoutActivityWithoutId();
 
             workoutActivity.updateActivity(
-                    2,
+                    new ExerciseId(2L),
                     5,
                     6,
                     10,
@@ -100,7 +100,8 @@ class WorkoutActivityTest {
                     UPDATED_AT
             );
 
-            assertThat(workoutActivity.getOrderIndex()).isEqualTo(2);
+            assertThat(workoutActivity.getExerciseId()).isEqualTo(new ExerciseId(2L));
+            assertThat(workoutActivity.getOrderIndex()).isEqualTo(1);
             assertThat(workoutActivity.getSets()).isEqualTo(5);
             assertThat(workoutActivity.getRepRangeMin()).isEqualTo(6);
             assertThat(workoutActivity.getRepRangeMax()).isEqualTo(10);
@@ -119,8 +120,8 @@ class WorkoutActivityTest {
             WorkoutActivity workoutActivity = workoutActivityWithoutId();
 
             workoutActivity.updateActivity(
-                    2,
-                    5,
+                    EXERCISE_ID,
+                    null,
                     null,
                     null,
                     null,
@@ -133,6 +134,7 @@ class WorkoutActivityTest {
                     UPDATED_AT
             );
 
+            assertThat(workoutActivity.getSets()).isNull();
             assertThat(workoutActivity.getRepRangeMin()).isNull();
             assertThat(workoutActivity.getRepRangeMax()).isNull();
             assertThat(workoutActivity.getTargetLoadKg()).isNull();
@@ -142,6 +144,16 @@ class WorkoutActivityTest {
             assertThat(workoutActivity.getIntensityText()).isNull();
             assertThat(workoutActivity.getRestSeconds()).isNull();
             assertThat(workoutActivity.getNotes()).isNull();
+            assertThat(workoutActivity.getUpdatedAt()).isEqualTo(UPDATED_AT);
+        }
+
+        @Test
+        void shouldReorderWorkoutActivity() {
+            WorkoutActivity workoutActivity = workoutActivityWithoutId();
+
+            workoutActivity.reorder(2, UPDATED_AT);
+
+            assertThat(workoutActivity.getOrderIndex()).isEqualTo(2);
             assertThat(workoutActivity.getUpdatedAt()).isEqualTo(UPDATED_AT);
         }
     }
@@ -155,7 +167,7 @@ class WorkoutActivityTest {
 
             assertThatExceptionOfType(InvalidWorkoutActivityException.class)
                     .isThrownBy(() -> workoutActivity.updateActivity(
-                            2,
+                            new ExerciseId(2L),
                             5,
                             6,
                             10,
@@ -179,7 +191,7 @@ class WorkoutActivityTest {
 
             assertThatExceptionOfType(InvalidWorkoutActivityException.class)
                     .isThrownBy(() -> workoutActivity.updateActivity(
-                            2,
+                            new ExerciseId(2L),
                             5,
                             6,
                             10,
@@ -197,7 +209,43 @@ class WorkoutActivityTest {
             assertInitialEditableState(workoutActivity);
         }
 
+        @Test
+        void shouldPreserveStateWhenUpdatedExerciseIsMissing() {
+            WorkoutActivity workoutActivity = workoutActivityWithoutId();
+
+            assertThatExceptionOfType(InvalidWorkoutActivityException.class)
+                    .isThrownBy(() -> workoutActivity.updateActivity(
+                            null,
+                            5,
+                            6,
+                            10,
+                            new BigDecimal("90.00"),
+                            "RPE 9",
+                            50,
+                            new BigDecimal("6.00"),
+                            "Alta",
+                            120,
+                            "Manter cadência controlada",
+                            UPDATED_AT
+                    ))
+                    .withMessage("Exercício não pode ser nulo.");
+
+            assertInitialEditableState(workoutActivity);
+        }
+
+        @Test
+        void shouldPreserveStateWhenReorderPositionIsInvalid() {
+            WorkoutActivity workoutActivity = workoutActivityWithoutId();
+
+            assertThatExceptionOfType(InvalidWorkoutActivityException.class)
+                    .isThrownBy(() -> workoutActivity.reorder(0, UPDATED_AT))
+                    .withMessage("Ordem deve ser maior que zero.");
+
+            assertInitialEditableState(workoutActivity);
+        }
+
         private void assertInitialEditableState(WorkoutActivity workoutActivity) {
+            assertThat(workoutActivity.getExerciseId()).isEqualTo(EXERCISE_ID);
             assertThat(workoutActivity.getOrderIndex()).isEqualTo(1);
             assertThat(workoutActivity.getSets()).isEqualTo(4);
             assertThat(workoutActivity.getRepRangeMin()).isEqualTo(8);
@@ -262,12 +310,25 @@ class WorkoutActivityTest {
         }
 
         @Test
-        void shouldRequireSets() {
-            assertThatExceptionOfType(InvalidWorkoutActivityException.class)
-                    .isThrownBy(() -> registerValidActivity(WORKOUT_DAY_ID, EXERCISE_ID, 1, null, 8, 12,
-                            new BigDecimal("80.50"), "RPE 8", 45, new BigDecimal("5.50"),
-                            "Moderada", 90, "Priorizar a técnica", CREATED_AT))
-                    .withMessage("Quantidade de séries deve ser maior que zero.");
+        void shouldAllowMissingSets() {
+            WorkoutActivity workoutActivity = registerValidActivity(
+                    WORKOUT_DAY_ID,
+                    EXERCISE_ID,
+                    1,
+                    null,
+                    8,
+                    12,
+                    new BigDecimal("80.50"),
+                    "RPE 8",
+                    45,
+                    new BigDecimal("5.50"),
+                    "Moderada",
+                    90,
+                    "Priorizar a técnica",
+                    CREATED_AT
+            );
+
+            assertThat(workoutActivity.getSets()).isNull();
         }
 
         @Test

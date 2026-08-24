@@ -1,4 +1,4 @@
-package com.ironcore.application.workoutplanning.workoutday.update;
+package com.ironcore.application.workoutplanning.workoutactivity.delete;
 
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
@@ -7,6 +7,8 @@ import com.ironcore.domain.person.model.Person;
 import com.ironcore.domain.person.repository.PersonRepository;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
+import com.ironcore.domain.workoutplanning.workoutactivity.model.WorkoutActivity;
+import com.ironcore.domain.workoutplanning.workoutactivity.repository.WorkoutActivityRepository;
 import com.ironcore.domain.workoutplanning.workoutcycle.enums.WorkoutStatus;
 import com.ironcore.domain.workoutplanning.workoutcycle.model.WorkoutCycle;
 import com.ironcore.domain.workoutplanning.workoutcycle.repository.WorkoutCycleRepository;
@@ -18,19 +20,22 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class UpdateWorkoutDayUseCase {
+public class DeleteWorkoutActivityUseCase {
 
     private final UserRepository userRepository;
     private final PersonRepository personRepository;
+    private final WorkoutActivityRepository workoutActivityRepository;
     private final WorkoutDayRepository workoutDayRepository;
     private final WorkoutCycleRepository workoutCycleRepository;
     private final Clock clock;
 
     @Transactional
-    public UpdateWorkoutDayResult execute(UpdateWorkoutDayCommand command) {
+    public void execute(DeleteWorkoutActivityCommand command) {
         User user = userRepository.findById(command.actorUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
 
@@ -41,7 +46,11 @@ public class UpdateWorkoutDayUseCase {
         Person person = personRepository.findById(user.getPersonId())
                 .orElseThrow(() -> new ResourceNotFoundException("Pessoa não encontrada."));
 
-        WorkoutDay workoutDay = workoutDayRepository.findByIdAndPersonId(command.id(), person.getId())
+        WorkoutActivity workoutActivity = workoutActivityRepository.findByIdAndPersonId(command.id(), person.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Atividade de treino não encontrada."));
+
+        WorkoutDay workoutDay = workoutDayRepository
+                .findByIdAndPersonId(workoutActivity.getWorkoutDayId(), person.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Dia de treino não encontrado."));
 
         WorkoutCycle workoutCycle = workoutCycleRepository
@@ -51,26 +60,27 @@ public class UpdateWorkoutDayUseCase {
         if (workoutCycle.getWorkoutStatus() == WorkoutStatus.COMPLETED
                 || workoutCycle.getWorkoutStatus() == WorkoutStatus.CANCELLED) {
             throw new OperationNotAllowedException(
-                    "Não é permitido editar dias de treino de ciclos concluídos ou cancelados."
+                    "Não é permitido excluir atividades de treino de ciclos concluídos ou cancelados."
             );
         }
 
-        LocalDateTime updatedAt =  LocalDateTime.now(clock);
+        workoutActivityRepository.deleteById(workoutActivity.getId());
 
-        workoutDay.updateDay(
-                command.title(),
-                updatedAt
-        );
+        List<WorkoutActivity> remainingWorkoutActivities = workoutActivityRepository
+                .findByPersonIdAndWorkoutDayId(person.getId(), workoutDay.getId())
+                .stream()
+                .sorted(Comparator.comparing(WorkoutActivity::getOrderIndex))
+                .toList();
 
-        WorkoutDay savedWorkoutDay = workoutDayRepository.save(workoutDay);
+        LocalDateTime updatedAt = LocalDateTime.now(clock);
 
-        return new UpdateWorkoutDayResult(
-                savedWorkoutDay.getId(),
-                savedWorkoutDay.getWorkoutCycleId(),
-                savedWorkoutDay.getWeekDay(),
-                savedWorkoutDay.getTitle(),
-                savedWorkoutDay.getSortOrder(),
-                savedWorkoutDay.getUpdatedAt()
-        );
+        for (int i = 0; i < remainingWorkoutActivities.size(); i++) {
+            remainingWorkoutActivities.get(i).reorder(
+                    i + 1,
+                    updatedAt
+            );
+        }
+
+        remainingWorkoutActivities.forEach(workoutActivityRepository::save);
     }
 }
