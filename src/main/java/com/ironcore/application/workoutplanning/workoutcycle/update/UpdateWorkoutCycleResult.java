@@ -13,7 +13,6 @@ public record UpdateWorkoutCycleResult(
         String name,
         TrainingGoalId trainingGoalId,
         LocalDate startDate,
-        LocalDate endDate,
         WorkoutStatus workoutStatus,
         WorkoutOrigin workoutOrigin,
         Integer desiredDurationMonths,
