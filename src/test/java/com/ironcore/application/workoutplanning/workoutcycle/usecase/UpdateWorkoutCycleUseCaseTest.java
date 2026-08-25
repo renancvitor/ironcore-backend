@@ -263,7 +263,6 @@ class UpdateWorkoutCycleUseCaseTest {
         assertThat(result.name()).isEqualTo(command.name());
         assertThat(result.trainingGoalId()).isEqualTo(command.trainingGoalId());
         assertThat(result.startDate()).isEqualTo(startDate);
-        assertThat(result.endDate()).isEqualTo(endDate);
         assertThat(result.updatedAt()).isEqualTo(updatedAt);
     }
 

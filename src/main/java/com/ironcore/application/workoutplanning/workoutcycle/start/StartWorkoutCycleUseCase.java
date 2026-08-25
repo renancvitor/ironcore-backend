@@ -1,4 +1,4 @@
-package com.ironcore.application.workoutplanning.workoutcycle.update;
+package com.ironcore.application.workoutplanning.workoutcycle.start;
 
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
@@ -10,28 +10,34 @@ import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.workoutplanning.traininggoal.exception.InvalidTrainingGoalException;
 import com.ironcore.domain.workoutplanning.traininggoal.model.TrainingGoal;
 import com.ironcore.domain.workoutplanning.traininggoal.repository.TrainingGoalRepository;
-import com.ironcore.domain.workoutplanning.workoutcycle.enums.WorkoutStatus;
+import com.ironcore.domain.workoutplanning.workoutactivity.model.WorkoutActivity;
+import com.ironcore.domain.workoutplanning.workoutactivity.repository.WorkoutActivityRepository;
 import com.ironcore.domain.workoutplanning.workoutcycle.model.WorkoutCycle;
 import com.ironcore.domain.workoutplanning.workoutcycle.repository.WorkoutCycleRepository;
+import com.ironcore.domain.workoutplanning.workoutday.model.WorkoutDay;
+import com.ironcore.domain.workoutplanning.workoutday.repository.WorkoutDayRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class UpdateWorkoutCycleUseCase {
+public class StartWorkoutCycleUseCase {
 
     private final UserRepository userRepository;
     private final PersonRepository personRepository;
     private final TrainingGoalRepository trainingGoalRepository;
     private final WorkoutCycleRepository workoutCycleRepository;
+    private final WorkoutDayRepository workoutDayRepository;
+    private final WorkoutActivityRepository workoutActivityRepository;
     private final Clock clock;
 
     @Transactional
-    public UpdateWorkoutCycleResult execute(UpdateWorkoutCycleCommand command) {
+    public StartWorkoutCycleResult execute(StartWorkoutCycleCommand command) {
         User user = userRepository.findById(command.actorUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
 
@@ -45,42 +51,45 @@ public class UpdateWorkoutCycleUseCase {
         WorkoutCycle workoutCycle = workoutCycleRepository.findByIdAndPersonId(command.id(), person.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Ciclo de treino não encontrado."));
 
-        if (workoutCycle.getWorkoutStatus() == WorkoutStatus.COMPLETED
-                || workoutCycle.getWorkoutStatus() == WorkoutStatus.CANCELLED) {
-            throw new OperationNotAllowedException(
-                    "Não é permitido editar ciclos de treino concluídos ou cancelados."
-            );
-        }
-
-        TrainingGoal trainingGoal = trainingGoalRepository.findById(command.trainingGoalId())
+        TrainingGoal trainingGoal = trainingGoalRepository.findById(workoutCycle.getTrainingGoalId())
                 .orElseThrow(() -> new ResourceNotFoundException("Objetivo de treino não encontrado."));
 
         if (!trainingGoal.getActive()) {
             throw new InvalidTrainingGoalException("Objetivo de treino inativo.");
         }
 
-        LocalDateTime updatedAt = LocalDateTime.now(clock);
+        List<WorkoutDay> workoutDays = workoutDayRepository.findByWorkoutCycleId(workoutCycle.getId());
 
-        workoutCycle.updateCycle(
-                command.name(),
-                trainingGoal.getId(),
-                command.desiredDurationMonths(),
-                command.notes(),
-                updatedAt
-        );
+        if (workoutDays.isEmpty()) {
+            throw new OperationNotAllowedException(
+                    "O ciclo de treino deve possuir pelo menos um dia de treino."
+            );
+        }
+
+        for (WorkoutDay workoutDay : workoutDays) {
+            List<WorkoutActivity> activities = workoutActivityRepository.findByPersonIdAndWorkoutDayId(
+                    person.getId(),
+                    workoutDay.getId()
+            );
+
+            if (activities.isEmpty()) {
+                throw new OperationNotAllowedException(
+                        "Cada dia de treino deve possuir pelo menos uma atividade."
+                );
+            }
+        }
+
+        LocalDate startDate = LocalDate.now(clock);
+
+        workoutCycle.startCycle(startDate);
 
         WorkoutCycle savedWorkoutCycle = workoutCycleRepository.save(workoutCycle);
 
-        return new UpdateWorkoutCycleResult(
+        return new StartWorkoutCycleResult(
                 savedWorkoutCycle.getId(),
-                savedWorkoutCycle.getName(),
                 savedWorkoutCycle.getTrainingGoalId(),
                 savedWorkoutCycle.getStartDate(),
-                savedWorkoutCycle.getWorkoutStatus(),
-                savedWorkoutCycle.getWorkoutOrigin(),
-                savedWorkoutCycle.getDesiredDurationMonths(),
-                savedWorkoutCycle.getNotes(),
-                savedWorkoutCycle.getUpdatedAt()
+                savedWorkoutCycle.getWorkoutStatus()
         );
     }
 }
