@@ -28,6 +28,7 @@ import static com.ironcore.infrastructure.persistence.workoutplanning.workoutcyc
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -277,6 +278,30 @@ class WorkoutCycleAdapterTest {
             assertThatExceptionOfType(DataMappingException.class)
                     .isThrownBy(() -> adapter.findByPersonIdAndTrainingGoalId(personId, trainingGoalId))
                     .withMessage("Falha ao converter workout cycle por person id e training goal id para domínio.");
+        }
+    }
+
+    @Nested
+    class DeleteById {
+
+        @Test
+        void shouldDeleteWorkoutCycleById() {
+            WorkoutCycleId workoutCycleId = new WorkoutCycleId(1L);
+
+            adapter.deleteById(workoutCycleId);
+
+            verify(workoutCycleJpaRepository).deleteById(1L);
+        }
+
+        @Test
+        void shouldWrapRepositoryFailure() {
+            WorkoutCycleId workoutCycleId = new WorkoutCycleId(1L);
+            doThrow(new RuntimeException("database unavailable"))
+                    .when(workoutCycleJpaRepository).deleteById(1L);
+
+            assertThatExceptionOfType(PersistenceException.class)
+                    .isThrownBy(() -> adapter.deleteById(workoutCycleId))
+                    .withMessage("Falha ao excluir ciclo de treino por id.");
         }
     }
 }
