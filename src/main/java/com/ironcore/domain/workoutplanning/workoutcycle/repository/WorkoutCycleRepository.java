@@ -20,4 +20,6 @@ public interface WorkoutCycleRepository {
     List<WorkoutCycle> findByPersonIdAndWorkoutStatus(PersonId personId, WorkoutStatus workoutStatus);
 
     List<WorkoutCycle> findByPersonIdAndTrainingGoalId(PersonId personId, TrainingGoalId trainingGoalId);
+
+    void deleteById(WorkoutCycleId id);
 }

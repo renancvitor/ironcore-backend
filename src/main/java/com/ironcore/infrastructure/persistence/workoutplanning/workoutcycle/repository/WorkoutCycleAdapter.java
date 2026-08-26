@@ -155,4 +155,14 @@ public class WorkoutCycleAdapter implements WorkoutCycleRepository {
             );
         }
     }
+
+    @Override
+    public void deleteById(WorkoutCycleId id) {
+        try {
+            Long workoutCycleId = Objects.requireNonNull(id.value(), "Id do ciclo de treino não pode ser nulo.");
+            workoutCycleJpaRepository.deleteById(workoutCycleId);
+        } catch (RuntimeException exception) {
+            throw new PersistenceException("Falha ao excluir ciclo de treino por id.", exception);
+        }
+    }
 }
