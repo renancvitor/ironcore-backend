@@ -16,7 +16,7 @@ CREATE TABLE workout_activities(
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP,
 
-    CONSTRAINT workout_activity_workout_day FOREIGN KEY (workout_day_id) REFERENCES workout_days(id),
+    CONSTRAINT workout_activity_workout_day FOREIGN KEY (workout_day_id) REFERENCES workout_days(id) ON DELETE CASCADE,
     CONSTRAINT workout_activity_exercise FOREIGN KEY (exercise_id) REFERENCES exercises(id),
 
     CONSTRAINT uk_workout_activities_day_order UNIQUE (workout_day_id, order_index) DEFERRABLE INITIALLY DEFERRED,
