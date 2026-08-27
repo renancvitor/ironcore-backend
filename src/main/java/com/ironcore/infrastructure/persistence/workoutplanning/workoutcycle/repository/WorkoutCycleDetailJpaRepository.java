@@ -22,7 +22,7 @@ public interface WorkoutCycleDetailJpaRepository
                 wc.notes,
 
                 tg.id,
-                tg.name,
+                tg.displayName,
 
                 wd.id,
                 wd.weekDay,
