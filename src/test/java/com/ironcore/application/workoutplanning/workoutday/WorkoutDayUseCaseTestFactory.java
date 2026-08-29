@@ -34,10 +34,7 @@ public final class WorkoutDayUseCaseTestFactory {
     public static DeleteWorkoutDayCommand validDeleteCommand() {
         return new DeleteWorkoutDayCommand(
                 new UserId(1L),
-                new WorkoutDayId(1L),
-                WeekDay.MONDAY,
-                "Treino A",
-                1
+                new WorkoutDayId(1L)
         );
     }
 
