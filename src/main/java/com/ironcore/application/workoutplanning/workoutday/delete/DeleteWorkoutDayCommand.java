@@ -6,9 +6,6 @@ import com.ironcore.domain.workoutplanning.workoutday.valueobject.WorkoutDayId;
 
 public record DeleteWorkoutDayCommand(
         UserId actorUserId,
-        WorkoutDayId id,
-        WeekDay weekDay,
-        String title,
-        Integer sortOrder
+        WorkoutDayId id
 ) {
 }
