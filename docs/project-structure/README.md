@@ -43,6 +43,8 @@ docs
 │   └── README.md
 ├── exercises
 │   └── README.md
+├── workout-planning
+│   └── README.md
 ├── diagram
 │   ├── README.md
 │   ├── er-sql
@@ -71,7 +73,8 @@ docs
 │   ├── v0.3.0
 │   ├── v0.4.0
 │   ├── v0.5.0
-│   └── v0.6.0
+│   ├── v0.6.0
+│   └── v1.0.0
 ├── swagger
 │   ├── README.md
 │   ├── api-docs.md
@@ -110,6 +113,11 @@ src/main/java/com/ironcore
 │   │       ├── bootstrap
 │   │       └── update
 │   ├── shared
+│   ├── workoutplanning
+│   │   ├── traininggoal
+│   │   ├── workoutactivity
+│   │   ├── workoutcycle
+│   │   └── workoutday
 │   └── user
 │       ├── service
 │       └── usecase
@@ -157,6 +165,11 @@ src/main/java/com/ironcore
 │   │   ├── model
 │   │   ├── repository
 │   │   └── valueobject
+│   ├── workoutplanning
+│   │   ├── traininggoal
+│   │   ├── workoutactivity
+│   │   ├── workoutcycle
+│   │   └── workoutday
 │   └── user
 │       ├── exception
 │       ├── model
@@ -179,6 +192,7 @@ src/main/java/com/ironcore
 │   │   ├── muscle
 │   │   ├── person
 │   │   ├── shared
+│   │   ├── workoutplanning
 │   │   └── user
 │   └── security
 └── interfaces
@@ -188,6 +202,7 @@ src/main/java/com/ironcore
         ├── exercise
         ├── exception
         ├── person
+        ├── workoutplanning
         └── user
 ```
 
@@ -216,7 +231,12 @@ src/main/resources
         ├── V14__seed_muscle_groups.sql
         ├── V15__seed_muscle_subgroups.sql
         ├── V16__seed_exercises.sql
-        └── V17__seed_exercise_muscle_targets.sql
+        ├── V17__seed_exercise_muscle_targets.sql
+        ├── V18__create_table_training_goals.sql
+        ├── V19__create_table_workout_cycles.sql
+        ├── V20__create_table_workout_days.sql
+        ├── V21__create_table_workout_activities.sql
+        └── V22__seed_training_goals.sql
 ```
 
 ## Testes
@@ -231,6 +251,7 @@ src/test/java/com/ironcore
 │   ├── logging
 │   ├── person
 │   ├── shared
+│   ├── workoutplanning
 │   └── user
 ├── domain
 │   ├── bodymetrics
@@ -240,6 +261,7 @@ src/test/java/com/ironcore
 │   ├── exercisemuscletarget
 │   ├── muscle
 │   ├── person
+│   ├── workoutplanning
 │   └── user
 ├── infrastructure
 │   ├── bootstrap
@@ -252,6 +274,7 @@ src/test/java/com/ironcore
 │   │   ├── muscle
 │   │   ├── person
 │   │   ├── shared
+│   │   ├── workoutplanning
 │   │   └── user
 │   └── security
 └── interfaces
@@ -261,6 +284,7 @@ src/test/java/com/ironcore
         ├── exercise
         ├── person
         ├── support
+        ├── workoutplanning
         └── user
 ```
 
@@ -271,6 +295,7 @@ src/test/java/com/ironcore
 - `User` representa autenticação/acesso.
 - `BodyMetrics` representa métricas corporais da pessoa e usa `PersonId` como ownership interna.
 - `Exercise Catalog` representa catálogo global controlado pelo sistema, com consulta por endpoints REST e carga por migrations/seeds.
+- `Workout Planning` representa objetivos, ciclos, dias e atividades prescritas da pessoa, com composição e ownership por `PersonId`.
 - Diagramas podem conter blueprint planejado; confirmar o estado real por código, migrations e testes.
 
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>

@@ -34,8 +34,12 @@ Exemplos atuais:
 - `NavyBodyFatCalculatorTest`
 - `FatMassCalculatorTest`
 - `LeanMassCalculatorTest`
+- `TrainingGoalTest`
+- `WorkoutCycleTest`
+- `WorkoutDayTest`
+- `WorkoutActivityTest`
 
-Esses testes validam invariantes, entradas inválidas, criação de objetos de valor, catálogos de exercise e cálculos de composição corporal.
+Esses testes validam invariantes, entradas inválidas, criação de objetos de valor, catálogos de exercise, workout planning e cálculos de composição corporal.
 
 ### `application`
 
@@ -69,8 +73,25 @@ Exemplos atuais:
 - `ListMuscleSubgroupsUseCaseTest`
 - `ListExercisesUseCaseTest`
 - `GetExerciseByIdUseCaseTest`
+- `ListTrainingGoalsUseCaseTest`
+- `CreateWorkoutCycleUseCaseTest`
+- `UpdateWorkoutCycleUseCaseTest`
+- `StartWorkoutCycleUseCaseTest`
+- `CompleteWorkoutCycleUseCaseTest`
+- `CancelWorkoutCycleUseCaseTest`
+- `DeleteWorkoutCycleUseCaseTest`
+- `ListWorkoutCyclesUseCaseTest`
+- `GetWorkoutCycleDetailUseCaseTest`
+- `CreateWorkoutDayUseCaseTest`
+- `UpdateWorkoutDayUseCaseTest`
+- `ReorderWorkoutDayUseCaseTest`
+- `DeleteWorkoutDayUseCaseTest`
+- `CreateWorkoutActivityUseCaseTest`
+- `UpdateWorkoutActivityUseCaseTest`
+- `ReorderWorkoutActivityUseCaseTest`
+- `DeleteWorkoutActivityUseCaseTest`
 
-Esses testes validam regras de orquestração, autenticação, troca de senha, bootstrap, atualização de pessoa, atualização de nickname, publicação de logs, métricas corporais, progresso e consultas do exercise catalog.
+Esses testes validam regras de orquestração, autenticação, troca de senha, bootstrap, atualização de pessoa, atualização de nickname, publicação de logs, métricas corporais, progresso, exercise catalog e workout planning.
 
 ### `infrastructure`
 
@@ -105,6 +126,13 @@ Exemplos atuais:
 - `JwtAccessTokenValidatorTest`
 - `JwtAuthenticationFilterTest`
 - `SpringSecurityPasswordHasherTest`
+- `TrainingGoalAdapterTest`
+- `WorkoutCycleAdapterTest`
+- `WorkoutCycleDetailQueryAdapterTest`
+- `WorkoutCycleSearchAdapterTest`
+- `WorkoutCycleSearchAdapterIntegrationTest`
+- `WorkoutDayAdapterTest`
+- `WorkoutActivityAdapterTest`
 
 Esses testes validam mapping, comportamento de adapter, geração e validação de JWT, filtro de autenticação e configuração de bootstrap.
 
@@ -130,6 +158,11 @@ Exemplos atuais:
 - `ListExercisesControllerTest`
 - `GetExerciseByIdControllerTest`
 - `ExerciseCatalogIntegrationTest`
+- `TrainingGoalControllerTest`
+- `WorkoutCycleControllerTest`
+- `WorkoutDayControllerTest`
+- `WorkoutActivityControllerTest`
+- `WorkoutPlanningIntegrationTest`
 
 Esses testes validam contratos HTTP, autenticação, logout, rotas protegidas, validação de request e respostas dos endpoints atuais.
 
@@ -145,6 +178,7 @@ Exemplos atuais:
 - `AuthSecurityIntegrationTest`: válida autenticação e proteção de rotas no contexto REST/security.
 - `BodyMetricsIntegrationTest`: válida fluxo REST de métricas corporais no contexto da aplicação.
 - `ExerciseCatalogIntegrationTest`: valida consultas REST do catálogo de exercises no contexto da aplicação.
+- `WorkoutPlanningIntegrationTest`: valida o fluxo REST de objetivos, ciclos, dias e atividades no contexto da aplicação.
 
 Os testes com Testcontainers aplicam as migrations Flyway em um banco PostgreSQL temporário, o que aumenta a confiança na compatibilidade entre entidade, repository e schema.
 

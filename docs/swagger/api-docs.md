@@ -77,5 +77,7 @@ Pontos principais de validação:
 - schemas de senha com `format: password`;
 - parâmetros de progresso expostos como `startDate` e `endDate`.
 - parâmetros de listagem de exercises expostos como `page`, `size`, `name`, `activityTypeId`, `equipmentTypeId`, `muscleGroupId`, `muscleSubgroupId` e `targetRole`.
+- endpoints de workout planning para `TrainingGoal`, `WorkoutCycle`, `WorkoutDay` e `WorkoutActivity`.
+- parâmetros da listagem de ciclos expostos como `workoutStatus`, `trainingGoalId`, `startDate`, `endDate`, `name`, `page` e `size`.
 
 <p align="right"><a href="README.md">Voltar para Swagger/OpenAPI</a></p>
