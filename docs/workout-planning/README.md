@@ -4,7 +4,7 @@
 
 O módulo `workoutplanning` implementa o planejamento de treinos da pessoa vinculada ao usuário autenticado. Neste documento, `workout` pode ser usado como abreviação de `WorkoutCycle`.
 
-O escopo implementado cobre objetivos de treino, ciclos, dias, atividades prescritas, composição, lifecycle, consultas e auditoria. Workout Session, execução real, histórico de sessões e geração por IA não fazem parte deste módulo.
+O escopo implementado cobre objetivos de treino, ciclos, dias, atividades prescritas, composição, lifecycle, consultas e auditoria. Workout Session, histórico de sessões e geração por IA não fazem parte deste módulo.
 
 ## Composição e Ownership
 
