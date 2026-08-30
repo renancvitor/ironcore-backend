@@ -3,9 +3,13 @@ package com.ironcore.application.workoutplanning.workoutactivity.create;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
+import com.ironcore.application.logging.audit.port.AuditLogPublisher;
+import com.ironcore.application.workoutplanning.workoutactivity.WorkoutActivityAuditData;
 import com.ironcore.domain.exercise.exception.InvalidExerciseException;
 import com.ironcore.domain.exercise.model.Exercise;
 import com.ironcore.domain.exercise.repository.ExerciseRepository;
+import com.ironcore.domain.logging.audit.enums.AuditActionType;
+import com.ironcore.domain.logging.audit.enums.AuditTargetType;
 import com.ironcore.domain.person.model.Person;
 import com.ironcore.domain.person.repository.PersonRepository;
 import com.ironcore.domain.user.model.User;
@@ -35,6 +39,7 @@ public class CreateWorkoutActivityUseCase {
     private final WorkoutCycleRepository workoutCycleRepository;
     private final ExerciseRepository exerciseRepository;
     private final Clock clock;
+    private final AuditLogPublisher publisher;
 
     @Transactional
     public CreateWorkoutActivityResult execute(CreateWorkoutActivityCommand command) {
@@ -104,6 +109,16 @@ public class CreateWorkoutActivityUseCase {
         );
 
         WorkoutActivity savedWorkoutActivity = workoutActivityRepository.save(newWorkoutActivity);
+
+        publisher.publish(
+                AuditActionType.CREATE,
+                user.getId().value(),
+                user.getEmail().value(),
+                AuditTargetType.WORKOUT_ACTIVITY,
+                savedWorkoutActivity.getId().value(),
+                null,
+                WorkoutActivityAuditData.from(savedWorkoutActivity)
+        );
 
         return new CreateWorkoutActivityResult(
                 savedWorkoutActivity.getId(),

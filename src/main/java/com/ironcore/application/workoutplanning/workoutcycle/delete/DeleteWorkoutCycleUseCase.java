@@ -3,6 +3,10 @@ package com.ironcore.application.workoutplanning.workoutcycle.delete;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
+import com.ironcore.application.logging.audit.port.AuditLogPublisher;
+import com.ironcore.application.workoutplanning.workoutcycle.WorkoutCycleAuditData;
+import com.ironcore.domain.logging.audit.enums.AuditActionType;
+import com.ironcore.domain.logging.audit.enums.AuditTargetType;
 import com.ironcore.domain.person.model.Person;
 import com.ironcore.domain.person.repository.PersonRepository;
 import com.ironcore.domain.user.model.User;
@@ -21,6 +25,7 @@ public class DeleteWorkoutCycleUseCase {
     private final UserRepository userRepository;
     private final PersonRepository personRepository;
     private final WorkoutCycleRepository workoutCycleRepository;
+    private final AuditLogPublisher publisher;
 
     @Transactional
     public void execute(DeleteWorkoutCycleCommand command) {
@@ -43,6 +48,18 @@ public class DeleteWorkoutCycleUseCase {
             );
         }
 
+        WorkoutCycleAuditData beforeState = WorkoutCycleAuditData.from(workoutCycle);
+
         workoutCycleRepository.deleteById(workoutCycle.getId());
+
+        publisher.publish(
+                AuditActionType.DELETE,
+                user.getId().value(),
+                user.getEmail().value(),
+                AuditTargetType.WORKOUT_CYCLE,
+                workoutCycle.getId().value(),
+                beforeState,
+                null
+        );
     }
 }

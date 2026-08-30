@@ -3,6 +3,10 @@ package com.ironcore.application.workoutplanning.workoutday.reorder;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
+import com.ironcore.application.logging.audit.port.AuditLogPublisher;
+import com.ironcore.application.workoutplanning.workoutday.WorkoutDayAuditData;
+import com.ironcore.domain.logging.audit.enums.AuditActionType;
+import com.ironcore.domain.logging.audit.enums.AuditTargetType;
 import com.ironcore.domain.person.model.Person;
 import com.ironcore.domain.person.repository.PersonRepository;
 import com.ironcore.domain.user.model.User;
@@ -33,6 +37,7 @@ public class ReorderWorkoutDayUseCase {
     private final WorkoutDayRepository workoutDayRepository;
     private final WorkoutCycleRepository workoutCycleRepository;
     private final Clock clock;
+    private final AuditLogPublisher publisher;
 
     @Transactional
     public void execute(ReorderWorkoutDayCommand command) {
@@ -89,6 +94,8 @@ public class ReorderWorkoutDayUseCase {
 
         LocalDateTime updatedAt = LocalDateTime.now(clock);
 
+        WorkoutDayAuditData beforeState = WorkoutDayAuditData.from(workoutDay);
+
         if (changeWeekDay) {
             List<WorkoutDay> sourceDay = workoutDays.stream()
                     .filter(day -> day.getWeekDay() == sourceWeekDay)
@@ -116,5 +123,17 @@ public class ReorderWorkoutDayUseCase {
         }
 
         targetDay.forEach(workoutDayRepository::save);
+
+        WorkoutDayAuditData afterState = WorkoutDayAuditData.from(workoutDay);
+
+        publisher.publish(
+                AuditActionType.UPDATE,
+                user.getId().value(),
+                user.getEmail().value(),
+                AuditTargetType.WORKOUT_DAY,
+                workoutDay.getId().value(),
+                beforeState,
+                afterState
+        );
     }
 }

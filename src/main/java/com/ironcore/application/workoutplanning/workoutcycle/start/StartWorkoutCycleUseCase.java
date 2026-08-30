@@ -3,6 +3,10 @@ package com.ironcore.application.workoutplanning.workoutcycle.start;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
+import com.ironcore.application.logging.audit.port.AuditLogPublisher;
+import com.ironcore.application.workoutplanning.workoutcycle.WorkoutCycleAuditData;
+import com.ironcore.domain.logging.audit.enums.AuditActionType;
+import com.ironcore.domain.logging.audit.enums.AuditTargetType;
 import com.ironcore.domain.person.model.Person;
 import com.ironcore.domain.person.repository.PersonRepository;
 import com.ironcore.domain.user.model.User;
@@ -35,6 +39,7 @@ public class StartWorkoutCycleUseCase {
     private final WorkoutDayRepository workoutDayRepository;
     private final WorkoutActivityRepository workoutActivityRepository;
     private final Clock clock;
+    private final AuditLogPublisher publisher;
 
     @Transactional
     public StartWorkoutCycleResult execute(StartWorkoutCycleCommand command) {
@@ -81,9 +86,21 @@ public class StartWorkoutCycleUseCase {
 
         LocalDate startDate = LocalDate.now(clock);
 
+        WorkoutCycleAuditData beforeState = WorkoutCycleAuditData.from(workoutCycle);
+
         workoutCycle.startCycle(startDate);
 
         WorkoutCycle savedWorkoutCycle = workoutCycleRepository.save(workoutCycle);
+
+        publisher.publish(
+                AuditActionType.UPDATE,
+                user.getId().value(),
+                user.getEmail().value(),
+                AuditTargetType.WORKOUT_CYCLE,
+                savedWorkoutCycle.getId().value(),
+                beforeState,
+                WorkoutCycleAuditData.from(savedWorkoutCycle)
+        );
 
         return new StartWorkoutCycleResult(
                 savedWorkoutCycle.getId(),
