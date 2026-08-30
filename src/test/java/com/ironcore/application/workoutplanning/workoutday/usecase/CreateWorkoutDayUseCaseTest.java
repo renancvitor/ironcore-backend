@@ -3,10 +3,14 @@ package com.ironcore.application.workoutplanning.workoutday.usecase;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
+import com.ironcore.application.logging.audit.port.AuditLogPublisher;
+import com.ironcore.application.workoutplanning.workoutday.WorkoutDayAuditData;
 import com.ironcore.application.workoutplanning.workoutday.create.CreateWorkoutDayCommand;
 import com.ironcore.application.workoutplanning.workoutday.create.CreateWorkoutDayResult;
 import com.ironcore.application.workoutplanning.workoutday.create.CreateWorkoutDayUseCase;
 import com.ironcore.domain.person.model.Person;
+import com.ironcore.domain.logging.audit.enums.AuditActionType;
+import com.ironcore.domain.logging.audit.enums.AuditTargetType;
 import com.ironcore.domain.person.repository.PersonRepository;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
@@ -41,6 +45,8 @@ import static com.ironcore.domain.workoutplanning.workoutcycle.WorkoutCycleTestF
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -63,6 +69,9 @@ class CreateWorkoutDayUseCaseTest {
     @Mock
     private Clock clock;
 
+    @Mock
+    private AuditLogPublisher publisher;
+
     private CreateWorkoutDayUseCase useCase;
 
     @BeforeEach
@@ -72,7 +81,8 @@ class CreateWorkoutDayUseCaseTest {
                 personRepository,
                 workoutCycleRepository,
                 workoutDayRepository,
-                clock
+                clock,
+                publisher
         );
     }
 
@@ -120,6 +130,11 @@ class CreateWorkoutDayUseCaseTest {
             assertThat(captor.getValue().getCreatedAt()).isEqualTo(createdAt);
             assertThat(result.id()).isEqualTo(new WorkoutDayId(3L));
             assertThat(result.sortOrder()).isEqualTo(3);
+            verify(publisher).publish(
+                    eq(AuditActionType.CREATE), eq(user.getId().value()), eq(user.getEmail().value()),
+                    eq(AuditTargetType.WORKOUT_DAY), eq(result.id().value()), isNull(),
+                    any(WorkoutDayAuditData.class)
+            );
         }
     }
 

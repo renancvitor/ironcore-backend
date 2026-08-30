@@ -3,9 +3,13 @@ package com.ironcore.application.workoutplanning.workoutcycle.usecase;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
+import com.ironcore.application.logging.audit.port.AuditLogPublisher;
+import com.ironcore.application.workoutplanning.workoutcycle.WorkoutCycleAuditData;
 import com.ironcore.application.workoutplanning.workoutcycle.delete.DeleteWorkoutCycleCommand;
 import com.ironcore.application.workoutplanning.workoutcycle.delete.DeleteWorkoutCycleUseCase;
 import com.ironcore.domain.person.model.Person;
+import com.ironcore.domain.logging.audit.enums.AuditActionType;
+import com.ironcore.domain.logging.audit.enums.AuditTargetType;
 import com.ironcore.domain.person.repository.PersonRepository;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
@@ -30,6 +34,8 @@ import static com.ironcore.domain.workoutplanning.workoutcycle.WorkoutCycleTestF
 import static com.ironcore.domain.workoutplanning.workoutcycle.WorkoutCycleTestFactory.restoredWorkoutCycle;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -46,11 +52,14 @@ class DeleteWorkoutCycleUseCaseTest {
     @Mock
     private WorkoutCycleRepository workoutCycleRepository;
 
+    @Mock
+    private AuditLogPublisher publisher;
+
     private DeleteWorkoutCycleUseCase useCase;
 
     @BeforeEach
     void setUp() {
-        useCase = new DeleteWorkoutCycleUseCase(userRepository, personRepository, workoutCycleRepository);
+        useCase = new DeleteWorkoutCycleUseCase(userRepository, personRepository, workoutCycleRepository, publisher);
     }
 
     @Nested
@@ -67,6 +76,11 @@ class DeleteWorkoutCycleUseCaseTest {
             useCase.execute(command);
 
             verify(workoutCycleRepository).deleteById(workoutCycle.getId());
+            verify(publisher).publish(
+                    eq(AuditActionType.DELETE), eq(user.getId().value()), eq(user.getEmail().value()),
+                    eq(AuditTargetType.WORKOUT_CYCLE), eq(workoutCycle.getId().value()),
+                    any(WorkoutCycleAuditData.class), isNull()
+            );
         }
     }
 

@@ -13,7 +13,7 @@ import static com.ironcore.domain.workoutplanning.workoutcycle.WorkoutCycleTestF
 import static com.ironcore.domain.workoutplanning.workoutday.WorkoutDayTestFactory.restoredWorkoutDay;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -21,11 +21,15 @@ import static org.mockito.Mockito.when;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
+import com.ironcore.application.logging.audit.port.AuditLogPublisher;
+import com.ironcore.application.workoutplanning.workoutactivity.WorkoutActivityAuditData;
 import com.ironcore.application.workoutplanning.workoutactivity.create.CreateWorkoutActivityCommand;
 import com.ironcore.application.workoutplanning.workoutactivity.create.CreateWorkoutActivityResult;
 import com.ironcore.application.workoutplanning.workoutactivity.create.CreateWorkoutActivityUseCase;
 import com.ironcore.domain.exercise.exception.InvalidExerciseException;
 import com.ironcore.domain.exercise.repository.ExerciseRepository;
+import com.ironcore.domain.logging.audit.enums.AuditActionType;
+import com.ironcore.domain.logging.audit.enums.AuditTargetType;
 import com.ironcore.domain.person.model.Person;
 import com.ironcore.domain.person.repository.PersonRepository;
 import com.ironcore.domain.user.model.User;
@@ -75,6 +79,9 @@ class CreateWorkoutActivityUseCaseTest {
     @Mock
     private Clock clock;
 
+    @Mock
+    private AuditLogPublisher publisher;
+
     private CreateWorkoutActivityUseCase useCase;
 
     @BeforeEach
@@ -87,7 +94,9 @@ class CreateWorkoutActivityUseCaseTest {
                         workoutDayRepository,
                         workoutCycleRepository,
                         exerciseRepository,
-                        clock);
+                        clock,
+                        publisher
+                );
     }
 
     @Nested
@@ -137,6 +146,11 @@ class CreateWorkoutActivityUseCaseTest {
             verify(workoutActivityRepository).save(captor.capture());
             assertThat(captor.getValue().getOrderIndex()).isEqualTo(3);
             assertThat(captor.getValue().getCreatedAt()).isEqualTo(createdAt);
+            verify(publisher).publish(
+                    eq(AuditActionType.CREATE), eq(user.getId().value()), eq(user.getEmail().value()),
+                    eq(AuditTargetType.WORKOUT_ACTIVITY), eq(result.id().value()), isNull(),
+                    any(WorkoutActivityAuditData.class)
+            );
             assertThat(result.id()).isEqualTo(new WorkoutActivityId(2L));
             assertThat(result.orderIndex()).isEqualTo(3);
         }
