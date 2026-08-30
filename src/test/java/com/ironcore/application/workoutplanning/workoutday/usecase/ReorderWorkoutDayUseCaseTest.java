@@ -3,9 +3,13 @@ package com.ironcore.application.workoutplanning.workoutday.usecase;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
+import com.ironcore.application.logging.audit.port.AuditLogPublisher;
+import com.ironcore.application.workoutplanning.workoutday.WorkoutDayAuditData;
 import com.ironcore.application.workoutplanning.workoutday.reorder.ReorderWorkoutDayCommand;
 import com.ironcore.application.workoutplanning.workoutday.reorder.ReorderWorkoutDayUseCase;
 import com.ironcore.domain.person.model.Person;
+import com.ironcore.domain.logging.audit.enums.AuditActionType;
+import com.ironcore.domain.logging.audit.enums.AuditTargetType;
 import com.ironcore.domain.person.repository.PersonRepository;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
@@ -41,6 +45,7 @@ import static com.ironcore.domain.workoutplanning.workoutday.WorkoutDayTestFacto
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -64,6 +69,9 @@ class ReorderWorkoutDayUseCaseTest {
     @Mock
     private Clock clock;
 
+    @Mock
+    private AuditLogPublisher publisher;
+
     private ReorderWorkoutDayUseCase useCase;
 
     @BeforeEach
@@ -73,7 +81,8 @@ class ReorderWorkoutDayUseCaseTest {
                 personRepository,
                 workoutDayRepository,
                 workoutCycleRepository,
-                clock
+                clock,
+                publisher
         );
     }
 
@@ -106,6 +115,11 @@ class ReorderWorkoutDayUseCaseTest {
                     .extracting(WorkoutDay::getSortOrder)
                     .containsExactly(1, 2);
             assertThat(captor.getAllValues()).allSatisfy(day -> assertThat(day.getUpdatedAt()).isEqualTo(updatedAt));
+            verify(publisher).publish(
+                    eq(AuditActionType.UPDATE), eq(user.getId().value()), eq(user.getEmail().value()),
+                    eq(AuditTargetType.WORKOUT_DAY), eq(movedDay.getId().value()),
+                    any(WorkoutDayAuditData.class), any(WorkoutDayAuditData.class)
+            );
         }
 
         @Test

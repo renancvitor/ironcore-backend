@@ -2,10 +2,14 @@ package com.ironcore.application.workoutplanning.workoutcycle.usecase;
 
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
+import com.ironcore.application.logging.audit.port.AuditLogPublisher;
+import com.ironcore.application.workoutplanning.workoutcycle.WorkoutCycleAuditData;
 import com.ironcore.application.workoutplanning.workoutcycle.complete.CompleteWorkoutCycleCommand;
 import com.ironcore.application.workoutplanning.workoutcycle.complete.CompleteWorkoutCycleResult;
 import com.ironcore.application.workoutplanning.workoutcycle.complete.CompleteWorkoutCycleUseCase;
 import com.ironcore.domain.person.model.Person;
+import com.ironcore.domain.logging.audit.enums.AuditActionType;
+import com.ironcore.domain.logging.audit.enums.AuditTargetType;
 import com.ironcore.domain.person.repository.PersonRepository;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
@@ -37,6 +41,7 @@ import static com.ironcore.domain.workoutplanning.workoutcycle.WorkoutCycleTestF
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -56,6 +61,9 @@ class CompleteWorkoutCycleUseCaseTest {
     @Mock
     private Clock clock;
 
+    @Mock
+    private AuditLogPublisher publisher;
+
     private CompleteWorkoutCycleUseCase useCase;
 
     @BeforeEach
@@ -64,7 +72,8 @@ class CompleteWorkoutCycleUseCaseTest {
                 userRepository,
                 personRepository,
                 workoutCycleRepository,
-                clock
+                clock,
+                publisher
         );
     }
 
@@ -97,6 +106,11 @@ class CompleteWorkoutCycleUseCaseTest {
             assertThat(result.startDate()).isEqualTo(workoutCycle.getStartDate());
             assertThat(result.endDate()).isEqualTo(endDate);
             assertThat(result.workoutStatus()).isEqualTo(WorkoutStatus.COMPLETED);
+            verify(publisher).publish(
+                    eq(AuditActionType.UPDATE), eq(user.getId().value()), eq(user.getEmail().value()),
+                    eq(AuditTargetType.WORKOUT_CYCLE), eq(workoutCycle.getId().value()),
+                    any(WorkoutCycleAuditData.class), any(WorkoutCycleAuditData.class)
+            );
         }
     }
 

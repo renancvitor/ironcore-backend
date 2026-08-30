@@ -3,6 +3,10 @@ package com.ironcore.application.workoutplanning.workoutactivity.delete;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
+import com.ironcore.application.logging.audit.port.AuditLogPublisher;
+import com.ironcore.application.workoutplanning.workoutactivity.WorkoutActivityAuditData;
+import com.ironcore.domain.logging.audit.enums.AuditActionType;
+import com.ironcore.domain.logging.audit.enums.AuditTargetType;
 import com.ironcore.domain.person.model.Person;
 import com.ironcore.domain.person.repository.PersonRepository;
 import com.ironcore.domain.user.model.User;
@@ -33,6 +37,7 @@ public class DeleteWorkoutActivityUseCase {
     private final WorkoutDayRepository workoutDayRepository;
     private final WorkoutCycleRepository workoutCycleRepository;
     private final Clock clock;
+    private final AuditLogPublisher publisher;
 
     @Transactional
     public void execute(DeleteWorkoutActivityCommand command) {
@@ -64,6 +69,8 @@ public class DeleteWorkoutActivityUseCase {
             );
         }
 
+        WorkoutActivityAuditData beforeState = WorkoutActivityAuditData.from(workoutActivity);
+
         workoutActivityRepository.deleteById(workoutActivity.getId());
 
         List<WorkoutActivity> remainingWorkoutActivities = workoutActivityRepository
@@ -82,5 +89,15 @@ public class DeleteWorkoutActivityUseCase {
         }
 
         remainingWorkoutActivities.forEach(workoutActivityRepository::save);
+
+        publisher.publish(
+                AuditActionType.DELETE,
+                user.getId().value(),
+                user.getEmail().value(),
+                AuditTargetType.WORKOUT_ACTIVITY,
+                workoutActivity.getId().value(),
+                beforeState,
+                null
+        );
     }
 }

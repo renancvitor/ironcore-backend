@@ -2,6 +2,10 @@ package com.ironcore.application.workoutplanning.workoutcycle.complete;
 
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
+import com.ironcore.application.logging.audit.port.AuditLogPublisher;
+import com.ironcore.application.workoutplanning.workoutcycle.WorkoutCycleAuditData;
+import com.ironcore.domain.logging.audit.enums.AuditActionType;
+import com.ironcore.domain.logging.audit.enums.AuditTargetType;
 import com.ironcore.domain.person.model.Person;
 import com.ironcore.domain.person.repository.PersonRepository;
 import com.ironcore.domain.user.model.User;
@@ -23,6 +27,7 @@ public class CompleteWorkoutCycleUseCase {
     private final PersonRepository personRepository;
     private final WorkoutCycleRepository workoutCycleRepository;
     private final Clock clock;
+    private final AuditLogPublisher publisher;
 
     @Transactional
     public CompleteWorkoutCycleResult execute(CompleteWorkoutCycleCommand command) {
@@ -41,9 +46,21 @@ public class CompleteWorkoutCycleUseCase {
 
         LocalDate endDate = LocalDate.now(clock);
 
+        WorkoutCycleAuditData beforeState = WorkoutCycleAuditData.from(workoutCycle);
+
         workoutCycle.endCycle(endDate);
 
         WorkoutCycle savedWorkoutCycle = workoutCycleRepository.save(workoutCycle);
+
+        publisher.publish(
+                AuditActionType.UPDATE,
+                user.getId().value(),
+                user.getEmail().value(),
+                AuditTargetType.WORKOUT_CYCLE,
+                savedWorkoutCycle.getId().value(),
+                beforeState,
+                WorkoutCycleAuditData.from(savedWorkoutCycle)
+        );
 
         return new CompleteWorkoutCycleResult(
                 savedWorkoutCycle.getId(),

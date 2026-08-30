@@ -3,9 +3,13 @@ package com.ironcore.application.workoutplanning.workoutday.usecase;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
+import com.ironcore.application.logging.audit.port.AuditLogPublisher;
+import com.ironcore.application.workoutplanning.workoutday.WorkoutDayAuditData;
 import com.ironcore.application.workoutplanning.workoutday.delete.DeleteWorkoutDayCommand;
 import com.ironcore.application.workoutplanning.workoutday.delete.DeleteWorkoutDayUseCase;
 import com.ironcore.domain.person.model.Person;
+import com.ironcore.domain.logging.audit.enums.AuditActionType;
+import com.ironcore.domain.logging.audit.enums.AuditTargetType;
 import com.ironcore.domain.person.repository.PersonRepository;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
@@ -41,6 +45,8 @@ import static com.ironcore.domain.workoutplanning.workoutday.WorkoutDayTestFacto
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -63,6 +69,9 @@ class DeleteWorkoutDayUseCaseTest {
     @Mock
     private Clock clock;
 
+    @Mock
+    private AuditLogPublisher publisher;
+
     private DeleteWorkoutDayUseCase useCase;
 
     @BeforeEach
@@ -72,7 +81,8 @@ class DeleteWorkoutDayUseCaseTest {
                 personRepository,
                 workoutDayRepository,
                 workoutCycleRepository,
-                clock
+                clock,
+                publisher
         );
     }
 
@@ -110,6 +120,11 @@ class DeleteWorkoutDayUseCaseTest {
             assertThat(captor.getValue().getId()).isEqualTo(remainingDay.getId());
             assertThat(captor.getValue().getSortOrder()).isEqualTo(1);
             assertThat(captor.getValue().getUpdatedAt()).isEqualTo(updatedAt);
+            verify(publisher).publish(
+                    eq(AuditActionType.DELETE), eq(user.getId().value()), eq(user.getEmail().value()),
+                    eq(AuditTargetType.WORKOUT_DAY), eq(deletedDay.getId().value()),
+                    any(WorkoutDayAuditData.class), isNull()
+            );
         }
     }
 

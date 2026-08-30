@@ -3,6 +3,10 @@ package com.ironcore.application.workoutplanning.workoutday.create;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
+import com.ironcore.application.logging.audit.port.AuditLogPublisher;
+import com.ironcore.application.workoutplanning.workoutday.WorkoutDayAuditData;
+import com.ironcore.domain.logging.audit.enums.AuditActionType;
+import com.ironcore.domain.logging.audit.enums.AuditTargetType;
 import com.ironcore.domain.person.model.Person;
 import com.ironcore.domain.person.repository.PersonRepository;
 import com.ironcore.domain.user.model.User;
@@ -28,6 +32,7 @@ public class CreateWorkoutDayUseCase {
     private final WorkoutCycleRepository workoutCycleRepository;
     private final WorkoutDayRepository workoutDayRepository;
     private final Clock clock;
+    private final AuditLogPublisher publisher;
 
     @Transactional
     public CreateWorkoutDayResult execute(CreateWorkoutDayCommand command) {
@@ -68,6 +73,16 @@ public class CreateWorkoutDayUseCase {
         );
 
         WorkoutDay savedWorkoutDay = workoutDayRepository.save(newWorkoutDay);
+
+        publisher.publish(
+                AuditActionType.CREATE,
+                user.getId().value(),
+                user.getEmail().value(),
+                AuditTargetType.WORKOUT_DAY,
+                savedWorkoutDay.getId().value(),
+                null,
+                WorkoutDayAuditData.from(savedWorkoutDay)
+        );
 
         return new CreateWorkoutDayResult(
                 savedWorkoutDay.getId(),

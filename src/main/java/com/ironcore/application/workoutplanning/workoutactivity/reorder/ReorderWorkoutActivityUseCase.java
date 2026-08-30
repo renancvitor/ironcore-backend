@@ -3,6 +3,10 @@ package com.ironcore.application.workoutplanning.workoutactivity.reorder;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
+import com.ironcore.application.logging.audit.port.AuditLogPublisher;
+import com.ironcore.application.workoutplanning.workoutactivity.WorkoutActivityAuditData;
+import com.ironcore.domain.logging.audit.enums.AuditActionType;
+import com.ironcore.domain.logging.audit.enums.AuditTargetType;
 import com.ironcore.domain.person.model.Person;
 import com.ironcore.domain.person.repository.PersonRepository;
 import com.ironcore.domain.user.model.User;
@@ -35,6 +39,7 @@ public class ReorderWorkoutActivityUseCase {
     private final WorkoutDayRepository workoutDayRepository;
     private final WorkoutCycleRepository workoutCycleRepository;
     private final Clock clock;
+    private final AuditLogPublisher publisher;
 
     @Transactional
     public void execute(ReorderWorkoutActivityCommand command) {
@@ -88,6 +93,8 @@ public class ReorderWorkoutActivityUseCase {
 
         LocalDateTime updatedAt = LocalDateTime.now(clock);
 
+        WorkoutActivityAuditData beforeState = WorkoutActivityAuditData.from(workoutActivity);
+
         for (int i = 0; i < reorderedActivities.size(); i++) {
             reorderedActivities.get(i).reorder(
                     i + 1,
@@ -96,5 +103,17 @@ public class ReorderWorkoutActivityUseCase {
         }
 
         reorderedActivities.forEach(workoutActivityRepository::save);
+
+        WorkoutActivityAuditData afterState = WorkoutActivityAuditData.from(workoutActivity);
+
+        publisher.publish(
+                AuditActionType.UPDATE,
+                user.getId().value(),
+                user.getEmail().value(),
+                AuditTargetType.WORKOUT_ACTIVITY,
+                workoutActivity.getId().value(),
+                beforeState,
+                afterState
+        );
     }
 }

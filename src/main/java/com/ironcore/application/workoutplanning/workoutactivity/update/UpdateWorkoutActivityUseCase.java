@@ -3,9 +3,13 @@ package com.ironcore.application.workoutplanning.workoutactivity.update;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
+import com.ironcore.application.logging.audit.port.AuditLogPublisher;
+import com.ironcore.application.workoutplanning.workoutactivity.WorkoutActivityAuditData;
 import com.ironcore.domain.exercise.exception.InvalidExerciseException;
 import com.ironcore.domain.exercise.model.Exercise;
 import com.ironcore.domain.exercise.repository.ExerciseRepository;
+import com.ironcore.domain.logging.audit.enums.AuditActionType;
+import com.ironcore.domain.logging.audit.enums.AuditTargetType;
 import com.ironcore.domain.person.model.Person;
 import com.ironcore.domain.person.repository.PersonRepository;
 import com.ironcore.domain.user.model.User;
@@ -35,6 +39,7 @@ public class UpdateWorkoutActivityUseCase {
     private final WorkoutCycleRepository workoutCycleRepository;
     private final ExerciseRepository exerciseRepository;
     private final Clock clock;
+    private final AuditLogPublisher publisher;
 
     @Transactional
     public UpdateWorkoutActivityResult execute(UpdateWorkoutActivityCommand command) {
@@ -84,6 +89,8 @@ public class UpdateWorkoutActivityUseCase {
 
         LocalDateTime updatedAt = LocalDateTime.now(clock);
 
+        WorkoutActivityAuditData beforeState = WorkoutActivityAuditData.from(workoutActivity);
+
         workoutActivity.updateActivity(
                 exercise.getId(),
                 command.sets(),
@@ -100,6 +107,16 @@ public class UpdateWorkoutActivityUseCase {
         );
 
         WorkoutActivity savedWorkoutActivity = workoutActivityRepository.save(workoutActivity);
+
+        publisher.publish(
+                AuditActionType.UPDATE,
+                user.getId().value(),
+                user.getEmail().value(),
+                AuditTargetType.WORKOUT_ACTIVITY,
+                savedWorkoutActivity.getId().value(),
+                beforeState,
+                WorkoutActivityAuditData.from(savedWorkoutActivity)
+        );
 
         return new UpdateWorkoutActivityResult(
                 savedWorkoutActivity.getId(),

@@ -11,7 +11,7 @@ import static com.ironcore.domain.workoutplanning.workoutcycle.WorkoutCycleTestF
 import static com.ironcore.domain.workoutplanning.workoutday.WorkoutDayTestFactory.restoredWorkoutDay;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -20,9 +20,13 @@ import static org.mockito.Mockito.when;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
+import com.ironcore.application.logging.audit.port.AuditLogPublisher;
+import com.ironcore.application.workoutplanning.workoutactivity.WorkoutActivityAuditData;
 import com.ironcore.application.workoutplanning.workoutactivity.reorder.ReorderWorkoutActivityCommand;
 import com.ironcore.application.workoutplanning.workoutactivity.reorder.ReorderWorkoutActivityUseCase;
 import com.ironcore.domain.exercise.valueobject.ExerciseId;
+import com.ironcore.domain.logging.audit.enums.AuditActionType;
+import com.ironcore.domain.logging.audit.enums.AuditTargetType;
 import com.ironcore.domain.person.model.Person;
 import com.ironcore.domain.person.repository.PersonRepository;
 import com.ironcore.domain.user.model.User;
@@ -69,6 +73,9 @@ class ReorderWorkoutActivityUseCaseTest {
     @Mock
     private Clock clock;
 
+    @Mock
+    private AuditLogPublisher publisher;
+
     private ReorderWorkoutActivityUseCase useCase;
 
     @BeforeEach
@@ -80,7 +87,8 @@ class ReorderWorkoutActivityUseCaseTest {
                         workoutActivityRepository,
                         workoutDayRepository,
                         workoutCycleRepository,
-                        clock);
+                        clock,
+                        publisher);
     }
 
     @Nested
@@ -114,6 +122,11 @@ class ReorderWorkoutActivityUseCaseTest {
                     .containsExactly(1, 2);
             assertThat(captor.getAllValues())
                     .allSatisfy(activity -> assertThat(activity.getUpdatedAt()).isEqualTo(updatedAt));
+            verify(publisher).publish(
+                    eq(AuditActionType.UPDATE), eq(user.getId().value()), eq(user.getEmail().value()),
+                    eq(AuditTargetType.WORKOUT_ACTIVITY), eq(moved.getId().value()),
+                    any(WorkoutActivityAuditData.class), any(WorkoutActivityAuditData.class)
+            );
         }
     }
 
