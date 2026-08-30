@@ -24,6 +24,7 @@ import com.ironcore.application.workoutplanning.workoutcycle.update.UpdateWorkou
 import com.ironcore.application.workoutplanning.workoutcycle.update.UpdateWorkoutCycleResult;
 import com.ironcore.application.workoutplanning.workoutcycle.update.UpdateWorkoutCycleUseCase;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
+import com.ironcore.interfaces.rest.workoutplanning.workoutcycle.api.WorkoutCycleApi;
 import com.ironcore.interfaces.rest.workoutplanning.workoutcycle.dto.cancel.CancelWorkoutCycleResponse;
 import com.ironcore.interfaces.rest.workoutplanning.workoutcycle.dto.complete.CompleteWorkoutCycleResponse;
 import com.ironcore.interfaces.rest.workoutplanning.workoutcycle.dto.create.CreateWorkoutCycleRequest;
@@ -51,7 +52,7 @@ import com.ironcore.domain.workoutplanning.workoutcycle.enums.WorkoutStatus;
 @Validated
 @RequiredArgsConstructor
 @RequestMapping("/api/users/me/workout-cycles")
-public class WorkoutCycleController {
+public class WorkoutCycleController implements WorkoutCycleApi {
 
     private final CreateWorkoutCycleUseCase createWorkoutCycleUseCase;
     private final UpdateWorkoutCycleUseCase updateWorkoutCycleUseCase;

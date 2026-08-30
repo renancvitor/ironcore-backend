@@ -1,6 +1,7 @@
 package com.ironcore.interfaces.rest.workoutplanning.traininggoal;
 
 import com.ironcore.application.workoutplanning.traininggoal.usecase.ListTrainingGoalsUseCase;
+import com.ironcore.interfaces.rest.workoutplanning.traininggoal.api.TrainingGoalApi;
 import com.ironcore.interfaces.rest.workoutplanning.traininggoal.dto.TrainingGoalResponse;
 import com.ironcore.interfaces.rest.workoutplanning.traininggoal.mapper.TrainingGoalRestMapper;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +15,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/training-goals")
-public class TrainingGoalController {
+public class TrainingGoalController implements TrainingGoalApi {
 
     private final ListTrainingGoalsUseCase listTrainingGoalsUseCase;
 

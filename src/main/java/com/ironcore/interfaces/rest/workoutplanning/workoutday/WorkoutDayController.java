@@ -11,6 +11,7 @@ import com.ironcore.application.workoutplanning.workoutday.update.UpdateWorkoutD
 import com.ironcore.application.workoutplanning.workoutday.update.UpdateWorkoutDayResult;
 import com.ironcore.application.workoutplanning.workoutday.update.UpdateWorkoutDayUseCase;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
+import com.ironcore.interfaces.rest.workoutplanning.workoutday.api.WorkoutDayApi;
 import com.ironcore.interfaces.rest.workoutplanning.workoutday.dto.create.CreateWorkoutDayRequest;
 import com.ironcore.interfaces.rest.workoutplanning.workoutday.dto.create.CreateWorkoutDayResponse;
 import com.ironcore.interfaces.rest.workoutplanning.workoutday.dto.reorder.ReorderWorkoutDayRequest;
@@ -27,7 +28,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/users/me/workout-days")
-public class WorkoutDayController {
+public class WorkoutDayController implements WorkoutDayApi {
 
     private final CreateWorkoutDayUseCase createWorkoutDayUseCase;
     private final UpdateWorkoutDayUseCase updateWorkoutDayUseCase;
