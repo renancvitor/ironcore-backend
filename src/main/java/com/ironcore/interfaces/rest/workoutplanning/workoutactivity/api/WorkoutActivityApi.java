@@ -21,7 +21,7 @@ public interface WorkoutActivityApi {
 
     @Operation(
             summary = "Cadastro de atividade de treino",
-            description = "Permite ao usuário cadastrar uma atividade de treino."
+            description = "Permite ao usuário cadastrar uma atividade de treino nos status 'Não iniciado' ou 'Em progresso'."
     )
     @ApiResponse(
             responseCode = "201",
@@ -44,7 +44,7 @@ public interface WorkoutActivityApi {
 
     @Operation(
             summary = "Alterar atividade de treino",
-            description = "Atualiza parcialmente a atividade de treino vinculada ao usuário autenticado."
+            description = "Atualiza a atividade de treino nos status 'Não iniciado' ou 'Em progresso'."
     )
     @ApiResponse(
             responseCode = "200",
@@ -68,7 +68,7 @@ public interface WorkoutActivityApi {
 
     @Operation(
             summary = "Deletar atividade de treino",
-            description = "Deleta o registro de atividade de treino do usuário autenticado."
+            description = "Exclui a atividade de treino nos status 'Não iniciado' ou 'Em progresso'."
     )
     @ApiResponse(
             responseCode = "204",
@@ -77,13 +77,14 @@ public interface WorkoutActivityApi {
     @BadRequestResponse
     @NotFoundResponse
     @ForbiddenResponse
+    @UnprocessableEntityResponse
     @UnauthorizedResponse
     @InternalServerErrorResponse
     ResponseEntity<Void> delete(AuthenticatedUser authenticatedUser, Long id);
 
     @Operation(
             summary = "Reordenar atividade de treino",
-            description = "Reordena a atividade de treino vinculada ao usuário autenticado."
+            description = "Reordena a atividade de treino nos status 'Não iniciado' ou 'Em progresso'."
     )
     @ApiResponse(
             responseCode = "204",

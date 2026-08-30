@@ -21,7 +21,7 @@ public interface WorkoutDayApi {
 
     @Operation(
             summary = "Cadastro de dia de treino",
-            description = "Permite ao usuário cadastrar um dia de treino."
+            description = "Permite ao usuário cadastrar um dia de treino nos status 'Não iniciado' ou 'Em progresso'."
     )
     @ApiResponse(
             responseCode = "201",
@@ -44,7 +44,7 @@ public interface WorkoutDayApi {
 
     @Operation(
             summary = "Alterar dia de treino",
-            description = "Atualiza parcialmente o dia de treino vinculado ao usuário autenticado."
+            description = "Atualiza o dia de treino nos status 'Não iniciado' ou 'Em progresso'."
     )
     @ApiResponse(
             responseCode = "200",
@@ -68,7 +68,7 @@ public interface WorkoutDayApi {
 
     @Operation(
             summary = "Deletar dia de treino",
-            description = "Deleta o registro de dia de treino do usuário autenticado."
+            description = "Exclui o dia de treino nos status 'Não iniciado' ou 'Em progresso'."
     )
     @ApiResponse(
             responseCode = "204",
@@ -77,13 +77,14 @@ public interface WorkoutDayApi {
     @BadRequestResponse
     @NotFoundResponse
     @ForbiddenResponse
+    @UnprocessableEntityResponse
     @UnauthorizedResponse
     @InternalServerErrorResponse
     ResponseEntity<Void> delete(AuthenticatedUser authenticatedUser, Long id);
 
     @Operation(
             summary = "Reordenar dia de treino",
-            description = "Reordena o dia de treino vinculado ao usuário autenticado."
+            description = "Reordena o dia de treino nos status 'Não iniciado' ou 'Em progresso'."
     )
     @ApiResponse(
             responseCode = "204",

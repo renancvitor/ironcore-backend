@@ -43,7 +43,6 @@ public interface WorkoutCycleApi {
     @BadRequestResponse
     @NotFoundResponse
     @ForbiddenResponse
-    @UnprocessableEntityResponse
     @UnauthorizedResponse
     @InternalServerErrorResponse
     ResponseEntity<CreateWorkoutCycleResponse> create(
@@ -53,7 +52,7 @@ public interface WorkoutCycleApi {
 
     @Operation(
             summary = "Alterar ciclo de treino",
-            description = "Atualiza parcialmente o ciclo de treino enquanto estiver em status editável."
+            description = "Atualiza o ciclo de treino nos status 'Não iniciado' ou 'Em progresso'."
     )
     @ApiResponse(
             responseCode = "200",
@@ -126,7 +125,6 @@ public interface WorkoutCycleApi {
     @BadRequestResponse
     @NotFoundResponse
     @ForbiddenResponse
-    @UnprocessableEntityResponse
     @UnauthorizedResponse
     @InternalServerErrorResponse
     ResponseEntity<CompleteWorkoutCycleResponse> complete(AuthenticatedUser authenticatedUser, Long id);
@@ -146,7 +144,6 @@ public interface WorkoutCycleApi {
     @BadRequestResponse
     @NotFoundResponse
     @ForbiddenResponse
-    @UnprocessableEntityResponse
     @UnauthorizedResponse
     @InternalServerErrorResponse
     ResponseEntity<CancelWorkoutCycleResponse> cancel(AuthenticatedUser authenticatedUser, Long id);
@@ -185,6 +182,7 @@ public interface WorkoutCycleApi {
     @BadRequestResponse
     @NotFoundResponse
     @ForbiddenResponse
+    @UnprocessableEntityResponse
     @UnauthorizedResponse
     @InternalServerErrorResponse
     ResponseEntity<ListWorkoutCyclesResponse> list(
