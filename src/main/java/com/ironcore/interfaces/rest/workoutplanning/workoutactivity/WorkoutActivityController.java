@@ -11,6 +11,7 @@ import com.ironcore.application.workoutplanning.workoutactivity.update.UpdateWor
 import com.ironcore.application.workoutplanning.workoutactivity.update.UpdateWorkoutActivityResult;
 import com.ironcore.application.workoutplanning.workoutactivity.update.UpdateWorkoutActivityUseCase;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
+import com.ironcore.interfaces.rest.workoutplanning.workoutactivity.api.WorkoutActivityApi;
 import com.ironcore.interfaces.rest.workoutplanning.workoutactivity.dto.create.CreateWorkoutActivityRequest;
 import com.ironcore.interfaces.rest.workoutplanning.workoutactivity.dto.create.CreateWorkoutActivityResponse;
 import com.ironcore.interfaces.rest.workoutplanning.workoutactivity.dto.reorder.ReorderWorkoutActivityRequest;
@@ -27,7 +28,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/users/me/workout-activities")
-public class WorkoutActivityController {
+public class WorkoutActivityController implements WorkoutActivityApi {
 
     private final CreateWorkoutActivityUseCase createWorkoutActivityUseCase;
     private final UpdateWorkoutActivityUseCase updateWorkoutActivityUseCase;
@@ -71,7 +72,7 @@ public class WorkoutActivityController {
     }
 
     @PatchMapping("/{id}/reorder")
-    public ResponseEntity<Void>  reorder(
+    public ResponseEntity<Void> reorder(
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
             @PathVariable Long id,
             @Valid @RequestBody ReorderWorkoutActivityRequest request
