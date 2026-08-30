@@ -9,7 +9,7 @@ O projeto usa Springdoc para expor os contratos REST atuais em dois formatos com
 - Swagger UI, para navegação visual e teste manual dos endpoints.
 - `/v3/api-docs`, para consumo técnico do contrato OpenAPI em JSON.
 
-A documentação cobre os fluxos REST já implementados de autenticação, usuário autenticado, pessoa vinculada, métricas corporais e exercise catalog.
+A documentação cobre os fluxos REST já implementados de autenticação, usuário autenticado, pessoa vinculada, métricas corporais, exercise catalog e workout planning.
 
 ## Acessos Locais
 
@@ -48,6 +48,9 @@ Fluxos documentados:
 - Consulta de catálogos auxiliares de exercises.
 - Listagem paginada e filtrada de exercises.
 - Consulta detalhada de exercise por id.
+- Listagem de objetivos de treino ativos.
+- Criação, lifecycle, detalhe, listagem paginada e filtrada de ciclos de treino.
+- Criação, atualização, exclusão e reorder de dias e atividades de treino.
 - Respostas padronizadas de erro.
 
 ## Autenticação no OpenAPI

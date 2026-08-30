@@ -36,10 +36,15 @@ A configuração base da aplicação habilita o Flyway e usa `hibernate.ddl-auto
 | `V15__seed_muscle_subgroups.sql` | `muscle_subgroups` | Insere seed inicial dos subgrupos musculares. |
 | `V16__seed_exercises.sql` | `exercises` | Insere seed inicial com 341 exercises. |
 | `V17__seed_exercise_muscle_targets.sql` | `exercise_muscle_targets` | Insere seed inicial com 2766 associações entre exercises e subgrupos musculares. |
+| `V18__create_table_training_goals.sql` | `training_goals` | Armazena objetivos globais de treino. |
+| `V19__create_table_workout_cycles.sql` | `workout_cycles` | Armazena ciclos de treino pertencentes a uma pessoa e vinculados a um objetivo. |
+| `V20__create_table_workout_days.sql` | `workout_days` | Armazena dias que compõem ciclos, com ordenação por dia da semana. |
+| `V21__create_table_workout_activities.sql` | `workout_activities` | Armazena atividades prescritas de cada dia. |
+| `V22__seed_training_goals.sql` | `training_goals` | Insere os objetivos iniciais de treino. |
 
 ## Modelo Implementado
 
-O schema funcional atual separa dados pessoais, acesso e medições corporais:
+O schema funcional atual separa dados pessoais, acesso, medições corporais, catálogo global de exercises e workout planning:
 
 ```text
 persons
@@ -50,6 +55,9 @@ persons
 activity_types -> exercises
 equipment_types -> exercises
 muscle_groups -> muscle_subgroups -> exercise_muscle_targets -> exercises
+
+persons -> workout_cycles -> workout_days -> workout_activities -> exercises
+training_goals -> workout_cycles
 ```
 
 Decisões atuais:
@@ -63,12 +71,19 @@ Decisões atuais:
 - Catálogos auxiliares usam `code`, `display_name`, `active` e `sort_order`.
 - `exercise_muscle_targets` impede duplicidade de associação por `exercise_id + muscle_subgroup_id`.
 - A carga atual do catálogo é feita por seeds versionados via Flyway.
+- `training_goals` é catálogo global com `code` único; a V22 insere cinco objetivos ativos iniciais.
+- `workout_cycles.person_id` usa `ON DELETE CASCADE`; `training_goal_id` referencia o catálogo sem cascade explícito.
+- `workout_days.workout_cycle_id` e `workout_activities.workout_day_id` usam `ON DELETE CASCADE`.
+- `workout_days` usa `sort_order`, com `UNIQUE (workout_cycle_id, week_day, sort_order) DEFERRABLE INITIALLY DEFERRED`, `week_day BETWEEN 1 AND 7` e `sort_order > 0`.
+- `workout_activities` usa `order_index`, com `UNIQUE (workout_day_id, order_index) DEFERRABLE INITIALLY DEFERRED` e `UNIQUE (workout_day_id, exercise_id)`.
 
 ## Observações Sobre os Diagramas
 
-Alguns diagramas descrevem um modelo de dados planejado mais amplo, incluindo objetivos de treino, ciclos, dias e atividades de treino. Essas tabelas são blueprint/escopo futuro quando não estiverem presentes nas migrations atuais.
+O diagrama ER inclui o recorte implementado de objetivos de treino, ciclos, dias e atividades. Diagramas de geração por IA e de Workout Session continuam blueprint de produto.
 
 Somente as tabelas criadas pelas migrations listadas acima devem ser tratadas como estado de banco implementado.
+
+Detalhes funcionais e de contrato: [Workout Planning](../workout-planning/README.md).
 
 ## Serviços Locais
 

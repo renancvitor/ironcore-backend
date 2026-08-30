@@ -40,6 +40,7 @@ Specifications são usadas quando uma listagem precisa combinar filtros opcionai
 Exemplo atual:
 
 - `ExerciseSpecifications.filter`
+- `WorkoutCycleSpecification.filter`
 
 A listagem de exercises combina:
 
@@ -51,6 +52,18 @@ A listagem de exercises combina:
 - `targetRole`
 
 O adapter monta a `Specification`, aplica paginação e ordena por `name` e `id`.
+
+### Workout cycles
+
+`WorkoutCycleSpecification.filter` sempre restringe a consulta à `PersonId` resolvida do usuário autenticado. Ela combina opcionalmente:
+
+- `workoutStatus`
+- `trainingGoalId`
+- `startDate`
+- `endDate`
+- `name`
+
+O período usa sobreposição entre as datas do ciclo e a janela solicitada; ciclos sem `endDate` são considerados em aberto. `name` aplica busca parcial case-insensitive com escape de caracteres de `LIKE`. O adapter aplica `page` e `size` e ordena por `name` ascendente e `id` ascendente.
 
 ## Critério de Escolha
 
@@ -78,5 +91,6 @@ Use Specification quando:
 - Body metrics usa derived queries para CRUD/listagem simples e JPQL para progresso.
 - Exercise catalog usa derived queries para catálogos auxiliares e detalhe por id.
 - Exercise catalog usa Specifications para listagem com filtros combinados.
+- Workout planning usa `WorkoutCycleSpecification` para listagem de ciclos com ownership, filtros combináveis, paginação e ordenação.
 
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>

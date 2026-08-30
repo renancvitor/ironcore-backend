@@ -6,12 +6,7 @@
 
 ## Visão Geral
 
-Este documento descreve o modelo relacional atual e planejado da aplicação **IronCore**.
-
-O diagrama representa duas camadas de leitura:
-
-- **implementado**: tabelas existentes nas migrations Flyway atuais;
-- **blueprint**: tabelas planejadas para módulos futuros, ainda sem migration funcional.
+Este documento descreve o modelo relacional implementado da aplicação **IronCore**. Migrations Flyway são a fonte de verdade para schema, FKs, cascades e constraints.
 
 A posição visual das tabelas na imagem prioriza legibilidade e não representa prioridade funcional, criticidade técnica ou ordem de entrega.
 
@@ -28,7 +23,7 @@ Modelo implementado:
 - `exercises`: catálogo de exercícios.
 - `exercise_muscle_targets`: associação entre exercícios e subgrupos musculares.
 
-Modelo planejado no diagrama:
+Workout planning implementado no diagrama:
 
 - `training_goals`: catálogo de objetivos de treino.
 - `workout_cycles`: ciclos ou planos de treino da pessoa.
@@ -173,7 +168,7 @@ Classifica subgrupos musculares vinculados a um grupamento principal.
 
 ### `exercises`
 
-Catalogo central de exercícios disponíveis para composição futura dos treinos.
+Catalogo central de exercícios disponíveis para a composição atual de `workout_activities`.
 
 | Campo | Tipo | Obrigatório | Descricao |
 |---|---|---|---|
@@ -202,76 +197,63 @@ Associa exercises a subgrupos musculares e diferencia o papel do alvo muscular.
 | `created_at` | `TIMESTAMP` | Sim | Data e hora de criação. |
 | `updated_at` | `TIMESTAMP` | Não | Data e hora da última atualização. |
 
-## Tabelas Planejadas no Diagrama
-
-As tabelas abaixo aparecem no diagrama como blueprint de produto. Elas não devem ser tratadas como schema implementado enquanto não existirem migrations correspondentes.
+## Tabelas de Workout Planning
 
 ### `training_goals`
 
 Representa o objetivo principal do ciclo de treino.
 
-Campos planejados:
-
-- `id`
-- `code`
-- `display_name`
-- `active`
-- `sort_order`
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---:|---|
+| `id` | `BIGINT` | Sim | Identificador do objetivo. |
+| `code` | `VARCHAR(50)` | Sim | Código único do catálogo. |
+| `display_name` | `VARCHAR(100)` | Sim | Nome de apresentação. |
+| `active` | `BOOLEAN` | Sim | Disponibilidade do objetivo. |
+| `sort_order` | `INTEGER` | Sim | Ordem de apresentação. |
 
 ### `workout_cycles`
 
 Representa um ciclo de treino associado a uma pessoa e a um objetivo específico.
 
-Campos planejados:
-
-- `id`
-- `person_id`
-- `name`
-- `training_goal_id`
-- `start_date`
-- `end_date`
-- `workout_status`
-- `workout_origin`
-- `notes`
-- `created_at`
-- `updated_at`
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---:|---|
+| `id` | `BIGINT` | Sim | Identificador do ciclo. |
+| `person_id` | `BIGINT` | Sim | Pessoa proprietária. |
+| `name` | `VARCHAR(150)` | Sim | Nome do ciclo. |
+| `training_goal_id` | `BIGINT` | Sim | Objetivo vinculado. |
+| `start_date` / `end_date` | `DATE` | Não | Datas do lifecycle. |
+| `desired_duration_months` | `INTEGER` | Não | Duração desejada. |
+| `workout_status` / `workout_origin` | `VARCHAR(50)` | Sim | Estado e origem do ciclo. |
+| `notes` | `TEXT` | Não | Observações. |
+| `created_at` / `updated_at` | `TIMESTAMP` | Sim / Não | Timestamps do registro. |
 
 ### `workout_days`
 
 Organiza os dias de treino vinculados a um ciclo.
 
-Campos planejados:
-
-- `id`
-- `workout_cycle_id`
-- `week_day`
-- `title`
-- `order_index`
-- `created_at`
-- `updated_at`
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---:|---|
+| `id` | `BIGINT` | Sim | Identificador do dia. |
+| `workout_cycle_id` | `BIGINT` | Sim | Ciclo vinculado. |
+| `week_day` | `INTEGER` | Sim | Valor entre 1 e 7. |
+| `title` | `VARCHAR(100)` | Sim | Título do dia. |
+| `sort_order` | `INTEGER` | Sim | Ordem positiva dentro do ciclo e dia da semana. |
+| `created_at` / `updated_at` | `TIMESTAMP` | Sim / Não | Timestamps do registro. |
 
 ### `workout_activities`
 
 Detalha cada atividade prescrita dentro de um dia de treino.
 
-Campos planejados:
-
-- `id`
-- `workout_day_id`
-- `exercise_id`
-- `order_index`
-- `sets`
-- `rep_range_min`
-- `rep_range_max`
-- `target_load_kg`
-- `target_load_text`
-- `duration_minutes`
-- `distance_km`
-- `intensity_text`
-- `rest_seconds`
-- `notes`
-- `created_at`
-- `updated_at`
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---:|---|
+| `id` | `BIGINT` | Sim | Identificador da atividade. |
+| `workout_day_id` / `exercise_id` | `BIGINT` | Sim | Dia e exercise vinculados. |
+| `order_index` | `INTEGER` | Sim | Ordem da atividade no dia. |
+| `sets`, `rep_range_min`, `rep_range_max`, `duration_minutes`, `rest_seconds` | `INTEGER` | Não | Dados opcionais de prescrição. |
+| `target_load_kg`, `distance_km` | `NUMERIC(5,2)` | Não | Dados numéricos opcionais. |
+| `target_load_text`, `intensity_text` | `VARCHAR(100)` | Não | Dados textuais opcionais. |
+| `notes` | `TEXT` | Não | Observações opcionais. |
+| `created_at` / `updated_at` | `TIMESTAMP` | Sim / Não | Timestamps do registro. |
 
 ## Relacionamentos
 
@@ -285,7 +267,7 @@ Relacionamentos implementados:
 - `muscle_subgroups` 1:N `exercise_muscle_targets`
 - `exercises` 1:N `exercise_muscle_targets`
 
-Relacionamentos planejados no diagrama:
+Relacionamentos implementados de workout planning:
 
 - `persons` 1:N `workout_cycles`
 - `training_goals` 1:N `workout_cycles`
@@ -293,16 +275,23 @@ Relacionamentos planejados no diagrama:
 - `workout_days` 1:N `workout_activities`
 - `exercises` 1:N `workout_activities`
 
+## Constraints de Workout Planning
+
+- `workout_cycles.person_id` usa `ON DELETE CASCADE`; `training_goal_id` não possui cascade explícito.
+- `workout_days.workout_cycle_id` e `workout_activities.workout_day_id` usam `ON DELETE CASCADE`; `exercise_id` não possui cascade explícito.
+- `workout_days` possui `UNIQUE (workout_cycle_id, week_day, sort_order) DEFERRABLE INITIALLY DEFERRED`, `CHECK (week_day BETWEEN 1 AND 7)` e `CHECK (sort_order > 0)`.
+- `workout_activities` possui `UNIQUE (workout_day_id, order_index) DEFERRABLE INITIALLY DEFERRED` e `UNIQUE (workout_day_id, exercise_id)`.
+
 ## Fluxo Logico do Domínio
 
-De forma resumida, o fluxo planejado funciona assim:
+De forma resumida, o fluxo implementado funciona assim:
 
 1. uma `person` possui dados pessoais;
 2. um `user` referencia uma `person` para autenticar e acessar o sistema;
 3. `body_metrics` registra medições corporais da `person`;
 4. `exercises` registra o catálogo global controlado pelo sistema;
 5. cada exercise é classificado por equipamento, tipo de atividade e alvos musculares;
-6. a mesma `person` poderá possuir varios `workout_cycles` quando o módulo de treinos for implementado;
+6. a mesma `person` pode possuir vários `workout_cycles`;
 7. cada `workout_cycle` será criado com base em um `training_goal`;
 8. cada ciclo será dividido em varios `workout_days`;
 9. cada dia contera varias `workout_activities`;

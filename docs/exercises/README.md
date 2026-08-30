@@ -4,7 +4,7 @@
 
 O módulo de exercise catalog representa o catálogo global de exercícios do IronCore Backend.
 
-Esta área é controlada pelo sistema e serve como base para consultas, filtros combinados e montagem futura de workouts. O usuário da API não cria, altera ou remove registros do catálogo pelos endpoints atuais.
+Esta área é controlada pelo sistema e serve como base para consultas, filtros combinados e composição atual de `WorkoutActivity`. O usuário da API não cria, altera ou remove registros do catálogo pelos endpoints atuais.
 
 ## Escopo Implementado
 

@@ -13,7 +13,8 @@ Cada release possui seu próprio `README.md` para facilitar navegação direta p
 | `v0.3.0` | [User body metrics funcional](./v0.3.0/README.md) | Histórico |
 | `v0.4.0` | [Person e ownership por PersonId](./v0.4.0/README.md) | Histórico |
 | `v0.5.0` | [Swagger/OpenAPI](./v0.5.0/README.md) | Histórico |
-| `v0.6.0` | [Exercise Catalog](./v0.6.0/README.md) | Atual |
+| `v0.6.0` | [Exercise Catalog](./v0.6.0/README.md) | Histórico |
+| `v1.0.0` | [Primeira versão estável do IronCore Backend](./v1.0.0/README.md) | Atual |
 
 ## Regra de Manutenção
 

@@ -10,7 +10,7 @@ Alguns diagramas descrevem a fundação técnica atual, enquanto outros descreve
 
 | Diagrama                                                                                                       | Status | Observações |
 |----------------------------------------------------------------------------------------------------------------|---|---|
-| [ER SQL](./er-sql/README.md)                                                                                   | Parcialmente implementado / blueprint | Use as migrations reais como fonte de verdade para o schema implementado. |
+| [ER SQL](./er-sql/README.md)                                                                                   | Implementado no recorte atual | O recorte de workout planning da imagem reflete migrations atuais; use migrations como fonte de verdade para constraints físicas. |
 | [General Architecture](./general-architecture/README.md)                             | Parcialmente implementado / blueprint | Use código, configurações e documentação específica para confirmar o estado funcional. |
 | [Internal Architecture](./internal-architecture/README.md) | Parcialmente implementado | Use a árvore de packages e os testes como fonte de verdade para o que já existe. |
 | [Workout Generation Sequence](./sequence-diagram/README.md)                                        | Blueprint planejado | O fluxo de geração de treino com IA/LLM ainda não está implementado. |
