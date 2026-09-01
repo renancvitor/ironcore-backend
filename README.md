@@ -18,7 +18,11 @@
 
 <h2 align="center">🔗 Frontend</h2>
 
-> 🏗️ Frontend em preparação
+O frontend deste sistema está em um repositório separado:
+
+- 🌐 [IronCore Frontend](https://github.com/renancvitor/ironcore-frontend)
+
+Consulte-o para acompanhar a implementação da interface, integração com a API e evolução dos fluxos do produto.
 
 ---
 
