@@ -37,11 +37,11 @@ public class SpringDocConfiguration {
                         .description("Ambiente local"))
                 .info(new Info()
                         .title("IronCore Backend API")
-                        .version("v0.5.0")
+                        .version("v1.0.0")
                         .description("""
                                 API REST do IronCore para autenticação single-user, gerenciamento do usuário autenticado,
-                                pessoa vinculada e métricas corporais.
-
+                                pessoa vinculada, métricas corporais, catálogo de exercícios e planejamento de treinos.
+                        
                                 A API utiliza autenticação via JWT armazenado em cookie HTTP-only e possui tratamento
                                 padronizado de erros.
                                 """)
@@ -52,10 +52,26 @@ public class SpringDocConfiguration {
                                 .name("MIT License")
                                 .url("https://github.com/renancvitor/ironcore-backend/blob/main/LICENSE")))
                 .tags(List.of(
-                        new Tag().name("Autenticação").description("Fluxo de autenticação e sessão."),
-                        new Tag().name("Usuário").description("Dados do usuário autenticado."),
-                        new Tag().name("Pessoa").description("Pessoa vinculada ao usuário autenticado."),
-                        new Tag().name("Medidas corporais").description("Métricas corporais e evolução física.")
+                        new Tag().name("Autenticação")
+                                .description("Fluxo de autenticação e sessão."),
+                        new Tag().name("Usuário")
+                                .description("Dados do usuário autenticado."),
+                        new Tag().name("Pessoa")
+                                .description("Pessoa vinculada ao usuário autenticado."),
+                        new Tag().name("Medidas corporais")
+                                .description("Métricas corporais e evolução física."),
+                        new Tag().name("Dia de treino")
+                                .description("Gerenciamento dos dias de treino."),
+                        new Tag().name("Ciclo de treino")
+                                .description("Gerenciamento dos ciclos de treino."),
+                        new Tag().name("Atividade de treino")
+                                .description("Gerenciamento das atividades de treino."),
+                        new Tag().name("Objetivos de treino")
+                                .description("Objetivos disponíveis para os ciclos de treino."),
+                        new Tag().name("Catálogo de exercícios")
+                                .description("Catálogos auxiliares utilizados na classificação dos exercícios."),
+                        new Tag().name("Exercício")
+                                .description("Consulta e filtragem dos exercícios disponíveis no sistema.")
                 ));
     }
 }
