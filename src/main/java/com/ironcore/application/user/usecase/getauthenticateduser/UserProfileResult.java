@@ -6,6 +6,7 @@ import com.ironcore.domain.user.valueobject.UserId;
 public record UserProfileResult(
         UserId userId,
         Email email,
-        String nickname
+        String nickname,
+        Boolean mustChangePassword
 ) {
 }
