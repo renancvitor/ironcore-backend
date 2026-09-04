@@ -216,7 +216,8 @@ class UserControllerTest {
             UserProfileResult result = new UserProfileResult(
                     new UserId(1L),
                     new Email("renan@example.com"),
-                    "Renan"
+                    "Renan",
+                    true
             );
 
             when(getAuthenticatedUserUseCase.execute(new UserId(1L))).thenReturn(result);
@@ -227,6 +228,7 @@ class UserControllerTest {
                     .andExpect(jsonPath("$.userId").value(1L))
                     .andExpect(jsonPath("$.email").value("renan@example.com"))
                     .andExpect(jsonPath("$.nickname").value("Renan"))
+                    .andExpect(jsonPath("$.mustChangePassword").value(true))
                     .andExpect(jsonPath("$.passwordHash").doesNotExist());
 
             verify(getAuthenticatedUserUseCase).execute(new UserId(1L));

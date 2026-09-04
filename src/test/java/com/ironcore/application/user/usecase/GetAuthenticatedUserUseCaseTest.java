@@ -44,6 +44,7 @@ class GetAuthenticatedUserUseCaseTest {
             assertThat(result.userId()).isEqualTo(user.getId());
             assertThat(result.email()).isEqualTo(user.getEmail());
             assertThat(result.nickname()).isEqualTo(user.getNickname());
+            assertThat(result.mustChangePassword()).isEqualTo(user.mustChangePassword());
             verify(userRepository).findById(user.getId());
         }
     }
