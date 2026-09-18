@@ -54,6 +54,7 @@ Exemplos atuais:
 - `ChangePasswordUseCaseTest`
 - `ChangeNicknameUseCaseTest`
 - `GetAuthenticatedUserUseCaseTest`
+- `GetPersonUseCaseTest`
 - `UpdatePersonUseCaseTest`
 - `UserPasswordChangeServiceTest`
 - `PasswordHashingServiceTest`

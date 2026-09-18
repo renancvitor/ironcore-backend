@@ -21,6 +21,7 @@ Implementado:
 - Persistência relacional em `persons`.
 - Repository contract no domínio e adapter JPA em infrastructure.
 - Bootstrap de pessoa inicial.
+- Consulta dos dados pessoais da pessoa vinculada ao usuário autenticado.
 - Atualização dos dados pessoais da pessoa vinculada ao usuário autenticado.
 - Testes de domínio, aplicação, persistência, bootstrap e REST.
 
@@ -120,6 +121,38 @@ Cria/garante User inicial vinculado ao PersonId
 O bootstrap deve permanecer idempotente: não deve duplicar pessoa nem usuário inicial.
 
 ## Endpoint REST
+
+### Consultar Pessoa do Usuário Autenticado
+
+```http
+GET /api/users/me/person
+```
+
+Autenticação:
+
+- Requer cookie `access_token` válido.
+- O backend obtém o usuário autenticado e resolve a pessoa pelo `personId` vinculado à conta.
+- Não é aceito identificador arbitrário de pessoa.
+
+Resposta:
+
+- `200 OK`
+
+```json
+{
+  "personId": 1,
+  "name": "Renan",
+  "sex": "MALE",
+  "birthDate": "1995-01-01"
+}
+```
+
+Os metadados internos `createdAt` e `updatedAt` da entidade não fazem parte deste contrato.
+
+Erros de negócio relevantes:
+
+- `403 Forbidden` quando o usuário autenticado está inativo.
+- `404 Not Found` quando o usuário autenticado ou a pessoa vinculada não existe.
 
 ### Atualizar Pessoa do Usuário Autenticado
 
