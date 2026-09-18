@@ -47,6 +47,7 @@ class AuthSecurityIntegrationTest {
     private static final String LOGIN_ENDPOINT = "/api/auth/login";
     private static final String LOGOUT_ENDPOINT = "/api/auth/logout";
     private static final String AUTHENTICATED_USER_ENDPOINT = "/api/users/me";
+    private static final String AUTHENTICATED_USER_PERSON_ENDPOINT = "/api/users/me/person";
 
     private static final String EMAIL = "renan@example.com";
     private static final String RAW_PASSWORD = "StrongPass123@";
@@ -136,6 +137,12 @@ class AuthSecurityIntegrationTest {
         }
 
         @Test
+        void shouldBlockPersonRouteWhenAccessTokenCookieIsMissing() throws Exception {
+            mockMvc.perform(get(AUTHENTICATED_USER_PERSON_ENDPOINT))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
         void shouldAllowProtectedRouteWhenAccessTokenCookieIsValid() throws Exception {
             Cookie accessTokenCookie = loginAndGetAccessTokenCookie();
 
@@ -149,6 +156,36 @@ class AuthSecurityIntegrationTest {
                     .andExpect(jsonPath("$.passwordHash").doesNotExist());
         }
 
+        @Test
+        void shouldReturnPersonLinkedToAuthenticatedUser() throws Exception {
+            Cookie accessTokenCookie = loginAndGetAccessTokenCookie();
+
+            mockMvc.perform(get(AUTHENTICATED_USER_PERSON_ENDPOINT)
+                            .cookie(accessTokenCookie))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.personId").isNumber())
+                    .andExpect(jsonPath("$.name").value("Renan"))
+                    .andExpect(jsonPath("$.sex").value("MALE"))
+                    .andExpect(jsonPath("$.birthDate").value("1994-04-09"))
+                    .andExpect(jsonPath("$.createdAt").doesNotExist())
+                    .andExpect(jsonPath("$.updatedAt").doesNotExist());
+        }
+
+    }
+
+    @Nested
+    class OpenApiContract {
+
+        @Test
+        void shouldDocumentAuthenticatedUserPersonEndpoint() throws Exception {
+            mockMvc.perform(get("/v3/api-docs"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.paths['/api/users/me/person'].get").exists())
+                    .andExpect(jsonPath("$.paths['/api/users/me/person'].get.responses['200']").exists())
+                    .andExpect(jsonPath("$.components.schemas.PersonResponse").exists())
+                    .andExpect(jsonPath("$.components.schemas.PersonResponse.properties.createdAt").doesNotExist())
+                    .andExpect(jsonPath("$.components.schemas.PersonResponse.properties.updatedAt").doesNotExist());
+        }
     }
 
     @Nested
