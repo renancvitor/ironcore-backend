@@ -1,10 +1,13 @@
 package com.ironcore.interfaces.rest.person.mapper;
 
+import com.ironcore.application.person.usecase.get.GetPersonCommand;
+import com.ironcore.application.person.usecase.get.GetPersonResult;
 import com.ironcore.application.person.usecase.update.UpdatePersonCommand;
 import com.ironcore.application.person.usecase.update.UpdatePersonResult;
 import com.ironcore.domain.person.valueobject.BirthDate;
 import com.ironcore.domain.person.valueobject.Sex;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
+import com.ironcore.interfaces.rest.person.dto.PersonResponse;
 import com.ironcore.interfaces.rest.person.dto.UpdatePersonRequest;
 import com.ironcore.interfaces.rest.person.dto.UpdatePersonResponse;
 
@@ -13,6 +16,19 @@ import java.time.LocalDate;
 public final class PersonRestMapper {
 
     private PersonRestMapper() {
+    }
+
+    public static GetPersonCommand toGetCommand(AuthenticatedUser authenticatedUser) {
+        return new GetPersonCommand(authenticatedUser.userId());
+    }
+
+    public static PersonResponse toResponse(GetPersonResult result) {
+        return new PersonResponse(
+                result.personId().value(),
+                result.name(),
+                result.sex().type(),
+                result.birthDate().value()
+        );
     }
 
     public static UpdatePersonCommand toUpdateCommand(
