@@ -1,12 +1,18 @@
 package com.ironcore.interfaces.rest.person;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ironcore.application.exception.ResourceNotFoundException;
+import com.ironcore.application.exception.UserInactiveException;
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
+import com.ironcore.application.person.usecase.get.GetPersonCommand;
+import com.ironcore.application.person.usecase.get.GetPersonResult;
+import com.ironcore.application.person.usecase.get.GetPersonUseCase;
 import com.ironcore.application.person.usecase.update.UpdatePersonCommand;
 import com.ironcore.application.person.usecase.update.UpdatePersonResult;
 import com.ironcore.application.person.usecase.update.UpdatePersonUseCase;
 import com.ironcore.domain.person.enums.SexType;
 import com.ironcore.domain.person.valueobject.BirthDate;
+import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.person.valueobject.Sex;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.UserId;
@@ -32,6 +38,7 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -49,6 +56,9 @@ class PersonControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
+    private GetPersonUseCase getPersonUseCase;
+
+    @MockitoBean
     private UpdatePersonUseCase updatePersonUseCase;
 
     @MockitoBean
@@ -62,6 +72,72 @@ class PersonControllerTest {
 
     @MockitoBean
     private UserRepository userRepository;
+
+    @Nested
+    class GetPerson {
+
+        @Test
+        void shouldReturnPersonLinkedToAuthenticatedUser() throws Exception {
+            GetPersonCommand command = new GetPersonCommand(new UserId(1L));
+            GetPersonResult result = new GetPersonResult(
+                    new PersonId(10L),
+                    "Renan Vitor",
+                    new Sex(SexType.MALE),
+                    new BirthDate(LocalDate.of(1994, 4, 9))
+            );
+
+            when(getPersonUseCase.execute(command)).thenReturn(result);
+
+            mockMvc.perform(get(PERSON_ENDPOINT)
+                            .with(authenticatedUser()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.personId").value(10L))
+                    .andExpect(jsonPath("$.name").value("Renan Vitor"))
+                    .andExpect(jsonPath("$.sex").value("MALE"))
+                    .andExpect(jsonPath("$.birthDate").value("1994-04-09"))
+                    .andExpect(jsonPath("$.createdAt").doesNotExist())
+                    .andExpect(jsonPath("$.updatedAt").doesNotExist());
+
+            verify(getPersonUseCase).execute(command);
+        }
+
+        @Test
+        void shouldReturnNotFoundWhenLinkedPersonDoesNotExist() throws Exception {
+            GetPersonCommand command = new GetPersonCommand(new UserId(1L));
+
+            when(getPersonUseCase.execute(command))
+                    .thenThrow(new ResourceNotFoundException("Pessoa não encontrada."));
+
+            mockMvc.perform(get(PERSON_ENDPOINT)
+                            .with(authenticatedUser()))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.status").value(404))
+                    .andExpect(jsonPath("$.error").value("Not Found"))
+                    .andExpect(jsonPath("$.message").value("Pessoa não encontrada."))
+                    .andExpect(jsonPath("$.path").value(PERSON_ENDPOINT))
+                    .andExpect(jsonPath("$.fields").isArray());
+
+            verify(getPersonUseCase).execute(command);
+        }
+
+        @Test
+        void shouldReturnForbiddenWhenAuthenticatedUserIsInactive() throws Exception {
+            GetPersonCommand command = new GetPersonCommand(new UserId(1L));
+
+            when(getPersonUseCase.execute(command))
+                    .thenThrow(new UserInactiveException("Usuário inativo."));
+
+            mockMvc.perform(get(PERSON_ENDPOINT)
+                            .with(authenticatedUser()))
+                    .andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.status").value(403))
+                    .andExpect(jsonPath("$.error").value("Forbidden"))
+                    .andExpect(jsonPath("$.message").value("Usuário inativo."))
+                    .andExpect(jsonPath("$.path").value(PERSON_ENDPOINT));
+
+            verify(getPersonUseCase).execute(command);
+        }
+    }
 
     @Nested
     class SuccessfulUpdate {

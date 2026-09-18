@@ -2,6 +2,7 @@ package com.ironcore.interfaces.rest.person.api;
 
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
 import com.ironcore.interfaces.rest.openapi.*;
+import com.ironcore.interfaces.rest.person.dto.PersonResponse;
 import com.ironcore.interfaces.rest.person.dto.UpdatePersonRequest;
 import com.ironcore.interfaces.rest.person.dto.UpdatePersonResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,6 +15,24 @@ import org.springframework.http.ResponseEntity;
 
 @Tag(name = "Pessoa")
 public interface PersonApi {
+
+    @Operation(
+            summary = "Consultar dados pessoais",
+            description = "Retorna os dados pessoais completos vinculados ao usuário autenticado."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Dados pessoais consultados com sucesso.",
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = PersonResponse.class)
+            )
+    )
+    @NotFoundResponse
+    @ForbiddenResponse
+    @UnauthorizedResponse
+    @InternalServerErrorResponse
+    ResponseEntity<PersonResponse> get(AuthenticatedUser authenticatedUser);
 
     @Operation(
             summary = "Alterar nome, sexo ou data de nascimento",
