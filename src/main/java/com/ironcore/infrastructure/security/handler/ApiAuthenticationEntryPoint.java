@@ -13,12 +13,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.UUID;
 
-@Component
 @RequiredArgsConstructor
 public class ApiAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
@@ -34,16 +32,16 @@ public class ApiAuthenticationEntryPoint implements AuthenticationEntryPoint {
             HttpServletResponse response,
             AuthenticationException exception
     ) throws IOException {
-        Throwable authenticationFailure = getAuthenticationFailure(exception);
+        Throwable authenticationFailure = authenticationFailure(exception);
 
         publisher.publish(
                 ErrorCodeType.AUTHENTICATION_ERROR,
-                getExceptionMessage(authenticationFailure),
+                exceptionMessage(authenticationFailure),
                 authenticationFailure.getClass().getName(),
                 request.getRequestURI(),
                 request.getMethod(),
                 null,
-                getOrCreateCorrelationId(request)
+                correlationId(request)
         );
 
         ApiErrorResponse apiErrorResponse = ApiErrorResponseFactory.create(
@@ -59,29 +57,21 @@ public class ApiAuthenticationEntryPoint implements AuthenticationEntryPoint {
         objectMapper.writeValue(response.getOutputStream(), apiErrorResponse);
     }
 
-    private Throwable getAuthenticationFailure(AuthenticationException exception) {
+    private Throwable authenticationFailure(AuthenticationException exception) {
         return exception.getCause() instanceof JwtTokenValidationException
                 ? exception.getCause()
                 : exception;
     }
 
-    private String getExceptionMessage(Throwable exception) {
+    private String exceptionMessage(Throwable exception) {
         String message = exception.getMessage();
 
-        if (message == null || message.isBlank()) {
-            return exception.getClass().getSimpleName();
-        }
-
-        return message;
+        return message == null || message.isBlank() ? exception.getClass().getSimpleName() : message;
     }
 
-    private String getOrCreateCorrelationId(HttpServletRequest request) {
+    private String correlationId(HttpServletRequest request) {
         String correlationId = request.getHeader("X-Correlation-Id");
 
-        if (correlationId == null || correlationId.isBlank()) {
-            return UUID.randomUUID().toString();
-        }
-
-        return correlationId;
+        return correlationId == null || correlationId.isBlank() ? UUID.randomUUID().toString() : correlationId;
     }
 }
