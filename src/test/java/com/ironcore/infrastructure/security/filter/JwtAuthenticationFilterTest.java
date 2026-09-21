@@ -7,8 +7,10 @@ import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.PasswordHash;
 import com.ironcore.domain.user.valueobject.UserId;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
+import com.ironcore.infrastructure.security.handler.ApiAuthenticationEntryPoint;
 import com.ironcore.infrastructure.security.jwt.JwtAccessTokenClaims;
 import com.ironcore.infrastructure.security.jwt.JwtAccessTokenValidator;
+import com.ironcore.infrastructure.security.jwt.exception.JwtTokenValidationException;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -27,6 +30,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -40,12 +44,18 @@ class JwtAuthenticationFilterTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private ApiAuthenticationEntryPoint authenticationEntryPoint;
+
+    @Mock
+    private ObjectProvider<ApiAuthenticationEntryPoint> authenticationEntryPointProvider;
+
     private JwtAuthenticationFilter filter;
 
     @BeforeEach
     void setUp() {
         SecurityContextHolder.clearContext();
-        filter = new JwtAuthenticationFilter(validator, userRepository);
+        filter = new JwtAuthenticationFilter(validator, userRepository, authenticationEntryPointProvider);
     }
 
     @AfterEach
@@ -141,6 +151,25 @@ class JwtAuthenticationFilterTest {
         filter.doFilter(request, response, chain);
 
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+    }
+
+    @Test
+    void shouldDelegateToAuthenticationEntryPointWhenAccessTokenIsInvalid() throws Exception {
+        when(validator.validate("invalid-token"))
+                .thenThrow(new JwtTokenValidationException("JWT inválido ou expirado."));
+        when(authenticationEntryPointProvider.getObject()).thenReturn(authenticationEntryPoint);
+
+        MockHttpServletRequest request = request("GET", "/api/protected");
+        request.setCookies(new Cookie("access_token", "invalid-token"));
+
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        MockFilterChain chain = new MockFilterChain();
+
+        filter.doFilter(request, response, chain);
+
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+        verify(authenticationEntryPoint).commence(any(), any(), any());
+        assertThat(chain.getRequest()).isNull();
     }
 
     @Test

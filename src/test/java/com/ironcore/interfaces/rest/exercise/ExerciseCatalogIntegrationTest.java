@@ -270,13 +270,13 @@ class ExerciseCatalogIntegrationTest {
             Long exerciseId = exerciseId("Supino reto", "BARBELL", "STRENGTH");
 
             mockMvc.perform(get(CATALOG_ENDPOINT + "/activity-types"))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
 
             mockMvc.perform(get(EXERCISES_ENDPOINT))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
 
             mockMvc.perform(get(EXERCISES_ENDPOINT + "/" + exerciseId))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
     }
 

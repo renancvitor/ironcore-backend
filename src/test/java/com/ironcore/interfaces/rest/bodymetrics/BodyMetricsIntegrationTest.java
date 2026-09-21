@@ -91,7 +91,7 @@ class BodyMetricsIntegrationTest {
         @Test
         void shouldBlockPersonBodyMetricsAccessWithoutAuthentication() throws Exception {
             mockMvc.perform(get(BODY_METRICS_ENDPOINT))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
         }
     }
 

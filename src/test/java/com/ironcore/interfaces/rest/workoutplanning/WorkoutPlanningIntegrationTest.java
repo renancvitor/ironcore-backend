@@ -151,7 +151,7 @@ class WorkoutPlanningIntegrationTest {
         @Test
         void shouldRequireAuthenticationAndIsolateWorkoutCyclesByPerson() throws Exception {
             mockMvc.perform(get(WORKOUT_CYCLES_ENDPOINT))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized());
 
             Long firstUserCycleId = createWorkoutCycle(firstUserCookie, "Ciclo privado", hypertrophyGoalId);
 

@@ -1,6 +1,8 @@
 package com.ironcore.interfaces.rest.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
 import com.ironcore.IroncoreBackendApplication;
 import com.ironcore.domain.person.enums.SexType;
 import com.ironcore.infrastructure.persistence.person.entity.PersonEntity;
@@ -8,6 +10,7 @@ import com.ironcore.infrastructure.persistence.person.repository.PersonJpaReposi
 import com.ironcore.infrastructure.persistence.user.entity.UserEntity;
 import com.ironcore.infrastructure.persistence.user.repository.UserJpaRepository;
 import com.ironcore.interfaces.rest.auth.dto.LoginRequest;
+import com.ironcore.infrastructure.security.jwt.JwtTokenProperties;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,8 +26,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.time.LocalDateTime;
 import java.time.LocalDate;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -68,6 +73,9 @@ class AuthSecurityIntegrationTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtTokenProperties jwtTokenProperties;
 
     @BeforeEach
     void setUp() {
@@ -133,13 +141,45 @@ class AuthSecurityIntegrationTest {
         @Test
         void shouldBlockProtectedRouteWhenAccessTokenCookieIsMissing() throws Exception {
             mockMvc.perform(get(AUTHENTICATED_USER_ENDPOINT))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.timestamp").isString())
+                    .andExpect(jsonPath("$.status").value(401))
+                    .andExpect(jsonPath("$.error").value("Unauthorized"))
+                    .andExpect(jsonPath("$.message").value("Autenticação necessária."))
+                    .andExpect(jsonPath("$.path").value(AUTHENTICATED_USER_ENDPOINT))
+                    .andExpect(jsonPath("$.fields").isEmpty());
         }
 
         @Test
         void shouldBlockPersonRouteWhenAccessTokenCookieIsMissing() throws Exception {
             mockMvc.perform(get(AUTHENTICATED_USER_PERSON_ENDPOINT))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.timestamp").isString())
+                    .andExpect(jsonPath("$.status").value(401))
+                    .andExpect(jsonPath("$.error").value("Unauthorized"))
+                    .andExpect(jsonPath("$.message").value("Autenticação necessária."))
+                    .andExpect(jsonPath("$.path").value(AUTHENTICATED_USER_PERSON_ENDPOINT))
+                    .andExpect(jsonPath("$.fields").isEmpty());
+        }
+
+        @Test
+        void shouldBlockProtectedRouteWhenAccessTokenCookieIsInvalid() throws Exception {
+            assertInvalidTokenResponse(AUTHENTICATED_USER_ENDPOINT, invalidAccessTokenCookie());
+        }
+
+        @Test
+        void shouldBlockPersonRouteWhenAccessTokenCookieIsInvalid() throws Exception {
+            assertInvalidTokenResponse(AUTHENTICATED_USER_PERSON_ENDPOINT, invalidAccessTokenCookie());
+        }
+
+        @Test
+        void shouldBlockProtectedRouteWhenAccessTokenCookieIsExpired() throws Exception {
+            assertInvalidTokenResponse(AUTHENTICATED_USER_ENDPOINT, expiredAccessTokenCookie());
+        }
+
+        @Test
+        void shouldBlockPersonRouteWhenAccessTokenCookieIsExpired() throws Exception {
+            assertInvalidTokenResponse(AUTHENTICATED_USER_PERSON_ENDPOINT, expiredAccessTokenCookie());
         }
 
         @Test
@@ -236,6 +276,33 @@ class AuthSecurityIntegrationTest {
         assertThat(accessTokenCookie.getValue()).isNotBlank();
 
         return accessTokenCookie;
+    }
+
+    private Cookie invalidAccessTokenCookie() {
+        return new Cookie("access_token", "invalid-token");
+    }
+
+    private Cookie expiredAccessTokenCookie() {
+        String token = JWT.create()
+                .withIssuer(jwtTokenProperties.getIssuer())
+                .withSubject("1")
+                .withClaim("email", EMAIL)
+                .withClaim("mustChangePassword", false)
+                .withExpiresAt(Date.from(Instant.now().minusSeconds(60)))
+                .sign(Algorithm.HMAC256(jwtTokenProperties.getSecret()));
+
+        return new Cookie("access_token", token);
+    }
+
+    private void assertInvalidTokenResponse(String endpoint, Cookie accessTokenCookie) throws Exception {
+        mockMvc.perform(get(endpoint).cookie(accessTokenCookie))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.timestamp").isString())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.error").value("Unauthorized"))
+                .andExpect(jsonPath("$.message").value("Token de autenticação inválido ou expirado."))
+                .andExpect(jsonPath("$.path").value(endpoint))
+                .andExpect(jsonPath("$.fields").isEmpty());
     }
 
     private UserEntity activeUser() {
