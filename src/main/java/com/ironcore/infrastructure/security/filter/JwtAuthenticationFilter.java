@@ -3,16 +3,20 @@ package com.ironcore.infrastructure.security.filter;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
+import com.ironcore.infrastructure.security.handler.ApiAuthenticationEntryPoint;
 import com.ironcore.infrastructure.security.jwt.JwtAccessTokenClaims;
 import com.ironcore.infrastructure.security.jwt.JwtAccessTokenValidator;
+import com.ironcore.infrastructure.security.jwt.exception.JwtTokenValidationException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -28,6 +32,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtAccessTokenValidator validator;
     private final UserRepository userRepository;
+    private final ObjectProvider<ApiAuthenticationEntryPoint> authenticationEntryPointProvider;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -52,22 +57,32 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = recoveryToken(request);
 
         if (token != null) {
-            JwtAccessTokenClaims claims = validator.validate(token);
+            try {
+                JwtAccessTokenClaims claims = validator.validate(token);
 
-            userRepository.findById(claims.userId())
-                    .filter(User::isActive)
-                    .ifPresent(user -> {
-                        AuthenticatedUser principal = new AuthenticatedUser(
-                                user.getId(), user.getEmail(), user.mustChangePassword()
-                        );
+                userRepository.findById(claims.userId())
+                        .filter(User::isActive)
+                        .ifPresent(user -> {
+                            AuthenticatedUser principal = new AuthenticatedUser(
+                                    user.getId(), user.getEmail(), user.mustChangePassword()
+                            );
 
-                        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                                principal,
-                                null,
-                                List.of()
-                        );
-                        SecurityContextHolder.getContext().setAuthentication(auth);
-                    });
+                            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                                    principal,
+                                    null,
+                                    List.of()
+                            );
+                            SecurityContextHolder.getContext().setAuthentication(auth);
+                        });
+            } catch (JwtTokenValidationException exception) {
+                SecurityContextHolder.clearContext();
+                authenticationEntryPointProvider.getObject().commence(
+                        request,
+                        response,
+                        new InsufficientAuthenticationException("JWT inválido ou expirado.", exception)
+                );
+                return;
+            }
         }
 
         filterChain.doFilter(request, response);
