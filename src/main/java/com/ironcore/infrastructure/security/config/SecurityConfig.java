@@ -1,5 +1,7 @@
 package com.ironcore.infrastructure.security.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ironcore.application.logging.error.port.ErrorLogPublisher;
 import com.ironcore.infrastructure.security.filter.JwtAuthenticationFilter;
 import com.ironcore.infrastructure.security.handler.ApiAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
@@ -24,10 +26,12 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            ApiAuthenticationEntryPoint apiAuthenticationEntryPoint
+    ) throws Exception {
         return http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
@@ -45,6 +49,14 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
+    }
+
+    @Bean
+    public ApiAuthenticationEntryPoint apiAuthenticationEntryPoint(
+            ObjectMapper objectMapper,
+            ErrorLogPublisher publisher
+    ) {
+        return new ApiAuthenticationEntryPoint(objectMapper, publisher);
     }
 
     @Bean

@@ -140,8 +140,10 @@ class AuthSecurityIntegrationTest {
 
         @Test
         void shouldBlockProtectedRouteWhenAccessTokenCookieIsMissing() throws Exception {
-            mockMvc.perform(get(AUTHENTICATED_USER_ENDPOINT))
+            mockMvc.perform(get(AUTHENTICATED_USER_ENDPOINT)
+                            .header(HttpHeaders.ORIGIN, "http://localhost:4200"))
                     .andExpect(status().isUnauthorized())
+                    .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:4200"))
                     .andExpect(jsonPath("$.timestamp").isString())
                     .andExpect(jsonPath("$.status").value(401))
                     .andExpect(jsonPath("$.error").value("Unauthorized"))
@@ -152,8 +154,10 @@ class AuthSecurityIntegrationTest {
 
         @Test
         void shouldBlockPersonRouteWhenAccessTokenCookieIsMissing() throws Exception {
-            mockMvc.perform(get(AUTHENTICATED_USER_PERSON_ENDPOINT))
+            mockMvc.perform(get(AUTHENTICATED_USER_PERSON_ENDPOINT)
+                            .header(HttpHeaders.ORIGIN, "http://localhost:4200"))
                     .andExpect(status().isUnauthorized())
+                    .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:4200"))
                     .andExpect(jsonPath("$.timestamp").isString())
                     .andExpect(jsonPath("$.status").value(401))
                     .andExpect(jsonPath("$.error").value("Unauthorized"))
@@ -295,8 +299,11 @@ class AuthSecurityIntegrationTest {
     }
 
     private void assertInvalidTokenResponse(String endpoint, Cookie accessTokenCookie) throws Exception {
-        mockMvc.perform(get(endpoint).cookie(accessTokenCookie))
+        mockMvc.perform(get(endpoint)
+                        .header(HttpHeaders.ORIGIN, "http://localhost:4200")
+                        .cookie(accessTokenCookie))
                 .andExpect(status().isUnauthorized())
+                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:4200"))
                 .andExpect(jsonPath("$.timestamp").isString())
                 .andExpect(jsonPath("$.status").value(401))
                 .andExpect(jsonPath("$.error").value("Unauthorized"))
