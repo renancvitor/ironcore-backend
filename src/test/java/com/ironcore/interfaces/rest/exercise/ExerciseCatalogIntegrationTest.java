@@ -262,6 +262,51 @@ class ExerciseCatalogIntegrationTest {
         }
     }
 
+    @Test
+    void shouldCombineMultipleFiltersWithoutDuplicatingPages() throws Exception {
+        Long barbell = catalogId("equipment_types", "BARBELL");
+        Long dumbbell = catalogId("equipment_types", "DUMBBELL");
+        Long chest = catalogId("muscle_groups", "CHEST");
+        Long strength = catalogId("activity_types", "STRENGTH");
+        long expected = jdbcTemplate.queryForObject("""
+                SELECT COUNT(DISTINCT e.id) FROM exercises e
+                JOIN exercise_muscle_targets t ON t.exercise_id = e.id
+                JOIN muscle_subgroups s ON s.id = t.muscle_subgroup_id
+                WHERE e.active AND t.active AND e.equipment_type_id IN (?, ?)
+                AND e.activity_type_id = ? AND s.muscle_group_id = ?
+                AND t.target_role IN ('PRIMARY', 'SECONDARY')
+                """, Long.class, barbell, dumbbell, strength, chest);
+        String filters = "equipmentTypeIds=" + barbell + "&equipmentTypeIds=" + dumbbell
+                + "&activityTypeIds=" + strength + "&muscleGroupIds=" + chest
+                + "&targetRoles=PRIMARY&targetRoles=SECONDARY&size=2";
+        Set<Long> seen = new HashSet<>();
+        JsonNode page = exercisePage(filters);
+        assertThat(expected).isPositive();
+        assertThat(page.get("totalElements").asLong()).isEqualTo(expected);
+        int pages = page.get("totalPages").asInt();
+        for (int index = 0; index < pages; index++) {
+            JsonNode current = index == 0 ? page : exercisePage(filters + "&page=" + index);
+            assertThat(current.get("totalElements").asLong()).isEqualTo(expected);
+            for (JsonNode item : current.get("content")) assertThat(seen.add(item.get("id").asLong())).isTrue();
+        }
+        assertThat(seen).hasSize((int) expected);
+    }
+
+    @Test
+    void shouldRequireGroupAndSubgroupOnSameTarget() throws Exception {
+        Long chest = catalogId("muscle_groups", "CHEST");
+        Long shoulder = catalogId("muscle_subgroups", "ANTERIOR_DELTOID");
+        JsonNode page = exercisePage("muscleGroupIds=" + chest + "&muscleSubgroupIds=" + shoulder);
+        assertThat(page.get("totalElements").asLong()).isZero();
+        assertThat(page.get("content")).isEmpty();
+    }
+
+    @Test
+    void shouldReturnEmptyPageForUnknownIds() throws Exception {
+        JsonNode page = exercisePage("equipmentTypeIds=9223372036854775807");
+        assertThat(page.get("totalElements").asLong()).isZero();
+    }
+
     @Nested
     class Authentication {
 

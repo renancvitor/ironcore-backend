@@ -38,11 +38,11 @@ class ListExercisesUseCaseTest {
     void shouldListExercisesWithFiltersAndPagination() {
         ListExercisesCommand command = new ListExercisesCommand(
                 "supino",
-                new ActivityTypeId(1L),
-                new EquipmentTypeId(2L),
-                new MuscleGroupId(3L),
-                new MuscleSubgroupId(4L),
-                TargetRoleType.PRIMARY,
+                List.of(new ActivityTypeId(1L)),
+                List.of(new EquipmentTypeId(2L)),
+                List.of(new MuscleGroupId(3L)),
+                List.of(new MuscleSubgroupId(4L)),
+                List.of(TargetRoleType.PRIMARY),
                 1,
                 2
         );
@@ -57,11 +57,11 @@ class ListExercisesUseCaseTest {
         );
         when(queryPort.findActiveExercises(
                 command.name(),
-                command.activityTypeId(),
-                command.equipmentTypeId(),
-                command.muscleGroupId(),
-                command.muscleSubgroupId(),
-                command.targetRole(),
+                command.activityTypeIds(),
+                command.equipmentTypeIds(),
+                command.muscleGroupIds(),
+                command.muscleSubgroupIds(),
+                command.targetRoles(),
                 pageQuery
         )).thenReturn(expectedPage);
 
@@ -69,11 +69,11 @@ class ListExercisesUseCaseTest {
 
         verify(queryPort).findActiveExercises(
                 command.name(),
-                command.activityTypeId(),
-                command.equipmentTypeId(),
-                command.muscleGroupId(),
-                command.muscleSubgroupId(),
-                command.targetRole(),
+                command.activityTypeIds(),
+                command.equipmentTypeIds(),
+                command.muscleGroupIds(),
+                command.muscleSubgroupIds(),
+                command.targetRoles(),
                 pageQuery
         );
         assertThat(result.exercises()).isEqualTo(expectedPage);
