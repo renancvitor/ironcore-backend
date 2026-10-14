@@ -9,6 +9,8 @@ import com.ironcore.domain.muscle.musclesubgroup.valueobject.MuscleSubgroupId;
 import com.ironcore.interfaces.rest.exercise.catalog.mapper.ExerciseCatalogRestMapper;
 import com.ironcore.interfaces.rest.exercise.dto.*;
 
+import java.util.List;
+
 public final class ExerciseRestMapper {
 
     private ExerciseRestMapper() {
@@ -48,14 +50,25 @@ public final class ExerciseRestMapper {
     ) {
         return new ListExercisesCommand(
                 request.name(),
-                request.activityTypeId() == null ? null : new ActivityTypeId(request.activityTypeId()),
-                request.equipmentTypeId() == null ? null : new EquipmentTypeId(request.equipmentTypeId()),
-                request.muscleGroupId() == null ? null : new MuscleGroupId(request.muscleGroupId()),
-                request.muscleSubgroupId() == null ? null : new MuscleSubgroupId(request.muscleSubgroupId()),
-                request.targetRole(),
+                resolve(request.activityTypeId(), request.activityTypeIds(), "activityTypeId").stream().map(ActivityTypeId::new).toList(),
+                resolve(request.equipmentTypeId(), request.equipmentTypeIds(), "equipmentTypeId").stream().map(EquipmentTypeId::new).toList(),
+                resolve(request.muscleGroupId(), request.muscleGroupIds(), "muscleGroupId").stream().map(MuscleGroupId::new).toList(),
+                resolve(request.muscleSubgroupId(), request.muscleSubgroupIds(), "muscleSubgroupId").stream().map(MuscleSubgroupId::new).toList(),
+                resolve(request.targetRole(), request.targetRoles(), "targetRole"),
                 page,
                 size
         );
+    }
+
+    private static <T> List<T> resolve(T single, List<T> multiple, String parameter) {
+        if (single != null && multiple != null) {
+            throw new IllegalArgumentException("Use apenas " + parameter + " ou " + parameter + "s, nunca ambos.");
+        }
+        List<T> values = multiple != null ? multiple : single == null ? List.of() : List.of(single);
+        if (values.stream().anyMatch(java.util.Objects::isNull)) {
+            throw new IllegalArgumentException("Valores vazios em " + parameter + "s nao sao permitidos.");
+        }
+        return values.stream().distinct().toList();
     }
 
     public static ListExercisesResponse toListResponse(
