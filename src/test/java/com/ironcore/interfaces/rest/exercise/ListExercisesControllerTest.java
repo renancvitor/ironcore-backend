@@ -68,11 +68,11 @@ public class ListExercisesControllerTest {
         void shouldListExercisesWithFiltersAndPagination() throws Exception {
             ListExercisesCommand command = new ListExercisesCommand(
                     "supino",
-                    new ActivityTypeId(3L),
-                    new EquipmentTypeId(2L),
-                    new MuscleGroupId(5L),
-                    new MuscleSubgroupId(4L),
-                    TargetRoleType.PRIMARY,
+                    List.of(new ActivityTypeId(3L)),
+                    List.of(new EquipmentTypeId(2L)),
+                    List.of(new MuscleGroupId(5L)),
+                    List.of(new MuscleSubgroupId(4L)),
+                    List.of(TargetRoleType.PRIMARY),
                     1,
                     2
             );
@@ -147,6 +147,51 @@ public class ListExercisesControllerTest {
 
             verify(listExercisesUseCase).execute(command);
         }
+    }
+
+    @Test
+    void shouldBindMultipleValuesAndRemoveDuplicates() throws Exception {
+        when(listExercisesUseCase.execute(any())).thenReturn(listExercisesResult(0, 20, 1, 1, true));
+        mockMvc.perform(get(EXERCISES_ENDPOINT)
+                .param("activityTypeIds", "1", "2")
+                .param("equipmentTypeIds", "2", "3", "2")
+                .param("muscleGroupIds", "4", "5")
+                .param("muscleSubgroupIds", "6", "7")
+                .param("targetRoles", "PRIMARY", "SECONDARY", "PRIMARY"))
+                .andExpect(status().isOk());
+        verify(listExercisesUseCase).execute(new ListExercisesCommand(null,
+                List.of(new ActivityTypeId(1L), new ActivityTypeId(2L)),
+                List.of(new EquipmentTypeId(2L), new EquipmentTypeId(3L)),
+                List.of(new MuscleGroupId(4L), new MuscleGroupId(5L)),
+                List.of(new MuscleSubgroupId(6L), new MuscleSubgroupId(7L)),
+                List.of(TargetRoleType.PRIMARY, TargetRoleType.SECONDARY), 0, 20));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"activityTypeId", "equipmentTypeId", "muscleGroupId", "muscleSubgroupId", "targetRole"})
+    void shouldRejectMixedSingularAndPlural(String parameter) throws Exception {
+        String value = parameter.equals("targetRole") ? "PRIMARY" : "1";
+        mockMvc.perform(get(EXERCISES_ENDPOINT).param(parameter, value).param(parameter + "s", value))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(listExercisesUseCase);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"activityTypeIds,0", "equipmentTypeIds,-1", "muscleGroupIds,abc",
+            "muscleSubgroupIds,0", "targetRoles,INVALID"})
+    void shouldRejectInvalidListValues(String parameter, String invalid) throws Exception {
+        String valid = parameter.equals("targetRoles") ? "PRIMARY" : "1";
+        mockMvc.perform(get(EXERCISES_ENDPOINT).param(parameter, valid, invalid))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(listExercisesUseCase);
+    }
+
+    @Test
+    void shouldTreatEmptyListsAsNoFilter() throws Exception {
+        when(listExercisesUseCase.execute(any())).thenReturn(listExercisesResult(0, 20, 1, 1, true));
+        mockMvc.perform(get(EXERCISES_ENDPOINT).param("equipmentTypeIds", "").param("targetRoles", ""))
+                .andExpect(status().isOk());
+        verify(listExercisesUseCase).execute(new ListExercisesCommand(null, null, null, null, null, null, 0, 20));
     }
 
     @Nested

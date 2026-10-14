@@ -16,61 +16,25 @@ public final class ExerciseSpecifications {
     }
 
     public static Specification<ExerciseEntity> filter(
-            String name,
-            Long activityTypeId,
-            Long equipmentTypeId,
-            Long muscleGroupId,
-            Long muscleSubgroupId,
-            TargetRoleType targetRole
+            String name, List<Long> activityTypeIds, List<Long> equipmentTypeIds,
+            List<Long> muscleGroupIds, List<Long> muscleSubgroupIds, List<TargetRoleType> targetRoles
     ) {
         Specification<ExerciseEntity> specification = active(true);
-
-        if (name != null && !name.isBlank()) {
-            specification = specification.and(nameContains(name));
+        if (name != null && !name.isBlank()) specification = specification.and(nameContains(name));
+        if (hasValues(activityTypeIds)) {
+            specification = specification.and((root, query, builder) -> root.get("activityType").get("id").in(activityTypeIds));
         }
-
-        if (activityTypeId != null) {
-            specification = specification.and(activityTypeId(activityTypeId));
+        if (hasValues(equipmentTypeIds)) {
+            specification = specification.and((root, query, builder) -> root.get("equipmentType").get("id").in(equipmentTypeIds));
         }
-
-        if (equipmentTypeId != null) {
-            specification = specification.and(equipmentTypeId(equipmentTypeId));
+        if (hasValues(muscleGroupIds) || hasValues(muscleSubgroupIds) || hasValues(targetRoles)) {
+            specification = specification.and(hasMuscleTarget(muscleGroupIds, muscleSubgroupIds, targetRoles));
         }
-
-        if (muscleGroupId != null) {
-            TargetRoleType groupTargetRole =
-                    muscleSubgroupId == null ? targetRole : null;
-
-            specification = specification.and(
-                    hasMuscleTarget(
-                            muscleGroupId,
-                            null,
-                            groupTargetRole
-                    )
-            );
-        }
-
-        if (muscleSubgroupId != null) {
-            specification = specification.and(
-                    hasMuscleTarget(
-                            null,
-                            muscleSubgroupId,
-                            targetRole
-                    )
-            );
-        }
-
-        if (muscleGroupId == null && muscleSubgroupId == null && targetRole != null) {
-            specification = specification.and(
-                    hasMuscleTarget(
-                            null,
-                            null,
-                            targetRole
-                    )
-            );
-        }
-
         return specification;
+    }
+
+    private static boolean hasValues(List<?> values) {
+        return values != null && !values.isEmpty();
     }
 
     public static Specification<ExerciseEntity> active(Boolean active) {
@@ -88,20 +52,10 @@ public final class ExerciseSpecifications {
         );
     }
 
-    public static Specification<ExerciseEntity> activityTypeId(Long activityTypeId) {
-        return (root, query, builder) ->
-                builder.equal(root.get("activityType").get("id"), activityTypeId);
-    }
-
-    public static Specification<ExerciseEntity> equipmentTypeId(Long equipmentTypeId) {
-        return (root, query, builder) ->
-                builder.equal(root.get("equipmentType").get("id"), equipmentTypeId);
-    }
-
     public static Specification<ExerciseEntity> hasMuscleTarget(
-            Long muscleGroupId,
-            Long muscleSubgroupId,
-            TargetRoleType targetRole
+            List<Long> muscleGroupIds,
+            List<Long> muscleSubgroupIds,
+            List<TargetRoleType> targetRoles
     ) {
         return (root, query, builder) -> {
             if (query == null) {
@@ -123,34 +77,14 @@ public final class ExerciseSpecifications {
                     builder.isTrue(target.get("active"))
             );
 
-            if (muscleGroupId != null) {
-                predicates.add(
-                        builder.equal(
-                                target.get("muscleSubgroup")
-                                        .get("muscleGroup")
-                                        .get("id"),
-                                muscleGroupId
-                        )
-                );
+            if (hasValues(muscleGroupIds)) {
+                predicates.add(target.get("muscleSubgroup").get("muscleGroup").get("id").in(muscleGroupIds));
             }
-
-            if (muscleSubgroupId != null) {
-                predicates.add(
-                        builder.equal(
-                                target.get("muscleSubgroup")
-                                        .get("id"),
-                                muscleSubgroupId
-                        )
-                );
+            if (hasValues(muscleSubgroupIds)) {
+                predicates.add(target.get("muscleSubgroup").get("id").in(muscleSubgroupIds));
             }
-
-            if (targetRole != null) {
-                predicates.add(
-                        builder.equal(
-                                target.get("targetRole"),
-                                targetRole
-                        )
-                );
+            if (hasValues(targetRoles)) {
+                predicates.add(target.get("targetRole").in(targetRoles));
             }
 
             subquery.select(target.get("id"))

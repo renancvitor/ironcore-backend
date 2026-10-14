@@ -23,11 +23,11 @@ public class ListExercisesUseCase {
         PageResult<ListExercisesItemResult> exercises =
                 queryPort.findActiveExercises(
                         command.name(),
-                        command.activityTypeId(),
-                        command.equipmentTypeId(),
-                        command.muscleGroupId(),
-                        command.muscleSubgroupId(),
-                        command.targetRole(),
+                        command.activityTypeIds(),
+                        command.equipmentTypeIds(),
+                        command.muscleGroupIds(),
+                        command.muscleSubgroupIds(),
+                        command.targetRoles(),
                         pageQuery
                 );
 

@@ -39,7 +39,14 @@ public interface ExerciseApi {
 
     @Operation(
             summary = "Listar catálogo de exercícios",
-            description = "Lista exercícios com paginação e filtros combinados do catálogo controlado pelo sistema."
+            description = """
+                    Lista exercicios com paginacao. Filtros plurais aceitam parametros repetidos,
+                    por exemplo equipmentTypeIds=1&equipmentTypeIds=2&muscleGroupIds=3.
+                    OR dentro de cada lista e AND entre filtros. Grupo, subgrupo e papel devem
+                    corresponder ao mesmo alvo muscular ativo. Listas ausentes ou vazias nao filtram;
+                    duplicatas sao removidas. Parametros singulares continuam aceitos, mas combinar
+                    singular e plural do mesmo filtro retorna 400. IDs devem ser positivos.
+                    """
     )
     @ApiResponse(
             responseCode = "200",

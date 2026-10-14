@@ -29,6 +29,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 @RequiredArgsConstructor
 public class ListExercisesQueryAdapter implements ListExercisesQueryPort {
@@ -38,11 +40,11 @@ public class ListExercisesQueryAdapter implements ListExercisesQueryPort {
     @Override
     public PageResult<ListExercisesItemResult> findActiveExercises(
             String name,
-            ActivityTypeId activityTypeId,
-            EquipmentTypeId equipmentTypeId,
-            MuscleGroupId muscleGroupId,
-            MuscleSubgroupId muscleSubgroupId,
-            TargetRoleType targetRole,
+            List<ActivityTypeId> activityTypeIds,
+            List<EquipmentTypeId> equipmentTypeIds,
+            List<MuscleGroupId> muscleGroupIds,
+            List<MuscleSubgroupId> muscleSubgroupIds,
+            List<TargetRoleType> targetRoles,
             PageQuery pageQuery
     ) {
         Page<ExerciseEntity> entities;
@@ -51,11 +53,11 @@ public class ListExercisesQueryAdapter implements ListExercisesQueryPort {
             Specification<ExerciseEntity> specification =
                     ExerciseSpecifications.filter(
                             name,
-                            valueOf(activityTypeId),
-                            valueOf(equipmentTypeId),
-                            valueOf(muscleGroupId),
-                            valueOf(muscleSubgroupId),
-                            targetRole
+                            activityTypeIds == null ? List.of() : activityTypeIds.stream().map(ActivityTypeId::value).toList(),
+                            equipmentTypeIds == null ? List.of() : equipmentTypeIds.stream().map(EquipmentTypeId::value).toList(),
+                            muscleGroupIds == null ? List.of() : muscleGroupIds.stream().map(MuscleGroupId::value).toList(),
+                            muscleSubgroupIds == null ? List.of() : muscleSubgroupIds.stream().map(MuscleSubgroupId::value).toList(),
+                            targetRoles
                     );
 
             Pageable pageable = PageRequest.of(
@@ -77,22 +79,6 @@ public class ListExercisesQueryAdapter implements ListExercisesQueryPort {
         } catch (RuntimeException exception) {
             throw new DataMappingException("Falha ao projetar exercícios.", exception);
         }
-    }
-
-    private static Long valueOf(ActivityTypeId id) {
-        return id == null ? null : id.value();
-    }
-
-    private static Long valueOf(EquipmentTypeId id) {
-        return id == null ? null : id.value();
-    }
-
-    private static Long valueOf(MuscleGroupId id) {
-        return id == null ? null : id.value();
-    }
-
-    private static Long valueOf(MuscleSubgroupId id) {
-        return id == null ? null : id.value();
     }
 
     private static ListExercisesItemResult toResult(ExerciseEntity entity) {

@@ -9,15 +9,17 @@ import com.ironcore.domain.exercisemuscletarget.enums.TargetRoleType;
 import com.ironcore.domain.muscle.musclegroup.valueobject.MuscleGroupId;
 import com.ironcore.domain.muscle.musclesubgroup.valueobject.MuscleSubgroupId;
 
+import java.util.List;
+
 public interface ListExercisesQueryPort {
 
     PageResult<ListExercisesItemResult> findActiveExercises(
             String name,
-            ActivityTypeId activityTypeId,
-            EquipmentTypeId equipmentTypeId,
-            MuscleGroupId muscleGroupId,
-            MuscleSubgroupId muscleSubgroupId,
-            TargetRoleType targetRole,
+            List<ActivityTypeId> activityTypeIds,
+            List<EquipmentTypeId> equipmentTypeIds,
+            List<MuscleGroupId> muscleGroupIds,
+            List<MuscleSubgroupId> muscleSubgroupIds,
+            List<TargetRoleType> targetRoles,
             PageQuery pageQuery
     );
 }

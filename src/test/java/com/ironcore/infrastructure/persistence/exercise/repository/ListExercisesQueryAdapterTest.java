@@ -64,11 +64,11 @@ class ListExercisesQueryAdapterTest {
 
         PageResult<ListExercisesItemResult> result = adapter.findActiveExercises(
                 "supino",
-                new ActivityTypeId(1L),
-                new EquipmentTypeId(2L),
-                new MuscleGroupId(3L),
-                new MuscleSubgroupId(4L),
-                TargetRoleType.PRIMARY,
+                List.of(new ActivityTypeId(1L)),
+                List.of(new EquipmentTypeId(2L)),
+                List.of(new MuscleGroupId(3L)),
+                List.of(new MuscleSubgroupId(4L)),
+                List.of(TargetRoleType.PRIMARY),
                 new PageQuery(1, 2)
         );
 
