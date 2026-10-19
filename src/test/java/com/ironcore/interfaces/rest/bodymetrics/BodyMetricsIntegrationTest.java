@@ -32,6 +32,7 @@ import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -175,7 +176,7 @@ class BodyMetricsIntegrationTest {
                     "Medição atualizada."
             );
 
-            mockMvc.perform(put(BODY_METRICS_ENDPOINT + "/{id}", secondMetricId)
+            mockMvc.perform(put(BODY_METRICS_ENDPOINT + "/{id}", secondMetricId).with(csrf())
                             .cookie(accessTokenCookie)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(updateRequest)))
@@ -193,7 +194,7 @@ class BodyMetricsIntegrationTest {
             assertThat(updatedMetric.getFatMassKg()).isNotNull();
             assertThat(updatedMetric.getLeanMassKg()).isNotNull();
 
-            mockMvc.perform(delete(BODY_METRICS_ENDPOINT + "/{id}", firstMetricId)
+            mockMvc.perform(delete(BODY_METRICS_ENDPOINT + "/{id}", firstMetricId).with(csrf())
                             .cookie(accessTokenCookie))
                     .andExpect(status().isNoContent());
 
@@ -203,7 +204,7 @@ class BodyMetricsIntegrationTest {
     }
 
     private Cookie loginAndGetAccessTokenCookie() throws Exception {
-        MvcResult result = mockMvc.perform(post(LOGIN_ENDPOINT)
+        MvcResult result = mockMvc.perform(post(LOGIN_ENDPOINT).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -223,7 +224,7 @@ class BodyMetricsIntegrationTest {
     }
 
     private Long createPersonBodyMetrics(Cookie accessTokenCookie, CreateBodyMetricsRequest request) throws Exception {
-        MvcResult result = mockMvc.perform(post(BODY_METRICS_ENDPOINT)
+        MvcResult result = mockMvc.perform(post(BODY_METRICS_ENDPOINT).with(csrf())
                         .cookie(accessTokenCookie)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))

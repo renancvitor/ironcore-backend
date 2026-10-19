@@ -6,6 +6,24 @@ spring:
     driver-class-name: org.postgresql.Driver
 
   flyway:
+    enabled: true
+    baseline-on-migrate: false
+
+management:
+  health:
+    mongo:
+      enabled: false
+
+security:
+  cors:
+    allowed-origin-patterns: ${FRONTEND_ORIGIN:https://irconcore.com.br}
+  cookie:
+    same-site: Lax
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
     enabled: false
 
 messaging:

@@ -60,6 +60,9 @@ class AuthControllerTest {
     private Clock clock;
 
     @MockitoBean
+    private org.springframework.security.web.csrf.CsrfTokenRepository csrfTokenRepository;
+
+    @MockitoBean
     private LoginUseCase loginUseCase;
 
     @MockitoBean
