@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -346,7 +347,7 @@ class ExerciseCatalogIntegrationTest {
     }
 
     private Cookie loginAndGetAccessTokenCookie() throws Exception {
-        MvcResult result = mockMvc.perform(post(LOGIN_ENDPOINT)
+        MvcResult result = mockMvc.perform(post(LOGIN_ENDPOINT).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {

@@ -14,6 +14,8 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Tag(name = "Autenticação")
 public interface AuthApi {
@@ -35,7 +37,8 @@ public interface AuthApi {
     @UnauthorizedResponse
     @ForbiddenResponse
     @InternalServerErrorResponse
-    ResponseEntity<LoginResponse> login(LoginRequest request);
+    ResponseEntity<LoginResponse> login(LoginRequest request, HttpServletRequest servletRequest,
+                                        HttpServletResponse servletResponse);
 
     @Operation(
             summary = "Encerrar sessão",
@@ -47,5 +50,5 @@ public interface AuthApi {
             description = "Sessão encerrada com sucesso."
     )
     @InternalServerErrorResponse
-    ResponseEntity<Void> logout();
+    ResponseEntity<Void> logout(HttpServletRequest servletRequest, HttpServletResponse servletResponse);
 }

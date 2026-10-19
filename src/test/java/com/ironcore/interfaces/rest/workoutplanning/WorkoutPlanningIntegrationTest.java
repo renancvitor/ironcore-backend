@@ -40,6 +40,7 @@ import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -159,7 +160,7 @@ class WorkoutPlanningIntegrationTest {
                             .cookie(secondUserCookie))
                     .andExpect(status().isNotFound());
 
-            mockMvc.perform(put(WORKOUT_CYCLES_ENDPOINT + "/{id}", firstUserCycleId)
+            mockMvc.perform(put(WORKOUT_CYCLES_ENDPOINT + "/{id}", firstUserCycleId).with(csrf())
                             .cookie(secondUserCookie)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody(new UpdateWorkoutCycleRequest(
@@ -167,7 +168,7 @@ class WorkoutPlanningIntegrationTest {
                             ))))
                     .andExpect(status().isNotFound());
 
-            mockMvc.perform(delete(WORKOUT_CYCLES_ENDPOINT + "/{id}", firstUserCycleId)
+            mockMvc.perform(delete(WORKOUT_CYCLES_ENDPOINT + "/{id}", firstUserCycleId).with(csrf())
                             .cookie(secondUserCookie))
                     .andExpect(status().isNotFound());
 
@@ -184,7 +185,7 @@ class WorkoutPlanningIntegrationTest {
         void shouldCreateComposeUpdateStartAndGetWorkoutDetail() throws Exception {
             Long cycleId = createWorkoutCycle(firstUserCookie, "Hipertrofia integrada", hypertrophyGoalId);
 
-            mockMvc.perform(put(WORKOUT_CYCLES_ENDPOINT + "/{id}", cycleId)
+            mockMvc.perform(put(WORKOUT_CYCLES_ENDPOINT + "/{id}", cycleId).with(csrf())
                             .cookie(firstUserCookie)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody(new UpdateWorkoutCycleRequest(
@@ -197,14 +198,14 @@ class WorkoutPlanningIntegrationTest {
             Long dayId = createWorkoutDay(firstUserCookie, cycleId, WeekDay.MONDAY, "Treino A");
             Long activityId = createWorkoutActivity(firstUserCookie, dayId, activeExerciseId);
 
-            mockMvc.perform(patch(WORKOUT_CYCLES_ENDPOINT + "/{id}/start", cycleId)
+            mockMvc.perform(patch(WORKOUT_CYCLES_ENDPOINT + "/{id}/start", cycleId).with(csrf())
                             .cookie(firstUserCookie))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(cycleId))
                     .andExpect(jsonPath("$.workoutStatus").value("IN_PROGRESS"))
                     .andExpect(jsonPath("$.startDate").value(LocalDate.now().toString()));
 
-            mockMvc.perform(put(WORKOUT_CYCLES_ENDPOINT + "/{id}", cycleId)
+            mockMvc.perform(put(WORKOUT_CYCLES_ENDPOINT + "/{id}", cycleId).with(csrf())
                             .cookie(firstUserCookie)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody(new UpdateWorkoutCycleRequest(
@@ -229,13 +230,13 @@ class WorkoutPlanningIntegrationTest {
         void shouldRejectStartingWorkoutCycleWithoutCompleteComposition() throws Exception {
             Long cycleId = createWorkoutCycle(firstUserCookie, "Ciclo sem dias", hypertrophyGoalId);
 
-            mockMvc.perform(patch(WORKOUT_CYCLES_ENDPOINT + "/{id}/start", cycleId)
+            mockMvc.perform(patch(WORKOUT_CYCLES_ENDPOINT + "/{id}/start", cycleId).with(csrf())
                             .cookie(firstUserCookie))
                     .andExpect(status().isUnprocessableEntity());
 
             Long dayId = createWorkoutDay(firstUserCookie, cycleId, WeekDay.TUESDAY, "Treino incompleto");
 
-            mockMvc.perform(patch(WORKOUT_CYCLES_ENDPOINT + "/{id}/start", cycleId)
+            mockMvc.perform(patch(WORKOUT_CYCLES_ENDPOINT + "/{id}/start", cycleId).with(csrf())
                             .cookie(firstUserCookie))
                     .andExpect(status().isUnprocessableEntity());
 
@@ -251,13 +252,13 @@ class WorkoutPlanningIntegrationTest {
             Long cycleId = createComposedWorkoutCycle(firstUserCookie, "Ciclo para concluir");
             startWorkoutCycle(firstUserCookie, cycleId);
 
-            mockMvc.perform(patch(WORKOUT_CYCLES_ENDPOINT + "/{id}/complete", cycleId)
+            mockMvc.perform(patch(WORKOUT_CYCLES_ENDPOINT + "/{id}/complete", cycleId).with(csrf())
                             .cookie(firstUserCookie))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.workoutStatus").value("COMPLETED"))
                     .andExpect(jsonPath("$.endDate").value(LocalDate.now().toString()));
 
-            mockMvc.perform(put(WORKOUT_CYCLES_ENDPOINT + "/{id}", cycleId)
+            mockMvc.perform(put(WORKOUT_CYCLES_ENDPOINT + "/{id}", cycleId).with(csrf())
                             .cookie(firstUserCookie)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody(new UpdateWorkoutCycleRequest(
@@ -265,7 +266,7 @@ class WorkoutPlanningIntegrationTest {
                             ))))
                     .andExpect(status().isUnprocessableEntity());
 
-            mockMvc.perform(delete(WORKOUT_CYCLES_ENDPOINT + "/{id}", cycleId)
+            mockMvc.perform(delete(WORKOUT_CYCLES_ENDPOINT + "/{id}", cycleId).with(csrf())
                             .cookie(firstUserCookie))
                     .andExpect(status().isUnprocessableEntity());
         }
@@ -274,12 +275,12 @@ class WorkoutPlanningIntegrationTest {
         void shouldCancelAndBlockFurtherUpdateAndDeleteOnlyNotStartedCycle() throws Exception {
             Long cancellableCycleId = createWorkoutCycle(firstUserCookie, "Ciclo para cancelar", hypertrophyGoalId);
 
-            mockMvc.perform(patch(WORKOUT_CYCLES_ENDPOINT + "/{id}/cancel", cancellableCycleId)
+            mockMvc.perform(patch(WORKOUT_CYCLES_ENDPOINT + "/{id}/cancel", cancellableCycleId).with(csrf())
                             .cookie(firstUserCookie))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.workoutStatus").value("CANCELLED"));
 
-            mockMvc.perform(put(WORKOUT_CYCLES_ENDPOINT + "/{id}", cancellableCycleId)
+            mockMvc.perform(put(WORKOUT_CYCLES_ENDPOINT + "/{id}", cancellableCycleId).with(csrf())
                             .cookie(firstUserCookie)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody(new UpdateWorkoutCycleRequest(
@@ -289,7 +290,7 @@ class WorkoutPlanningIntegrationTest {
 
             Long deletableCycleId = createWorkoutCycle(firstUserCookie, "Ciclo para excluir", hypertrophyGoalId);
 
-            mockMvc.perform(delete(WORKOUT_CYCLES_ENDPOINT + "/{id}", deletableCycleId)
+            mockMvc.perform(delete(WORKOUT_CYCLES_ENDPOINT + "/{id}", deletableCycleId).with(csrf())
                             .cookie(firstUserCookie))
                     .andExpect(status().isNoContent());
 
@@ -334,12 +335,12 @@ class WorkoutPlanningIntegrationTest {
     }
 
     private void startWorkoutCycle(Cookie cookie, Long cycleId) throws Exception {
-        mockMvc.perform(patch(WORKOUT_CYCLES_ENDPOINT + "/{id}/start", cycleId).cookie(cookie))
+        mockMvc.perform(patch(WORKOUT_CYCLES_ENDPOINT + "/{id}/start", cycleId).with(csrf()).cookie(cookie))
                 .andExpect(status().isOk());
     }
 
     private Long createWorkoutCycle(Cookie cookie, String name, Long trainingGoalId) throws Exception {
-        MvcResult result = mockMvc.perform(post(WORKOUT_CYCLES_ENDPOINT)
+        MvcResult result = mockMvc.perform(post(WORKOUT_CYCLES_ENDPOINT).with(csrf())
                         .cookie(cookie)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody(new CreateWorkoutCycleRequest(name, trainingGoalId, 3, "Plano integrado"))))
@@ -350,7 +351,7 @@ class WorkoutPlanningIntegrationTest {
     }
 
     private Long createWorkoutDay(Cookie cookie, Long cycleId, WeekDay weekDay, String title) throws Exception {
-        MvcResult result = mockMvc.perform(post(WORKOUT_DAYS_ENDPOINT)
+        MvcResult result = mockMvc.perform(post(WORKOUT_DAYS_ENDPOINT).with(csrf())
                         .cookie(cookie)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody(new CreateWorkoutDayRequest(cycleId, weekDay, title))))
@@ -376,7 +377,7 @@ class WorkoutPlanningIntegrationTest {
                 "Controle integrado"
         );
 
-        MvcResult result = mockMvc.perform(post(WORKOUT_ACTIVITIES_ENDPOINT)
+        MvcResult result = mockMvc.perform(post(WORKOUT_ACTIVITIES_ENDPOINT).with(csrf())
                         .cookie(cookie)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody(request)))
@@ -387,7 +388,7 @@ class WorkoutPlanningIntegrationTest {
     }
 
     private Cookie loginAndGetAccessTokenCookie(String email) throws Exception {
-        MvcResult result = mockMvc.perform(post(LOGIN_ENDPOINT)
+        MvcResult result = mockMvc.perform(post(LOGIN_ENDPOINT).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {

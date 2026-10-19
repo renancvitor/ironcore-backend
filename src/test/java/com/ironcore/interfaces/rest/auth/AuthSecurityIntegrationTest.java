@@ -33,6 +33,7 @@ import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
@@ -97,15 +98,15 @@ class AuthSecurityIntegrationTest {
         void shouldAuthenticateValidCredentialsAndReturnAccessTokenCookie() throws Exception {
             LoginRequest request = new LoginRequest(EMAIL, RAW_PASSWORD);
 
-            mockMvc.perform(post(LOGIN_ENDPOINT)
+            mockMvc.perform(post(LOGIN_ENDPOINT).with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
-                    .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("access_token=")))
-                    .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Path=/")))
-                    .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Secure")))
-                    .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("HttpOnly")))
-                    .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("SameSite=None")))
+                    .andExpect(header().stringValues(HttpHeaders.SET_COOKIE, org.hamcrest.Matchers.hasItem(containsString("access_token="))))
+                    .andExpect(header().stringValues(HttpHeaders.SET_COOKIE, org.hamcrest.Matchers.hasItem(containsString("Path=/"))))
+                    .andExpect(header().stringValues(HttpHeaders.SET_COOKIE, org.hamcrest.Matchers.hasItem(containsString("Secure"))))
+                    .andExpect(header().stringValues(HttpHeaders.SET_COOKIE, org.hamcrest.Matchers.hasItem(containsString("HttpOnly"))))
+                    .andExpect(header().stringValues(HttpHeaders.SET_COOKIE, org.hamcrest.Matchers.hasItem(containsString("SameSite=None"))))
                     .andExpect(cookie().exists("access_token"))
                     .andExpect(jsonPath("$.accessToken").isString())
                     .andExpect(jsonPath("$.tokenType").value("Bearer"))
@@ -122,7 +123,7 @@ class AuthSecurityIntegrationTest {
         void shouldReturnUnauthorizedWhenCredentialsAreInvalid() throws Exception {
             LoginRequest request = new LoginRequest(EMAIL, "WrongPassword123@");
 
-            mockMvc.perform(post(LOGIN_ENDPOINT)
+            mockMvc.perform(post(LOGIN_ENDPOINT).with(csrf())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isUnauthorized())
@@ -253,22 +254,22 @@ class AuthSecurityIntegrationTest {
         void shouldLogoutAndExpireAccessTokenCookie() throws Exception {
             Cookie accessTokenCookie = loginAndGetAccessTokenCookie();
 
-            mockMvc.perform(post(LOGOUT_ENDPOINT)
+            mockMvc.perform(post(LOGOUT_ENDPOINT).with(csrf())
                             .cookie(accessTokenCookie))
                     .andExpect(status().isNoContent())
-                    .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("access_token=")))
-                    .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Max-Age=0")))
-                    .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Path=/")))
-                    .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Secure")))
-                    .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("HttpOnly")))
-                    .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("SameSite=None")));
+                    .andExpect(header().stringValues(HttpHeaders.SET_COOKIE, org.hamcrest.Matchers.hasItem(containsString("access_token="))))
+                    .andExpect(header().stringValues(HttpHeaders.SET_COOKIE, org.hamcrest.Matchers.hasItem(containsString("Max-Age=0"))))
+                    .andExpect(header().stringValues(HttpHeaders.SET_COOKIE, org.hamcrest.Matchers.hasItem(containsString("Path=/"))))
+                    .andExpect(header().stringValues(HttpHeaders.SET_COOKIE, org.hamcrest.Matchers.hasItem(containsString("Secure"))))
+                    .andExpect(header().stringValues(HttpHeaders.SET_COOKIE, org.hamcrest.Matchers.hasItem(containsString("HttpOnly"))))
+                    .andExpect(header().stringValues(HttpHeaders.SET_COOKIE, org.hamcrest.Matchers.hasItem(containsString("SameSite=None"))));
         }
     }
 
     private Cookie loginAndGetAccessTokenCookie() throws Exception {
         LoginRequest request = new LoginRequest(EMAIL, RAW_PASSWORD);
 
-        MvcResult result = mockMvc.perform(post(LOGIN_ENDPOINT)
+        MvcResult result = mockMvc.perform(post(LOGIN_ENDPOINT).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())

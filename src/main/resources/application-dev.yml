@@ -25,3 +25,8 @@ spring:
 
 app:
   environment: development
+
+springdoc:
+  swagger-ui:
+    csrf:
+      enabled: true
