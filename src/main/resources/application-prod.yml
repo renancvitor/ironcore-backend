@@ -16,7 +16,7 @@ management:
 
 security:
   cors:
-    allowed-origin-patterns: ${FRONTEND_ORIGIN:https://irconcore.com.br}
+    allowed-origin-patterns: ${FRONTEND_ORIGIN:https://ironcore.dev.br}
   cookie:
     same-site: Lax
 
