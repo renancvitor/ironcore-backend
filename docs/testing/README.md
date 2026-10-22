@@ -215,6 +215,8 @@ O GitHub Actions executa:
 
 em eventos de `push` e `pull_request` para a branch `main`.
 
+O sucesso do CI de um `push` na `main` pode executar o CD conforme as condições do workflow de publicação. O CD recompila e executa novamente a verificação Maven antes de enviar o JAR à VPS. Gatilhos, checagem de saúde e limites do rollback estão em [Deploy e Produção](../deploy/README.md).
+
 ## Regra de Manutenção
 
 - Regras de domínio devem ser testadas preferencialmente em `domain`, sem Spring.

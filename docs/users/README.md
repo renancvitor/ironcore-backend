@@ -136,6 +136,8 @@ As variáveis de bootstrap do usuário são configuradas sob `ironcore.bootstrap
 - `IRONCORE_BOOTSTRAP_USER_EMAIL`
 - `IRONCORE_BOOTSTRAP_USER_PASSWORD`
 
+Em produção, o bootstrap inicial já foi executado e as flags de habilitação de pessoa e usuário foram posteriormente desativadas. A configuração sensível permanece fora do Git; consulte [Deploy e Produção](../deploy/README.md).
+
 O segredo JWT é configurado em:
 
 - `JWT_SECRET`
@@ -282,7 +284,7 @@ O cookie de autenticação emitido no login possui:
 - Nome: `access_token`
 - `HttpOnly`
 - `Secure`
-- `SameSite=None`
+- `SameSite` configurável: `None` como padrão da configuração base e `Lax` no perfil de produção
 - `Path=/`
 - `Max-Age` baseado na expiração do JWT
 
@@ -314,12 +316,12 @@ Componentes principais:
 Decisões atuais:
 
 - API stateless com `SessionCreationPolicy.STATELESS`.
-- CSRF desabilitado.
+- CSRF habilitado com `CookieCsrfTokenRepository`. O cliente obtém token e nome do header por `GET /api/auth/csrf` e envia o header nas operações de escrita, incluindo autenticação. Login e logout invalidam o token CSRF anterior.
 - JWT assinado com HMAC256.
 - Issuer padrão: `IronCore`.
 - Expiração padrão: `120` minutos.
 - Claims atuais: `sub` com user id, `email` e `mustChangePassword`.
-- CORS local habilitado para `http://localhost:*` e `http://127.0.0.1:*`, com credenciais.
+- CORS local habilitado para `http://localhost:*` e `http://127.0.0.1:*`, com credenciais. Em produção, `FRONTEND_ORIGIN` define a origem, com padrão `https://ironcore.dev.br`.
 
 ## Erros Relevantes
 
