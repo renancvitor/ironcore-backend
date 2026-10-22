@@ -22,7 +22,7 @@ O frontend deste sistema está em um repositório separado:
 
 - 🌐 [IronCore Frontend](https://github.com/renancvitor/ironcore-frontend)
 
-Consulte-o para acompanhar a implementação da interface, integração com a API e evolução dos fluxos do produto.
+O frontend está publicado em [ironcore.dev.br](https://ironcore.dev.br) e integrado à API de produção. Consulte seu repositório para acompanhar a evolução dos fluxos do produto.
 
 ---
 
@@ -83,7 +83,7 @@ O desenvolvimento do projeto busca consolidar habilidades como:
 
 <h2 id="status-atual-do-projeto" align="center">Status Atual do Projeto</h2>
 
-O <b>IronCore</b> está em evolução contínua. O backend alcança nesta entrega sua primeira versão estável, com autenticação single-user, pessoa vinculada ao usuário autenticado, métricas corporais, catálogo global de exercícios, workout planning, persistência relacional, logging, exceptions e testes automatizados. Isso não representa o produto completo: frontend, Workout Session, histórico de execução e IA continuam como evoluções futuras.
+O <b>IronCore</b> está em evolução contínua. A primeira versão funcional do backend está publicada e integrada ao frontend, com autenticação single-user, pessoa vinculada ao usuário autenticado, métricas corporais, catálogo global de exercícios, workout planning, persistência relacional, logging, exceptions e testes automatizados. A implantação inicial em produção foi concluída e validada em outubro de 2026. Workout Session, histórico de execução e IA continuam como evoluções futuras.
 
 ### Já existe no projeto
 - Estrutura inicial do backend com Spring Boot.
@@ -102,6 +102,7 @@ O <b>IronCore</b> está em evolução contínua. O backend alcança nesta entreg
 - Workout planning com objetivos de treino, ciclos por `PersonId`, composição em dias e atividades, lifecycle, edição, reorder, exclusão, detalhe, filtros e paginação.
 - Documentação Swagger/OpenAPI para os contratos REST atuais.
 - Testes automatizados e CI executando build/test.
+- API publicada em `https://api.ironcore.dev.br`, com CD automático após o CI da `main` e integração ao frontend Angular.
 - Documentação visual com diagramas de domínio, arquitetura e fluxos principais.
 
 ### Parcialmente preparado
@@ -110,7 +111,6 @@ O <b>IronCore</b> está em evolução contínua. O backend alcança nesta entreg
 
 ### Planejado para as próximas etapas
 - Workout Session e histórico de treinos.
-- Integração futura com frontend Angular.
 - Fluxo de geração de treino com apoio de IA.
 - Persistência documental para artefatos/contexto de IA, caso necessária.
 
@@ -484,7 +484,11 @@ SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
 
 <h2 id="deploy" align="center">Deploy</h2>
 
-> Esta seção será implementada por completo conforme o projeto evoluir. Deploy ainda não faz parte do estado atual do projeto.
+A API está publicada em [api.ironcore.dev.br](https://api.ironcore.dev.br), em uma VPS OVHcloud no Canadá, com Java 21, Spring Boot 3.5, systemd e Caddy com HTTPS automático. O PostgreSQL é hospedado no Supabase, em São Paulo, com TLS e migrations Flyway.
+
+O GitHub Actions executa CI e publica automaticamente após sua aprovação na `main`; o CD também aceita execução manual. O script da VPS instala o JAR, reinicia o serviço, verifica a saúde e tenta restaurar a versão anterior em caso de falha. **O rollback do JAR não desfaz migrations Flyway.**
+
+Consulte [Deploy e Produção](docs/deploy/README.md) para arquitetura, configurações, CI/CD e limitações operacionais. O frontend é publicado independentemente no Cloudflare Pages em [ironcore.dev.br](https://ironcore.dev.br).
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 

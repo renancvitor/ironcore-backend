@@ -16,6 +16,10 @@ Alguns documentos descrevem funcionalidades já implementadas, enquanto outros r
 - [Testes Automatizados](testing/README.md): estratégia de testes unitários, integração, segurança e CI.
 - [Estratégia de Filtragem](filtering/README.md): uso de derived queries, JPQL e Specifications nas listagens.
 
+### Produção e operação
+
+- [Deploy e Produção](deploy/README.md): hospedagem na OVHcloud, integração com frontend e Supabase, configurações, CI/CD e limites do rollback.
+
 ### Módulos documentados
 
 - [Persons](persons/README.md): domínio de dados pessoais, relação com user, bootstrap e endpoint de atualização.
@@ -48,7 +52,7 @@ Alguns documentos descrevem funcionalidades já implementadas, enquanto outros r
 ## Observações
 
 - A documentação usa termos técnicos em inglês quando eles representam código, camadas, módulos, ferramentas ou conceitos comuns no desenvolvimento backend.
-- Frontend, Workout Session, histórico de treinos, IA e Kafka continuam como evoluções planejadas; workout planning está implementado.
+- Backend e frontend estão integrados e publicados em produção desde outubro de 2026. Workout Session, histórico de treinos, IA e Kafka continuam como evoluções planejadas; workout planning está implementado.
 - Releases anteriores preservam história do projeto e não devem ser reescritos para refletir o estado atual.
 
 <p align="right"><a href="../README.md">Voltar para a documentação principal</a></p>

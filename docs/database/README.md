@@ -96,6 +96,8 @@ PostgreSQL é usado pela persistência funcional atual. MongoDB está preparado 
 
 ## Observação Sobre o Perfil de Produção
 
-`application-prod.yml` atualmente desabilita o Flyway. Isso deve ser revisado antes de um deploy real em produção. Essa é uma limitação conhecida de configuração, não uma decisão validada de produção.
+`application-prod.yml` habilita o Flyway e mantém `baseline-on-migrate=false`. O banco de produção é PostgreSQL no Supabase, na região de São Paulo, com conexão TLS. As credenciais são configuradas fora do Git, em `/etc/ironcore/ironcore.env` na VPS.
+
+O bootstrap inicial foi executado e posteriormente desabilitado em produção. **O rollback do JAR não desfaz migrations Flyway**; mudanças de schema devem permanecer compatíveis com a versão anterior que poderá ser restaurada. Arquitetura e fluxo de publicação: [Deploy e Produção](../deploy/README.md).
 
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>
