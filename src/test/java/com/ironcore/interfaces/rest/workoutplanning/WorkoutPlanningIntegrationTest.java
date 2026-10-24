@@ -335,9 +335,9 @@ class WorkoutPlanningIntegrationTest {
         Long sundaySecond = createWorkoutDay(firstUserCookie, cycleId, WeekDay.SUNDAY, "Sunday second");
         Long activity = createWorkoutActivity(firstUserCookie, sunday, activeExerciseId);
         var daysBefore = jdbcTemplate.queryForList(
-                "select * from workout_days where workout_cycle_id = é order by id", cycleId);
+                "select * from workout_days where workout_cycle_id = ? order by id", cycleId);
         var activitiesBefore = jdbcTemplate.queryForList(
-                "select * from workout_activities where workout_day_id = é order by id", sunday);
+                "select * from workout_activities where workout_day_id = ? order by id", sunday);
 
         mockMvc.perform(put(WORKOUT_CYCLES_ENDPOINT + "/{id}", cycleId).with(csrf())
                         .cookie(firstUserCookie).contentType(MediaType.APPLICATION_JSON)
@@ -355,10 +355,10 @@ class WorkoutPlanningIntegrationTest {
                 .andExpect(jsonPath("$.days[0].activities[0].id").value(activity));
 
         assertThat(jdbcTemplate.queryForList(
-                "select * from workout_days where workout_cycle_id = é order by id", cycleId))
+                "select * from workout_days where workout_cycle_id = ? order by id", cycleId))
                 .isEqualTo(daysBefore);
         assertThat(jdbcTemplate.queryForList(
-                "select * from workout_activities where workout_day_id = é order by id", sunday))
+                "select * from workout_activities where workout_day_id = ? order by id", sunday))
                 .isEqualTo(activitiesBefore);
     }
 
