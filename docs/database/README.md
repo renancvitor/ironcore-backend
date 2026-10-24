@@ -41,6 +41,7 @@ A configuração base da aplicação habilita o Flyway e usa `hibernate.ddl-auto
 | `V20__create_table_workout_days.sql` | `workout_days` | Armazena dias que compõem ciclos, com ordenação por dia da semana. |
 | `V21__create_table_workout_activities.sql` | `workout_activities` | Armazena atividades prescritas de cada dia. |
 | `V22__seed_training_goals.sql` | `training_goals` | Insere os objetivos iniciais de treino. |
+| `V23__add_column_week_starts_on_to_workout_cycles.sql` | `workout_cycles` | Adiciona `week_starts_on INTEGER NOT NULL DEFAULT 1`, definindo `SUNDAY` como início da semana nos ciclos existentes e como padrão no banco. |
 
 ## Modelo Implementado
 
