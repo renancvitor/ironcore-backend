@@ -1,5 +1,6 @@
 package com.ironcore.application.workoutplanning.workoutcycle.create;
 
+import com.ironcore.domain.workoutplanning.workoutday.enums.WeekDay;
 import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.workoutplanning.traininggoal.valueobject.TrainingGoalId;
 import com.ironcore.domain.workoutplanning.workoutcycle.enums.WorkoutOrigin;
@@ -14,6 +15,7 @@ public record CreateWorkoutCycleResult(
         String name,
         TrainingGoalId trainingGoalId,
         Integer desiredDurationMonths,
+        WeekDay weekStartsOn,
         WorkoutStatus workoutStatus,
         WorkoutOrigin workoutOrigin,
         String notes,

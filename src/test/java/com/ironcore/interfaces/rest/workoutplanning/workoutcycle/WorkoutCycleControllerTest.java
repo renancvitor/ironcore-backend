@@ -1,5 +1,6 @@
 package com.ironcore.interfaces.rest.workoutplanning.workoutcycle;
 
+import org.junit.jupiter.params.provider.ValueSource;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
@@ -71,17 +72,17 @@ class WorkoutCycleControllerTest {
 
     @Nested class Creation {
         @Test void shouldCreateWorkoutCycle() throws Exception {
-            CreateWorkoutCycleRequest request = new CreateWorkoutCycleRequest("Hipertrofia", 2L, 3, "Foco em força");
-            CreateWorkoutCycleCommand command = new CreateWorkoutCycleCommand(new UserId(1L), "Hipertrofia", new TrainingGoalId(2L), 3, "Foco em força");
-            when(createWorkoutCycleUseCase.execute(command)).thenReturn(new CreateWorkoutCycleResult(new WorkoutCycleId(1L), new PersonId(3L), "Hipertrofia", new TrainingGoalId(2L), 3, WorkoutStatus.NOT_STARTED, WorkoutOrigin.MANUAL, "Foco em força", LocalDateTime.of(2026, 8, 29, 10, 0)));
+            CreateWorkoutCycleRequest request = new CreateWorkoutCycleRequest("Hipertrofia", 2L, 3, WeekDay.MONDAY, "Foco em força");
+            CreateWorkoutCycleCommand command = new CreateWorkoutCycleCommand(new UserId(1L), "Hipertrofia", new TrainingGoalId(2L), 3, WeekDay.MONDAY, "Foco em força");
+            when(createWorkoutCycleUseCase.execute(command)).thenReturn(new CreateWorkoutCycleResult(new WorkoutCycleId(1L), new PersonId(3L), "Hipertrofia", new TrainingGoalId(2L), 3, WeekDay.MONDAY, WorkoutStatus.NOT_STARTED, WorkoutOrigin.MANUAL, "Foco em força", LocalDateTime.of(2026, 8, 29, 10, 0)));
 
             mockMvc.perform(post(ENDPOINT).with(authenticatedUser()).contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isCreated()).andExpect(jsonPath("$.id").value(1L)).andExpect(jsonPath("$.personId").value(3L)).andExpect(jsonPath("$.workoutStatus").value("NOT_STARTED"));
+                    .andExpect(status().isCreated()).andExpect(jsonPath("$.weekStartsOn").value("MONDAY")).andExpect(jsonPath("$.id").value(1L)).andExpect(jsonPath("$.personId").value(3L)).andExpect(jsonPath("$.workoutStatus").value("NOT_STARTED"));
             verify(createWorkoutCycleUseCase).execute(command);
         }
 
         @Test void shouldReturnBadRequestWhenCreateRequestIsInvalid() throws Exception {
-            CreateWorkoutCycleRequest request = new CreateWorkoutCycleRequest("", null, 0, null);
+            CreateWorkoutCycleRequest request = new CreateWorkoutCycleRequest("", null, 0, WeekDay.MONDAY, null);
             mockMvc.perform(post(ENDPOINT).with(authenticatedUser()).contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest()).andExpect(jsonPath("$.message").value("Erro de validação nos campos de requisição"));
             verifyNoInteractions(createWorkoutCycleUseCase);
@@ -90,14 +91,28 @@ class WorkoutCycleControllerTest {
 
     @Nested class Update {
         @Test void shouldUpdateWorkoutCycle() throws Exception {
-            UpdateWorkoutCycleRequest request = new UpdateWorkoutCycleRequest("Hipertrofia atualizada", 2L, 4, "Nova observação");
-            UpdateWorkoutCycleCommand command = new UpdateWorkoutCycleCommand(new UserId(1L), new WorkoutCycleId(1L), "Hipertrofia atualizada", new TrainingGoalId(2L), 4, "Nova observação");
-            when(updateWorkoutCycleUseCase.execute(command)).thenReturn(new UpdateWorkoutCycleResult(new WorkoutCycleId(1L), "Hipertrofia atualizada", new TrainingGoalId(2L), null, WorkoutStatus.NOT_STARTED, WorkoutOrigin.MANUAL, 4, "Nova observação", LocalDateTime.of(2026, 8, 29, 10, 0)));
+            UpdateWorkoutCycleRequest request = new UpdateWorkoutCycleRequest("Hipertrofia atualizada", 2L, 4, WeekDay.MONDAY, "Nova observação");
+            UpdateWorkoutCycleCommand command = new UpdateWorkoutCycleCommand(new UserId(1L), new WorkoutCycleId(1L), "Hipertrofia atualizada", new TrainingGoalId(2L), 4, WeekDay.MONDAY, "Nova observação");
+            when(updateWorkoutCycleUseCase.execute(command)).thenReturn(new UpdateWorkoutCycleResult(new WorkoutCycleId(1L), "Hipertrofia atualizada", new TrainingGoalId(2L), null, WorkoutStatus.NOT_STARTED, WorkoutOrigin.MANUAL, 4, WeekDay.MONDAY, "Nova observação", LocalDateTime.of(2026, 8, 29, 10, 0)));
 
             mockMvc.perform(put(ENDPOINT + "/{id}", 1L).with(authenticatedUser()).contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isOk()).andExpect(jsonPath("$.name").value("Hipertrofia atualizada"));
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.weekStartsOn").value("MONDAY")).andExpect(jsonPath("$.name").value("Hipertrofia atualizada"));
             verify(updateWorkoutCycleUseCase).execute(command);
         }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"FUNDAY", "8"})
+    void shouldRejectInvalidWeekStartOnCreateAndUpdate(String weekStart) throws Exception {
+        String body = objectMapper.writeValueAsString(java.util.Map.of(
+                "name", "Cycle", "trainingGoalId", 2, "weekStartsOn", weekStart));
+        mockMvc.perform(post(ENDPOINT).with(authenticatedUser())
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(put(ENDPOINT + "/1").with(authenticatedUser())
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(createWorkoutCycleUseCase, updateWorkoutCycleUseCase);
     }
 
     @Nested class Lifecycle {
@@ -145,10 +160,10 @@ class WorkoutCycleControllerTest {
         @Test void shouldReturnWorkoutCycleDetail() throws Exception {
             GetWorkoutCycleDetailCommand command = new GetWorkoutCycleDetailCommand(new UserId(1L), new WorkoutCycleId(1L));
             WorkoutActivityDetailResult activity = new WorkoutActivityDetailResult(new WorkoutActivityId(4L), 1, 3, 8, 12, new BigDecimal("20.0"), null, null, null, null, 60, "Controle", new ExerciseDetailResult(new ExerciseId(5L), "Supino", List.of(new MuscleGroupDetailResult(new MuscleGroupId(6L), "Peitoral"))));
-            WorkoutCycleDetailResult result = new WorkoutCycleDetailResult(new WorkoutCycleId(1L), "Hipertrofia", WorkoutStatus.IN_PROGRESS, new TrainingGoalDetailResult(new TrainingGoalId(2L), "Hipertrofia"), LocalDate.of(2026, 8, 1), null, 3, "Notas", List.of(new WorkoutDayDetailResult(new WorkoutDayId(3L), WeekDay.MONDAY, "Treino A", 1, List.of(activity))));
+            WorkoutCycleDetailResult result = new WorkoutCycleDetailResult(new WorkoutCycleId(1L), "Hipertrofia", WorkoutStatus.IN_PROGRESS, new TrainingGoalDetailResult(new TrainingGoalId(2L), "Hipertrofia"), LocalDate.of(2026, 8, 1), null, 3, WeekDay.MONDAY, "Notas", List.of(new WorkoutDayDetailResult(new WorkoutDayId(3L), WeekDay.MONDAY, "Treino A", 1, List.of(activity))));
             when(getWorkoutCycleDetailUseCase.execute(command)).thenReturn(result);
             mockMvc.perform(get(ENDPOINT + "/{id}", 1L).with(authenticatedUser()))
-                    .andExpect(status().isOk()).andExpect(jsonPath("$.trainingGoal.name").value("Hipertrofia")).andExpect(jsonPath("$.days[0].activities[0].exercise.name").value("Supino"));
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.weekStartsOn").value("MONDAY")).andExpect(jsonPath("$.trainingGoal.name").value("Hipertrofia")).andExpect(jsonPath("$.days[0].activities[0].exercise.name").value("Supino"));
             verify(getWorkoutCycleDetailUseCase).execute(command);
         }
     }

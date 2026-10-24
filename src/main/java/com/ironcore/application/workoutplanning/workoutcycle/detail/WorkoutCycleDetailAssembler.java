@@ -96,6 +96,7 @@ public class WorkoutCycleDetailAssembler {
                 first.startDate(),
                 first.endDate(),
                 first.desiredDurationMonths(),
+                first.weekStartsOn(),
                 first.cycleNotes(),
                 dayResults
         );

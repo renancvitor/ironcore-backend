@@ -1,5 +1,6 @@
 package com.ironcore.application.workoutplanning.workoutcycle.usecase;
 
+import com.ironcore.domain.workoutplanning.workoutday.enums.WeekDay;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
@@ -111,7 +112,8 @@ class UpdateWorkoutCycleUseCaseTest {
             verify(publisher).publish(
                     eq(AuditActionType.UPDATE), eq(user.getId().value()), eq(user.getEmail().value()),
                     eq(AuditTargetType.WORKOUT_CYCLE), eq(workoutCycle.getId().value()),
-                    any(WorkoutCycleAuditData.class), any(WorkoutCycleAuditData.class)
+                    org.mockito.ArgumentMatchers.<WorkoutCycleAuditData>argThat(data -> data.weekStartsOn() == WeekDay.SUNDAY),
+                    org.mockito.ArgumentMatchers.<WorkoutCycleAuditData>argThat(data -> data.weekStartsOn() == command.weekStartsOn())
             );
         }
 
@@ -274,6 +276,8 @@ class UpdateWorkoutCycleUseCaseTest {
         assertThat(savedWorkoutCycle.getStartDate()).isEqualTo(startDate);
         assertThat(savedWorkoutCycle.getEndDate()).isEqualTo(endDate);
         assertThat(savedWorkoutCycle.getUpdatedAt()).isEqualTo(updatedAt);
+        assertThat(savedWorkoutCycle.getWeekStartsOn()).isEqualTo(command.weekStartsOn());
+        assertThat(result.weekStartsOn()).isEqualTo(command.weekStartsOn());
         assertThat(result.name()).isEqualTo(command.name());
         assertThat(result.trainingGoalId()).isEqualTo(command.trainingGoalId());
         assertThat(result.startDate()).isEqualTo(startDate);

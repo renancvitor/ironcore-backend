@@ -1,5 +1,6 @@
 package com.ironcore.infrastructure.persistence.workoutplanning.workoutcycle;
 
+import com.ironcore.domain.workoutplanning.workoutday.enums.WeekDay;
 import com.ironcore.domain.workoutplanning.workoutcycle.enums.WorkoutOrigin;
 import com.ironcore.domain.workoutplanning.workoutcycle.enums.WorkoutStatus;
 import com.ironcore.infrastructure.persistence.workoutplanning.workoutcycle.entity.WorkoutCycleEntity;
@@ -32,6 +33,7 @@ public final class WorkoutCycleEntityTestFactory {
                 START_DATE,
                 null,
                 3,
+                WeekDay.SUNDAY,
                 WorkoutStatus.IN_PROGRESS,
                 WorkoutOrigin.MANUAL,
                 "Planejamento restaurado.",

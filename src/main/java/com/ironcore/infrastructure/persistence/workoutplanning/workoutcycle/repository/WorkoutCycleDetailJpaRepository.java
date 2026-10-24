@@ -19,6 +19,7 @@ public interface WorkoutCycleDetailJpaRepository
                 wc.startDate,
                 wc.endDate,
                 wc.desiredDurationMonths,
+                wc.weekStartsOn,
                 wc.notes,
 
                 tg.id,

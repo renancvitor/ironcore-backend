@@ -1,5 +1,6 @@
 package com.ironcore.application.workoutplanning.workoutcycle.update;
 
+import com.ironcore.domain.workoutplanning.workoutday.enums.WeekDay;
 import com.ironcore.domain.workoutplanning.traininggoal.valueobject.TrainingGoalId;
 import com.ironcore.domain.workoutplanning.workoutcycle.enums.WorkoutOrigin;
 import com.ironcore.domain.workoutplanning.workoutcycle.enums.WorkoutStatus;
@@ -16,6 +17,7 @@ public record UpdateWorkoutCycleResult(
         WorkoutStatus workoutStatus,
         WorkoutOrigin workoutOrigin,
         Integer desiredDurationMonths,
+        WeekDay weekStartsOn,
         String notes,
         LocalDateTime updatedAt
 ) {

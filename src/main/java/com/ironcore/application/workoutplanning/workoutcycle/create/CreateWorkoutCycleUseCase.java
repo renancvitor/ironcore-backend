@@ -60,6 +60,7 @@ public class CreateWorkoutCycleUseCase {
                 command.name(),
                 trainingGoal.getId(),
                 command.desiredDurationMonths(),
+                command.weekStartsOn(),
                 WorkoutOrigin.MANUAL,
                 command.notes(),
                 createdAt
@@ -83,6 +84,7 @@ public class CreateWorkoutCycleUseCase {
                 savedWorkoutCycle.getName(),
                 savedWorkoutCycle.getTrainingGoalId(),
                 savedWorkoutCycle.getDesiredDurationMonths(),
+                savedWorkoutCycle.getWeekStartsOn(),
                 savedWorkoutCycle.getWorkoutStatus(),
                 savedWorkoutCycle.getWorkoutOrigin(),
                 savedWorkoutCycle.getNotes(),

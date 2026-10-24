@@ -68,6 +68,21 @@ class WorkoutCycleDetailAssemblerTest {
         assertThat(result.days()).isEmpty();
     }
 
+    @Test
+    void shouldKeepCanonicalOrderEvenWhenWeekStartsOnMonday() {
+        WorkoutCycleDetailResult result = assembler.toResult(List.of(
+                projection(1L, WeekDay.SUNDAY, 1, null, null, null, null, null, null),
+                projection(2L, WeekDay.SUNDAY, 2, null, null, null, null, null, null),
+                projection(3L, WeekDay.MONDAY, 1, null, null, null, null, null, null)
+        ));
+
+        assertThat(result.weekStartsOn()).isEqualTo(WeekDay.MONDAY);
+        assertThat(result.days()).extracting(WorkoutDayDetailResult::weekDay)
+                .containsExactly(WeekDay.SUNDAY, WeekDay.SUNDAY, WeekDay.MONDAY);
+        assertThat(result.days()).extracting(WorkoutDayDetailResult::sortOrder)
+                .containsExactly(1, 2, 1);
+    }
+
     private static WorkoutCycleDetailProjection projection(
             Long dayId,
             WeekDay weekDay,
@@ -86,6 +101,7 @@ class WorkoutCycleDetailAssemblerTest {
                 LocalDate.of(2026, 8, 1),
                 null,
                 3,
+                WeekDay.MONDAY,
                 "Foco em hipertrofia",
                 20L,
                 "Hipertrofia",
