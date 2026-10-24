@@ -72,6 +72,7 @@ public class UpdateWorkoutCycleUseCase {
                 command.name(),
                 trainingGoal.getId(),
                 command.desiredDurationMonths(),
+                command.weekStartsOn(),
                 command.notes(),
                 updatedAt
         );
@@ -96,6 +97,7 @@ public class UpdateWorkoutCycleUseCase {
                 savedWorkoutCycle.getWorkoutStatus(),
                 savedWorkoutCycle.getWorkoutOrigin(),
                 savedWorkoutCycle.getDesiredDurationMonths(),
+                savedWorkoutCycle.getWeekStartsOn(),
                 savedWorkoutCycle.getNotes(),
                 savedWorkoutCycle.getUpdatedAt()
         );

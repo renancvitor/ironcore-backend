@@ -48,6 +48,7 @@ Um ciclo referencia `TrainingGoalId`. Criação, atualização e início exigem 
 | `personId` | Sim | Ownership interno do ciclo. |
 | `name` | Sim | Não pode ser nulo, vazio ou composto só por espaços. |
 | `trainingGoalId` | Sim | Deve referenciar objetivo existente e ativo nos fluxos de criação/atualização/início. |
+| `weekStartsOn` | Não na requisição | Enum `WeekDay`; omitido ou nulo na criação assume `SUNDAY`; na edição preserva o valor atual. |
 | `desiredDurationMonths` | Não | Deve ser positivo quando informado. |
 | `startDate` | Não na criação | Definida pelo backend ao iniciar o ciclo. |
 | `endDate` | Não na criação | Definida pelo backend ao concluir o ciclo. |
@@ -79,6 +80,14 @@ IN_PROGRESS -> CANCELLED
 `WorkoutCycle` pode ser atualizado enquanto não estiver `COMPLETED` ou `CANCELLED`; portanto, `IN_PROGRESS` continua editável.
 
 A exclusão funcional do ciclo é permitida somente em `NOT_STARTED`. Essa regra de use case é distinta dos cascades físicos do banco descritos em [Banco de dados](#banco-de-dados).
+
+### Referência de início da semana
+
+`weekStartsOn` usa `SUNDAY`, `MONDAY`, `TUESDAY`, `WEDNESDAY`, `THURSDAY`, `FRIDAY` ou `SATURDAY`. Pode ser alterado em `NOT_STARTED` e `IN_PROGRESS`; ciclos `COMPLETED` e `CANCELLED` continuam bloqueados para edição.
+
+O campo é recebido na criação e atualização e retornado nas respostas dessas operações e no detalhe. A ordenação circular para apresentação é responsabilidade do frontend. O backend mantém a ordenação canônica por `weekDay` e `sortOrder`; alterar `weekStartsOn` não modifica o `weekDay`, as posições ou a composição dos `WorkoutDay`.
+
+A migration V23 adiciona `week_starts_on INTEGER NOT NULL DEFAULT 1`, preservando `SUNDAY` nos ciclos existentes. A auditoria do ciclo inclui `weekStartsOn` nos snapshots.
 
 ### Detalhe e listagem
 

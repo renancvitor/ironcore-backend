@@ -1,5 +1,6 @@
 package com.ironcore.application.workoutplanning.workoutcycle;
 
+import com.ironcore.domain.workoutplanning.workoutday.enums.WeekDay;
 import com.ironcore.application.workoutplanning.workoutcycle.update.UpdateWorkoutCycleCommand;
 import com.ironcore.domain.user.valueobject.UserId;
 import com.ironcore.domain.workoutplanning.traininggoal.valueobject.TrainingGoalId;
@@ -17,6 +18,7 @@ public final class UpdateWorkoutCycleUseCaseTestFactory {
                 "Ciclo de força atualizado",
                 new TrainingGoalId(2L),
                 6,
+                WeekDay.MONDAY,
                 "Planejamento atualizado."
         );
     }

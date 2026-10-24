@@ -1,5 +1,6 @@
 package com.ironcore.domain.workoutplanning.workoutcycle.model;
 
+import com.ironcore.domain.workoutplanning.workoutday.enums.WeekDay;
 import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.workoutplanning.traininggoal.valueobject.TrainingGoalId;
 import com.ironcore.domain.workoutplanning.workoutcycle.enums.WorkoutOrigin;
@@ -22,6 +23,7 @@ public class WorkoutCycle {
     private LocalDate startDate;
     private LocalDate endDate;
     private Integer desiredDurationMonths;
+    private WeekDay weekStartsOn;
     private WorkoutStatus workoutStatus;
     private final WorkoutOrigin  workoutOrigin;
     private String notes;
@@ -29,8 +31,9 @@ public class WorkoutCycle {
     private LocalDateTime updatedAt;
 
     private WorkoutCycle(WorkoutCycleId id, PersonId personId, String name, TrainingGoalId trainingGoalId,
-                         LocalDate startDate, LocalDate endDate, Integer desiredDurationMonths, WorkoutStatus workoutStatus,
-                         WorkoutOrigin workoutOrigin, String notes, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                         LocalDate startDate, LocalDate endDate, Integer desiredDurationMonths, WeekDay weekStartsOn,
+                         WorkoutStatus workoutStatus, WorkoutOrigin workoutOrigin, String notes,
+                         LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.personId = requireNonNull(personId, "Pessoa não pode ser nula.");
         this.name = requireNonBlank(name, "Nome não pode ser nulo ou vazio.");
@@ -39,6 +42,7 @@ public class WorkoutCycle {
         this.endDate = endDate;
         this.desiredDurationMonths = requirePositiveIfPresent(desiredDurationMonths,
                 "Duração desejada deve ser positiva.");
+        this.weekStartsOn = requireNonNull(weekStartsOn, "Dia da semana de início é obrigatório.");
         this.workoutStatus = requireNonNull(workoutStatus, "Status do treino é obrigatório.");
         this.workoutOrigin = requireNonNull(workoutOrigin, "Origem do treino é obrigatório.");
         this.notes = notes;
@@ -51,6 +55,7 @@ public class WorkoutCycle {
             String name,
             TrainingGoalId trainingGoalId,
             Integer desiredDurationMonths,
+            WeekDay weekStartsOn,
             WorkoutOrigin workoutOrigin,
             String notes,
             LocalDateTime createdAt
@@ -63,6 +68,7 @@ public class WorkoutCycle {
                 null,
                 null,
                 desiredDurationMonths,
+                weekStartsOn != null ? weekStartsOn : WeekDay.SUNDAY,
                 WorkoutStatus.NOT_STARTED,
                 workoutOrigin,
                 notes,
@@ -79,6 +85,7 @@ public class WorkoutCycle {
             LocalDate startDate,
             LocalDate endDate,
             Integer desiredDurationMonths,
+            WeekDay weekStartsOn,
             WorkoutStatus workoutStatus,
             WorkoutOrigin workoutOrigin,
             String notes,
@@ -93,6 +100,7 @@ public class WorkoutCycle {
                 startDate,
                 endDate,
                 desiredDurationMonths,
+                weekStartsOn,
                 workoutStatus,
                 workoutOrigin,
                 notes,
@@ -105,6 +113,7 @@ public class WorkoutCycle {
             String name,
             TrainingGoalId trainingGoalId,
             Integer desiredDurationMonths,
+            WeekDay weekStartsOn,
             String notes,
             LocalDateTime updatedAt
     ) {
@@ -118,6 +127,7 @@ public class WorkoutCycle {
         this.name = validatedName;
         this.trainingGoalId = validatedTrainingGoalId;
         this.desiredDurationMonths = validatedDesiredDurationMonths;
+        this.weekStartsOn = weekStartsOn != null ? weekStartsOn : this.weekStartsOn;
         this.notes = notes;
         markUpdatedAt(validatedUpdatedAt);
     }

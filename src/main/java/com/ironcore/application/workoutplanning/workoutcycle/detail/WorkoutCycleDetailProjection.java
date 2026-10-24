@@ -13,6 +13,7 @@ public record WorkoutCycleDetailProjection(
         LocalDate startDate,
         LocalDate endDate,
         Integer desiredDurationMonths,
+        WeekDay weekStartsOn,
         String cycleNotes,
 
         Long trainingGoalId,

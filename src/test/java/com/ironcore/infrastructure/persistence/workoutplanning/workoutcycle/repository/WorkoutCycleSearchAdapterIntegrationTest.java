@@ -1,5 +1,13 @@
 package com.ironcore.infrastructure.persistence.workoutplanning.workoutcycle.repository;
 
+import org.flywaydb.core.Flyway;
+import java.sql.DriverManager;
+import java.util.UUID;
+import com.ironcore.domain.workoutplanning.workoutday.enums.WeekDay;
+import jakarta.persistence.EntityManager;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.ironcore.application.shared.pagination.PageQuery;
 import com.ironcore.application.shared.pagination.PageResult;
 import com.ironcore.application.workoutplanning.workoutcycle.list.ListWorkoutCyclesItemResult;
@@ -37,6 +45,12 @@ class WorkoutCycleSearchAdapterIntegrationTest {
 
     @Autowired
     private TrainingGoalJpaRepository trainingGoalJpaRepository;
+
+    @Autowired
+    private EntityManager entityManager;
+
+    @Autowired
+    private WorkoutCycleDetailJpaRepository detailRepository;
 
     private WorkoutCycleSearchAdapter adapter;
     private PersonEntity person;
@@ -98,6 +112,51 @@ class WorkoutCycleSearchAdapterIntegrationTest {
                 );
     }
 
+    @ParameterizedTest
+    @EnumSource(WeekDay.class)
+    void shouldPersistAndProjectEveryWeekStart(WeekDay weekDay) {
+        var cycle = workoutCycleJpaRepository.findAll().stream()
+                .filter(item -> item.getPerson().getId().equals(person.getId())).findFirst().orElseThrow();
+        cycle.setWeekStartsOn(weekDay);
+        workoutCycleJpaRepository.saveAndFlush(cycle);
+        Long cycleId = cycle.getId();
+        entityManager.clear();
+
+        assertThat(workoutCycleJpaRepository.findById(cycleId).orElseThrow().getWeekStartsOn())
+                .isEqualTo(weekDay);
+        assertThat(detailRepository.findDetail(cycleId, person.getId())).singleElement()
+                .satisfies(row -> assertThat(row.weekStartsOn()).isEqualTo(weekDay));
+        assertThat(entityManager.createNativeQuery("select week_starts_on from workout_cycles where id = :id")
+                .setParameter("id", cycleId).getSingleResult()).isEqualTo(weekDay.getValue());
+    }
+
+    @Test
+    void shouldBackfillExistingCyclesAndDefaultNewRowsToSunday() throws Exception {
+        String url = "jdbc:h2:mem:week_start_" + UUID.randomUUID() + ";DB_CLOSE_DELAY=-1";
+        try (var connection = DriverManager.getConnection(url, "sa", "");
+             var statement = connection.createStatement()) {
+            statement.execute("CREATE TABLE workout_cycles (id BIGINT PRIMARY KEY)");
+            statement.execute("INSERT INTO workout_cycles (id) VALUES (1)");
+
+            Flyway.configure().dataSource(url, "sa", "")
+                    .locations("classpath:db/migration")
+                    .baselineOnMigrate(true).baselineVersion("22").target("23")
+                    .load().migrate();
+
+            statement.execute("INSERT INTO workout_cycles (id) VALUES (2)");
+            try (var rows = statement.executeQuery("SELECT week_starts_on FROM workout_cycles ORDER BY id")) {
+                assertThat(rows.next()).isTrue();
+                assertThat(rows.getInt(1)).isEqualTo(1);
+                assertThat(rows.next()).isTrue();
+                assertThat(rows.getInt(1)).isEqualTo(1);
+                assertThat(rows.next()).isFalse();
+            }
+            assertThatThrownBy(() -> statement.execute(
+                    "INSERT INTO workout_cycles (id, week_starts_on) VALUES (3, NULL)"))
+                    .isInstanceOf(java.sql.SQLException.class);
+        }
+    }
+
     private PersonEntity savePerson(String name) {
         return personJpaRepository.save(new PersonEntity(
                 null,
@@ -135,6 +194,7 @@ class WorkoutCycleSearchAdapterIntegrationTest {
                 startDate,
                 endDate,
                 3,
+                WeekDay.SUNDAY,
                 status,
                 WorkoutOrigin.MANUAL,
                 null,

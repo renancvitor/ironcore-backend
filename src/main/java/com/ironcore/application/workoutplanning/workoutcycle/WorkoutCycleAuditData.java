@@ -1,5 +1,6 @@
 package com.ironcore.application.workoutplanning.workoutcycle;
 
+import com.ironcore.domain.workoutplanning.workoutday.enums.WeekDay;
 import com.ironcore.application.logging.audit.payload.LoggableData;
 import com.ironcore.domain.workoutplanning.workoutcycle.enums.WorkoutOrigin;
 import com.ironcore.domain.workoutplanning.workoutcycle.enums.WorkoutStatus;
@@ -15,6 +16,7 @@ public record WorkoutCycleAuditData(
         LocalDate startDate,
         LocalDate endDate,
         Integer desiredDurationMonths,
+        WeekDay weekStartsOn,
         WorkoutStatus workoutStatus,
         WorkoutOrigin workoutOrigin,
         String notes
@@ -29,6 +31,7 @@ public record WorkoutCycleAuditData(
                 workoutCycle.getStartDate(),
                 workoutCycle.getEndDate(),
                 workoutCycle.getDesiredDurationMonths(),
+                workoutCycle.getWeekStartsOn(),
                 workoutCycle.getWorkoutStatus(),
                 workoutCycle.getWorkoutOrigin(),
                 workoutCycle.getNotes()

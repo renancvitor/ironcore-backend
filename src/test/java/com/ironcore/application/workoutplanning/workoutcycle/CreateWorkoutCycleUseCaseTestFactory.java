@@ -1,5 +1,6 @@
 package com.ironcore.application.workoutplanning.workoutcycle;
 
+import com.ironcore.domain.workoutplanning.workoutday.enums.WeekDay;
 import com.ironcore.application.workoutplanning.workoutcycle.create.CreateWorkoutCycleCommand;
 import com.ironcore.domain.user.valueobject.UserId;
 import com.ironcore.domain.workoutplanning.traininggoal.valueobject.TrainingGoalId;
@@ -15,6 +16,7 @@ public final class CreateWorkoutCycleUseCaseTestFactory {
                 "Ciclo de hipertrofia",
                 new TrainingGoalId(1L),
                 3,
+                WeekDay.MONDAY,
                 "Planejamento inicial."
         );
     }
