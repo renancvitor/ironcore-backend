@@ -1,5 +1,6 @@
 package com.ironcore.application.workoutplanning.workoutcycle.detail;
 
+import com.ironcore.domain.workoutplanning.workoutday.enums.WeekDay;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
 import com.ironcore.application.workoutplanning.workoutcycle.port.WorkoutCycleDetailQueryPort;
@@ -154,7 +155,8 @@ class GetWorkoutCycleDetailUseCaseTest {
 
     private static WorkoutCycleDetailProjection projection() {
         return new WorkoutCycleDetailProjection(
-                10L, "Hipertrofia", null, null, null, null, null,
+                10L, "Hipertrofia", null, null, null, null,
+                WeekDay.MONDAY, null,
                 20L, "Hipertrofia", null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null

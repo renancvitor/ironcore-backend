@@ -1,5 +1,6 @@
 package com.ironcore.domain.workoutplanning.workoutcycle.model;
 
+import com.ironcore.domain.workoutplanning.workoutday.enums.WeekDay;
 import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.workoutplanning.traininggoal.valueobject.TrainingGoalId;
 import com.ironcore.domain.workoutplanning.workoutcycle.enums.WorkoutOrigin;
@@ -17,6 +18,22 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 class WorkoutCycleTest {
 
+    @Test
+    void shouldDefaultWeekStartToSundayWhenNotProvided() {
+        assertThat(workoutCycleWithoutId().getWeekStartsOn()).isEqualTo(WeekDay.SUNDAY);
+    }
+
+    @Test
+    void shouldChangeWeekStartAndPreserveItWhenOmittedOnUpdate() {
+        WorkoutCycle cycle = inProgressWorkoutCycle();
+        cycle.updateCycle(cycle.getName(), TRAINING_GOAL_ID, 3, WeekDay.WEDNESDAY, null, UPDATED_AT);
+        assertThat(cycle.getWeekStartsOn()).isEqualTo(WeekDay.WEDNESDAY);
+
+        cycle.updateCycle(cycle.getName(), TRAINING_GOAL_ID, 3, null, null, UPDATED_AT.plusHours(1));
+        assertThat(cycle.getWeekStartsOn()).isEqualTo(WeekDay.WEDNESDAY);
+    }
+
+
     @Nested
     class Creation {
 
@@ -27,6 +44,7 @@ class WorkoutCycleTest {
                     " Ciclo de hipertrofia ",
                     TRAINING_GOAL_ID,
                     3,
+                    null,
                     WorkoutOrigin.MANUAL,
                     "Planejamento inicial.",
                     CREATED_AT
@@ -77,6 +95,7 @@ class WorkoutCycleTest {
                     " Novo planejamento ",
                     newTrainingGoalId,
                     6,
+                    null,
                     "Novas observações.",
                     UPDATED_AT
             );
@@ -95,6 +114,7 @@ class WorkoutCycleTest {
             workoutCycle.updateCycle(
                     "Ciclo de hipertrofia",
                     TRAINING_GOAL_ID,
+                    null,
                     null,
                     null,
                     UPDATED_AT
@@ -118,6 +138,7 @@ class WorkoutCycleTest {
                             "Novo planejamento",
                             new TrainingGoalId(2L),
                             0,
+                            null,
                             "Novas observações.",
                             UPDATED_AT
                     ))
@@ -135,6 +156,7 @@ class WorkoutCycleTest {
                             "Novo planejamento",
                             new TrainingGoalId(2L),
                             6,
+                            null,
                             "Novas observações.",
                             null
                     ))
@@ -290,6 +312,7 @@ class WorkoutCycleTest {
                     "Ciclo sem duração",
                     TRAINING_GOAL_ID,
                     null,
+                    null,
                     WorkoutOrigin.MANUAL,
                     null,
                     CREATED_AT
@@ -322,6 +345,7 @@ class WorkoutCycleTest {
                     "Ciclo mensal",
                     TRAINING_GOAL_ID,
                     1,
+                    null,
                     WorkoutOrigin.MANUAL,
                     null,
                     CREATED_AT
@@ -353,6 +377,7 @@ class WorkoutCycleTest {
                             "Ciclo de hipertrofia",
                             TRAINING_GOAL_ID,
                             3,
+                            null,
                             WorkoutOrigin.MANUAL,
                             null,
                             CREATED_AT
@@ -368,6 +393,7 @@ class WorkoutCycleTest {
                             " ",
                             TRAINING_GOAL_ID,
                             3,
+                            null,
                             WorkoutOrigin.MANUAL,
                             null,
                             CREATED_AT
@@ -383,6 +409,7 @@ class WorkoutCycleTest {
                             "Ciclo de hipertrofia",
                             null,
                             3,
+                            null,
                             WorkoutOrigin.MANUAL,
                             null,
                             CREATED_AT
@@ -398,6 +425,7 @@ class WorkoutCycleTest {
                             "Ciclo de hipertrofia",
                             TRAINING_GOAL_ID,
                             0,
+                            null,
                             WorkoutOrigin.MANUAL,
                             null,
                             CREATED_AT
@@ -413,6 +441,7 @@ class WorkoutCycleTest {
                             "Ciclo de hipertrofia",
                             TRAINING_GOAL_ID,
                             -1,
+                            null,
                             WorkoutOrigin.MANUAL,
                             null,
                             CREATED_AT
@@ -430,6 +459,7 @@ class WorkoutCycleTest {
                             3,
                             null,
                             null,
+                            null,
                             CREATED_AT
                     ))
                     .withMessage("Origem do treino é obrigatório.");
@@ -443,6 +473,7 @@ class WorkoutCycleTest {
                             "Ciclo de hipertrofia",
                             TRAINING_GOAL_ID,
                             3,
+                            null,
                             WorkoutOrigin.MANUAL,
                             null,
                             null

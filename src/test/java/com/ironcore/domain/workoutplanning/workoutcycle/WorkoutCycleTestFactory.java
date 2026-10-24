@@ -1,5 +1,6 @@
 package com.ironcore.domain.workoutplanning.workoutcycle;
 
+import com.ironcore.domain.workoutplanning.workoutday.enums.WeekDay;
 import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.workoutplanning.traininggoal.valueobject.TrainingGoalId;
 import com.ironcore.domain.workoutplanning.workoutcycle.enums.WorkoutOrigin;
@@ -29,6 +30,7 @@ public final class WorkoutCycleTestFactory {
                 "Ciclo de hipertrofia",
                 TRAINING_GOAL_ID,
                 3,
+                null,
                 WorkoutOrigin.MANUAL,
                 "Planejamento inicial.",
                 CREATED_AT
@@ -48,6 +50,7 @@ public final class WorkoutCycleTestFactory {
                 startDate,
                 endDate,
                 3,
+                WeekDay.SUNDAY,
                 status,
                 WorkoutOrigin.MANUAL,
                 "Planejamento restaurado.",

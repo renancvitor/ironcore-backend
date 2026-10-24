@@ -1,5 +1,7 @@
 package com.ironcore.infrastructure.persistence.workoutplanning.workoutcycle.entity;
 
+import com.ironcore.domain.workoutplanning.workoutday.enums.WeekDay;
+import com.ironcore.infrastructure.persistence.workoutplanning.workoutday.converter.WeekDayConverter;
 import com.ironcore.domain.workoutplanning.workoutcycle.enums.WorkoutOrigin;
 import com.ironcore.domain.workoutplanning.workoutcycle.enums.WorkoutStatus;
 import com.ironcore.infrastructure.persistence.person.entity.PersonEntity;
@@ -44,6 +46,10 @@ public class WorkoutCycleEntity {
 
     @Column(name = "desired_duration_months")
     private Integer desiredDurationMonths;
+
+    @Convert(converter = WeekDayConverter.class)
+    @Column(name = "week_starts_on", nullable = false)
+    private WeekDay weekStartsOn;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "workout_status", nullable = false, length = 50)

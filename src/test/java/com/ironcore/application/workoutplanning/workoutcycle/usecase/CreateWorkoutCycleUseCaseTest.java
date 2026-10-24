@@ -1,5 +1,6 @@
 package com.ironcore.application.workoutplanning.workoutcycle.usecase;
 
+import com.ironcore.domain.workoutplanning.workoutday.enums.WeekDay;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
 import com.ironcore.application.logging.audit.port.AuditLogPublisher;
@@ -127,6 +128,8 @@ class CreateWorkoutCycleUseCaseTest {
             assertThat(savedWorkoutCycle.getCreatedAt()).isEqualTo(createdAt);
             assertThat(savedWorkoutCycle.getUpdatedAt()).isNull();
 
+            assertThat(savedWorkoutCycle.getWeekStartsOn()).isEqualTo(WeekDay.MONDAY);
+            assertThat(result.weekStartsOn()).isEqualTo(WeekDay.MONDAY);
             assertThat(result.id()).isEqualTo(new WorkoutCycleId(1L));
             assertThat(result.personId()).isEqualTo(person.getId());
             assertThat(result.name()).isEqualTo(command.name());
@@ -272,6 +275,7 @@ class CreateWorkoutCycleUseCaseTest {
                             workoutCycle.getStartDate(),
                             workoutCycle.getEndDate(),
                             workoutCycle.getDesiredDurationMonths(),
+                            workoutCycle.getWeekStartsOn(),
                             workoutCycle.getWorkoutStatus(),
                             workoutCycle.getWorkoutOrigin(),
                             workoutCycle.getNotes(),

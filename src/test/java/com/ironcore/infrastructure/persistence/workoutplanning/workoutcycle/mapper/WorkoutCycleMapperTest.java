@@ -1,5 +1,8 @@
 package com.ironcore.infrastructure.persistence.workoutplanning.workoutcycle.mapper;
 
+import com.ironcore.domain.workoutplanning.workoutday.enums.WeekDay;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.workoutplanning.traininggoal.valueobject.TrainingGoalId;
 import com.ironcore.domain.workoutplanning.workoutcycle.enums.WorkoutOrigin;
@@ -20,6 +23,19 @@ import static com.ironcore.infrastructure.persistence.workoutplanning.workoutcyc
 import static org.assertj.core.api.Assertions.assertThat;
 
 class WorkoutCycleMapperTest {
+
+    @ParameterizedTest
+    @EnumSource(WeekDay.class)
+    void shouldPreserveWeekStartAcrossPersistenceMapping(
+            WeekDay weekDay) {
+        WorkoutCycle cycle = inProgressWorkoutCycle();
+        cycle.updateCycle(cycle.getName(), cycle.getTrainingGoalId(), 3, weekDay, null, UPDATED_AT);
+
+        WorkoutCycleEntity entity = WorkoutCycleMapper.toEntity(cycle, personEntity(), trainingGoalEntity());
+
+        assertThat(entity.getWeekStartsOn()).isEqualTo(weekDay);
+        assertThat(WorkoutCycleMapper.toDomain(entity).getWeekStartsOn()).isEqualTo(weekDay);
+    }
 
     @Nested
     class ToEntity {

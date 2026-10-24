@@ -60,6 +60,7 @@ public final class WorkoutCycleRestMapper {
                 request.name(),
                 new TrainingGoalId(request.trainingGoalId()),
                 request.desiredDurationMonths(),
+                request.weekStartsOn(),
                 request.notes()
         );
     }
@@ -71,6 +72,7 @@ public final class WorkoutCycleRestMapper {
                 result.name(),
                 result.trainingGoalId().value(),
                 result.desiredDurationMonths(),
+                result.weekStartsOn(),
                 result.workoutStatus(),
                 result.workoutOrigin(),
                 result.notes(),
@@ -89,6 +91,7 @@ public final class WorkoutCycleRestMapper {
                 request.name(),
                 new TrainingGoalId(request.trainingGoalId()),
                 request.desiredDurationMonths(),
+                request.weekStartsOn(),
                 request.notes()
         );
     }
@@ -102,6 +105,7 @@ public final class WorkoutCycleRestMapper {
                 result.workoutStatus(),
                 result.workoutOrigin(),
                 result.desiredDurationMonths(),
+                result.weekStartsOn(),
                 result.notes(),
                 result.updatedAt()
         );
@@ -181,6 +185,7 @@ public final class WorkoutCycleRestMapper {
                 result.startDate(),
                 result.endDate(),
                 result.desiredDurationMonths(),
+                result.weekStartsOn(),
                 result.notes(),
                 result.days().stream()
                         .map(WorkoutCycleRestMapper::toWorkoutDayDetailResponse)

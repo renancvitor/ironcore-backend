@@ -164,7 +164,7 @@ class WorkoutPlanningIntegrationTest {
                             .cookie(secondUserCookie)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody(new UpdateWorkoutCycleRequest(
-                                    "Tentativa indevida", hypertrophyGoalId, 4, "Sem acesso"
+                                    "Tentativa indevida", hypertrophyGoalId, 4, WeekDay.MONDAY, "Sem acesso"
                             ))))
                     .andExpect(status().isNotFound());
 
@@ -189,7 +189,7 @@ class WorkoutPlanningIntegrationTest {
                             .cookie(firstUserCookie)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody(new UpdateWorkoutCycleRequest(
-                                    "Hipertrofia atualizada", hypertrophyGoalId, 4, "Foco em progressão"
+                                    "Hipertrofia atualizada", hypertrophyGoalId, 4, WeekDay.MONDAY, "Foco em progressão"
                             ))))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.name").value("Hipertrofia atualizada"))
@@ -209,7 +209,7 @@ class WorkoutPlanningIntegrationTest {
                             .cookie(firstUserCookie)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody(new UpdateWorkoutCycleRequest(
-                                    "Hipertrofia em andamento", hypertrophyGoalId, 5, "Atualizado em andamento"
+                                    "Hipertrofia em andamento", hypertrophyGoalId, 5, WeekDay.MONDAY, "Atualizado em andamento"
                             ))))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.workoutStatus").value("IN_PROGRESS"));
@@ -262,7 +262,7 @@ class WorkoutPlanningIntegrationTest {
                             .cookie(firstUserCookie)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody(new UpdateWorkoutCycleRequest(
-                                    "Não deve atualizar", hypertrophyGoalId, 3, null
+                                    "Não deve atualizar", hypertrophyGoalId, 3, WeekDay.MONDAY, null
                             ))))
                     .andExpect(status().isUnprocessableEntity());
 
@@ -284,7 +284,7 @@ class WorkoutPlanningIntegrationTest {
                             .cookie(firstUserCookie)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody(new UpdateWorkoutCycleRequest(
-                                    "Não deve atualizar", hypertrophyGoalId, 3, null
+                                    "Não deve atualizar", hypertrophyGoalId, 3, WeekDay.MONDAY, null
                             ))))
                     .andExpect(status().isUnprocessableEntity());
 
@@ -327,6 +327,65 @@ class WorkoutPlanningIntegrationTest {
         }
     }
 
+    @Test
+    void shouldPreserveCompositionAndCanonicalOrderWhenWeekStartChanges() throws Exception {
+        Long cycleId = createWorkoutCycle(firstUserCookie, "Weekly cycle", hypertrophyGoalId);
+        Long monday = createWorkoutDay(firstUserCookie, cycleId, WeekDay.MONDAY, "Monday");
+        Long sunday = createWorkoutDay(firstUserCookie, cycleId, WeekDay.SUNDAY, "Sunday");
+        Long sundaySecond = createWorkoutDay(firstUserCookie, cycleId, WeekDay.SUNDAY, "Sunday second");
+        Long activity = createWorkoutActivity(firstUserCookie, sunday, activeExerciseId);
+        var daysBefore = jdbcTemplate.queryForList(
+                "select * from workout_days where workout_cycle_id = ? order by id", cycleId);
+        var activitiesBefore = jdbcTemplate.queryForList(
+                "select * from workout_activities where workout_day_id = ? order by id", sunday);
+
+        mockMvc.perform(put(WORKOUT_CYCLES_ENDPOINT + "/{id}", cycleId).with(csrf())
+                        .cookie(firstUserCookie).contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody(new UpdateWorkoutCycleRequest(
+                                "Weekly cycle", hypertrophyGoalId, 3, WeekDay.WEDNESDAY, null))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.weekStartsOn").value("WEDNESDAY"));
+
+        mockMvc.perform(get(WORKOUT_CYCLES_ENDPOINT + "/{id}", cycleId).cookie(firstUserCookie))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.weekStartsOn").value("WEDNESDAY"))
+                .andExpect(jsonPath("$.days[0].id").value(sunday))
+                .andExpect(jsonPath("$.days[1].id").value(sundaySecond))
+                .andExpect(jsonPath("$.days[2].id").value(monday))
+                .andExpect(jsonPath("$.days[0].activities[0].id").value(activity));
+
+        assertThat(jdbcTemplate.queryForList(
+                "select * from workout_days where workout_cycle_id = ? order by id", cycleId))
+                .isEqualTo(daysBefore);
+        assertThat(jdbcTemplate.queryForList(
+                "select * from workout_activities where workout_day_id = ? order by id", sunday))
+                .isEqualTo(activitiesBefore);
+    }
+
+    @Test
+    void shouldDefaultAndPreserveWeekStartForLegacyRequests() throws Exception {
+        var body = objectMapper.createObjectNode().put("name", "Legacy cycle")
+                .put("trainingGoalId", hypertrophyGoalId).put("desiredDurationMonths", 3);
+        MvcResult created = mockMvc.perform(post(WORKOUT_CYCLES_ENDPOINT).with(csrf())
+                        .cookie(firstUserCookie).contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody(body)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.weekStartsOn").value("SUNDAY")).andReturn();
+        Long cycleId = responseBody(created).get("id").asLong();
+        body.put("weekStartsOn", "FRIDAY");
+        mockMvc.perform(put(WORKOUT_CYCLES_ENDPOINT + "/{id}", cycleId).with(csrf())
+                        .cookie(firstUserCookie).contentType(MediaType.APPLICATION_JSON).content(requestBody(body)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.weekStartsOn").value("FRIDAY"));
+        body.remove("weekStartsOn");
+        mockMvc.perform(put(WORKOUT_CYCLES_ENDPOINT + "/{id}", cycleId).with(csrf())
+                        .cookie(firstUserCookie).contentType(MediaType.APPLICATION_JSON).content(requestBody(body)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.weekStartsOn").value("FRIDAY"));
+        body.putNull("weekStartsOn");
+        mockMvc.perform(put(WORKOUT_CYCLES_ENDPOINT + "/{id}", cycleId).with(csrf())
+                        .cookie(firstUserCookie).contentType(MediaType.APPLICATION_JSON).content(requestBody(body)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.weekStartsOn").value("FRIDAY"));
+    }
+
     private Long createComposedWorkoutCycle(Cookie cookie, String name) throws Exception {
         Long cycleId = createWorkoutCycle(cookie, name, hypertrophyGoalId);
         Long dayId = createWorkoutDay(cookie, cycleId, WeekDay.MONDAY, "Treino completo");
@@ -343,7 +402,7 @@ class WorkoutPlanningIntegrationTest {
         MvcResult result = mockMvc.perform(post(WORKOUT_CYCLES_ENDPOINT).with(csrf())
                         .cookie(cookie)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestBody(new CreateWorkoutCycleRequest(name, trainingGoalId, 3, "Plano integrado"))))
+                        .content(requestBody(new CreateWorkoutCycleRequest(name, trainingGoalId, 3, WeekDay.MONDAY, "Plano integrado"))))
                 .andExpect(status().isCreated())
                 .andReturn();
 
