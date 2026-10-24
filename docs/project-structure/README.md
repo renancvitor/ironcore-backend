@@ -236,7 +236,8 @@ src/main/resources
         ├── V19__create_table_workout_cycles.sql
         ├── V20__create_table_workout_days.sql
         ├── V21__create_table_workout_activities.sql
-        └── V22__seed_training_goals.sql
+        ├── V22__seed_training_goals.sql
+        └── V23__add_column_week_starts_on_to_workout_cycles.sql
 ```
 
 ## Testes
