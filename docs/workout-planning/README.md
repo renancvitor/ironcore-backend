@@ -166,6 +166,7 @@ As migrations são a fonte de verdade do schema.
 | `V20__create_table_workout_days.sql` | Cria dias, ordenação e constraints de composição. |
 | `V21__create_table_workout_activities.sql` | Cria atividades prescritas, ordenação e unicidade de exercise por dia. |
 | `V22__seed_training_goals.sql` | Insere os objetivos iniciais ativos. |
+| `V23__add_column_week_starts_on_to_workout_cycles.sql` | Adiciona `week_starts_on INTEGER NOT NULL DEFAULT 1` aos ciclos, preservando `SUNDAY` nos registros existentes. |
 
 Relações físicas e cascades:
 

@@ -175,6 +175,7 @@ Migrations existentes no repositório:
 - `V12__seed_activity_types.sql` a `V17__seed_exercise_muscle_targets.sql`: carregam seeds iniciais do catálogo de exercises.
 - `V18__create_table_training_goals.sql` a `V21__create_table_workout_activities.sql`: criam o schema de workout planning.
 - `V22__seed_training_goals.sql`: carrega os objetivos de treino iniciais.
+- `V23__add_column_week_starts_on_to_workout_cycles.sql`: adiciona `week_starts_on` aos ciclos de treino, com padrão `SUNDAY` e preenchimento dos ciclos existentes.
 
 Documentação detalhada: [Banco de Dados e Migrations](docs/database/README.md).
 
