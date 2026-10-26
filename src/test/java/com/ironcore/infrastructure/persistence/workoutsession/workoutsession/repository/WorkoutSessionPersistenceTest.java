@@ -1,0 +1,319 @@
+package com.ironcore.infrastructure.persistence.workoutsession.workoutsession.repository;
+
+import com.ironcore.domain.activitytype.model.ActivityType;
+import com.ironcore.domain.activitytype.valueobject.*;
+import com.ironcore.domain.equipmenttype.valueobject.EquipmentTypeId;
+import com.ironcore.domain.exercise.model.Exercise;
+import com.ironcore.domain.exercise.valueobject.ExerciseId;
+import com.ironcore.domain.person.valueobject.PersonId;
+import com.ironcore.domain.workoutplanning.traininggoal.valueobject.TrainingGoalId;
+import com.ironcore.domain.workoutplanning.workoutactivity.model.WorkoutActivity;
+import com.ironcore.domain.workoutplanning.workoutactivity.valueobject.WorkoutActivityId;
+import com.ironcore.domain.workoutplanning.workoutcycle.enums.*;
+import com.ironcore.domain.workoutplanning.workoutcycle.model.WorkoutCycle;
+import com.ironcore.domain.workoutplanning.workoutcycle.valueobject.WorkoutCycleId;
+import com.ironcore.domain.workoutplanning.workoutday.enums.WeekDay;
+import com.ironcore.domain.workoutplanning.workoutday.model.WorkoutDay;
+import com.ironcore.domain.workoutplanning.workoutday.valueobject.WorkoutDayId;
+import com.ironcore.domain.workoutsession.workoutsession.enums.WorkoutSessionStatus;
+import com.ironcore.domain.workoutsession.workoutsession.model.WorkoutSession;
+import com.ironcore.domain.workoutsession.workoutsession.repository.WorkoutSessionRepository;
+import com.ironcore.domain.workoutsession.workoutsessionactivity.valueobject.WorkoutSessionActivitySource;
+import com.ironcore.domain.workoutsession.workoutsessionset.enums.ActualLoadMode;
+import com.ironcore.infrastructure.exception.PersistenceException;
+import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.*;
+import org.springframework.transaction.annotation.*;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.*;
+
+import java.math.BigDecimal;
+import java.time.*;
+import java.util.*;
+import java.util.concurrent.*;
+
+import static org.assertj.core.api.Assertions.*;
+
+@DataJpaTest(showSql = false, properties = {
+        "spring.jpa.hibernate.ddl-auto=validate",
+        "spring.flyway.enabled=true",
+        "spring.jpa.show-sql=false"
+})
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@Import(WorkoutSessionAdapter.class)
+@ActiveProfiles("test")
+@Testcontainers
+@Transactional(propagation = Propagation.NOT_SUPPORTED)
+class WorkoutSessionPersistenceTest {
+    @Container
+    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine")
+            .withDatabaseName("workout_session_test").withUsername("ironcore").withPassword("ironcore");
+
+    private static final Instant START = Instant.parse("2026-10-27T02:30:00Z");
+    private static final Instant EXPIRY = Instant.parse("2026-10-27T06:00:00Z");
+    private static final LocalDateTime CREATED = LocalDateTime.of(2026, 10, 26, 10, 0);
+
+    @DynamicPropertySource
+    static void postgres(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
+        registry.add("spring.datasource.username", POSTGRES::getUsername);
+        registry.add("spring.datasource.password", POSTGRES::getPassword);
+        registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
+    }
+
+    @Autowired WorkoutSessionRepository repository;
+    @Autowired JdbcTemplate jdbc;
+    private PersonId owner;
+    private Long cycleId;
+    private Long dayId;
+    private Long goalId;
+    private Long strengthExerciseId;
+    private Long cardioExerciseId;
+    private Long strengthTypeId;
+    private Long cardioTypeId;
+    private Long equipmentId;
+    private List<WorkoutSessionActivitySource> sources;
+
+    @BeforeEach
+    void fixtures() {
+        owner = new PersonId(id("INSERT INTO persons (name, sex, birth_date, created_at) VALUES ('Session owner', 'MALE', DATE '1990-01-01', now()) RETURNING id"));
+        goalId = id("SELECT id FROM training_goals ORDER BY id LIMIT 1");
+        equipmentId = id("SELECT id FROM equipment_types ORDER BY id LIMIT 1");
+        strengthTypeId = id("SELECT id FROM activity_types WHERE code = 'STRENGTH'");
+        cardioTypeId = id("SELECT id FROM activity_types WHERE code = 'CARDIO'");
+        cycleId = id("""
+                INSERT INTO workout_cycles (person_id, name, training_goal_id, workout_status, workout_origin, created_at)
+                VALUES (?, 'Ciclo histórico', ?, 'IN_PROGRESS', 'MANUAL', now()) RETURNING id
+                """, owner.value(), goalId);
+        dayId = id("""
+                INSERT INTO workout_days (workout_cycle_id, week_day, title, sort_order, created_at)
+                VALUES (?, 2, 'Treino misto', 1, now()) RETURNING id
+                """, cycleId);
+        strengthExerciseId = exercise("Agachamento", strengthTypeId);
+        cardioExerciseId = exercise("Caminhada", cardioTypeId);
+        sources = List.of(activity(strengthExerciseId, strengthTypeId, "STRENGTH", 1, 4),
+                activity(cardioExerciseId, cardioTypeId, "CARDIO", 2, null));
+    }
+
+    @AfterEach
+    void cleanup() {
+        jdbc.update("DELETE FROM persons WHERE id = ?", owner.value());
+        jdbc.update("DELETE FROM exercises WHERE id IN (?, ?)", strengthExerciseId, cardioExerciseId);
+    }
+
+    @Test
+    void shouldPersistMixedSnapshotsWithoutCreatingExecutedSets() {
+        WorkoutSession saved = repository.save(newSession());
+        assertThat(saved.getId()).isNotNull();
+        assertThat(saved.getVersion()).isNotNull();
+        assertThat(saved.getPerformedOn()).isEqualTo(LocalDate.of(2026, 10, 26));
+        assertThat(saved.getStartedAt()).isEqualTo(START);
+        assertThat(saved.getActivities()).hasSize(2).allSatisfy(a -> {
+            assertThat(a.getId()).isNotNull();
+            assertThat(a.getSets()).isEmpty();
+            assertThat(a.getActualDurationMinutes()).isNull();
+            assertThat(a.getActualDistanceKm()).isNull();
+        });
+        var loaded = repository.findByIdAndPersonId(saved.getId(), owner).orElseThrow();
+        assertThat(loaded).usingRecursiveComparison().isEqualTo(saved);
+        assertThat(loaded.getActivities().getLast().getSnapshot().plannedSets()).isNull();
+        assertThat(loaded.getActivities().getFirst().getSnapshot().plannedTargetLoadKg()).isEqualByComparingTo("45.50");
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM workout_session_sets", Long.class)).isZero();
+        assertThat(repository.findByIdAndPersonId(saved.getId(), new PersonId(owner.value() + 1000))).isEmpty();
+        assertThat(repository.findInProgressByPersonId(owner)).isPresent();
+    }
+
+    @Test
+    void shouldPreserveExecutionAndSnapshotsAfterAllOriginsAreDeleted() {
+        WorkoutSession saved = repository.save(newSession());
+        saved.recordSet(owner, 1, 5, new BigDecimal("50.00"), ActualLoadMode.PER_SIDE, 8, "Extra", START.plusSeconds(1));
+        saved.recordSet(owner, 2, 1, null, null, null, "Pausa", START.plusSeconds(2));
+        saved.updateActivityExecution(owner, 2, 20, new BigDecimal("2.00"), "Executado", START.plusSeconds(3));
+        saved = repository.save(saved);
+        var snapshots = saved.getActivities().stream().map(a -> a.getSnapshot()).toList();
+        jdbc.update("UPDATE workout_cycles SET name = 'Alterado' WHERE id = ?", cycleId);
+        jdbc.update("UPDATE workout_days SET title = 'Alterado' WHERE id = ?", dayId);
+        jdbc.update("UPDATE workout_activities SET sets = 9 WHERE workout_day_id = ?", dayId);
+        jdbc.update("UPDATE exercises SET name = 'Alterado' WHERE id IN (?, ?)", strengthExerciseId, cardioExerciseId);
+        assertThat(repository.findByIdAndPersonId(saved.getId(), owner).orElseThrow().getActivities())
+                .extracting(a -> a.getSnapshot()).containsExactlyElementsOf(snapshots);
+        jdbc.update("DELETE FROM workout_activities WHERE id = ?", sources.getFirst().activity().getId().value());
+        var afterActivityDeletion = repository.findByIdAndPersonId(saved.getId(), owner).orElseThrow();
+        assertThat(afterActivityDeletion.getActivities().getFirst().getWorkoutActivityId()).isNull();
+        assertThat(afterActivityDeletion.getActivities().getFirst().getSets()).hasSize(1);
+        jdbc.update("DELETE FROM workout_days WHERE id = ?", dayId);
+        assertThat(repository.findByIdAndPersonId(saved.getId(), owner).orElseThrow().getWorkoutDayId()).isNull();
+        jdbc.update("DELETE FROM workout_cycles WHERE id = ?", cycleId);
+        jdbc.update("DELETE FROM exercises WHERE id IN (?, ?)", strengthExerciseId, cardioExerciseId);
+        WorkoutSession historical = repository.findByIdAndPersonId(saved.getId(), owner).orElseThrow();
+        assertThat(historical.getWorkoutCycleId()).isNull();
+        assertThat(historical.getWorkoutDayId()).isNull();
+        assertThat(historical.getActivities()).extracting(a -> a.getSnapshot()).containsExactlyElementsOf(snapshots);
+        assertThat(historical.getActivities()).allSatisfy(a -> {
+            assertThat(a.getWorkoutActivityId()).isNull();
+            assertThat(a.getExerciseId()).isNull();
+            assertThat(a.getSets()).hasSize(1);
+        });
+        historical.expireIfDue(EXPIRY.plusSeconds(3600));
+        historical.updateNotes(owner, "Histórico corrigido", EXPIRY.plusSeconds(3601));
+        historical = repository.save(historical);
+        assertThat(historical.getFinishedAt()).isEqualTo(EXPIRY);
+        assertThat(historical.getStatus()).isEqualTo(WorkoutSessionStatus.CLOSED);
+    }
+
+    @Test
+    void shouldAllowSequentialSessionsOnSameDayAndEditClosedExecution() {
+        WorkoutSession first = repository.save(newSession());
+        assertThatThrownBy(() -> repository.save(newSession())).isInstanceOf(PersistenceException.class);
+        first.closeManually(owner, START.plusSeconds(30));
+        first = repository.save(first);
+        WorkoutSession second = repository.save(newSession());
+        assertThat(second.getId()).isNotEqualTo(first.getId());
+        assertThat(repository.findInProgressByPersonId(owner).orElseThrow().getId()).isEqualTo(second.getId());
+        first.recordSet(owner, 1, 1, new BigDecimal("0.00"), ActualLoadMode.TOTAL, 10, null, EXPIRY.plusSeconds(1));
+        first.updateNotes(owner, "Texto posterior", EXPIRY.plusSeconds(2));
+        first = repository.save(first);
+        Long setId = first.getActivities().getFirst().getSets().getFirst().getId().value();
+        first.recordSet(owner, 1, 1, new BigDecimal("10.00"), ActualLoadMode.TOTAL, 12, "Correção", EXPIRY.plusSeconds(3));
+        first = repository.save(first);
+        assertThat(first.getActivities().getFirst().getSets().getFirst().getId().value()).isEqualTo(setId);
+        assertThat(first.getStatus()).isEqualTo(WorkoutSessionStatus.CLOSED);
+        assertThat(first.getFinishedAt()).isEqualTo(START.plusSeconds(30));
+        first.removeSet(owner, 1, 1, EXPIRY.plusSeconds(4));
+        first = repository.save(first);
+        assertThat(first.getActivities().getFirst().getSets()).isEmpty();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM workout_session_sets WHERE id = ?", Long.class, setId)).isZero();
+    }
+
+    @Test
+    void shouldRejectStaleAggregateEvenWhenOnlyChildExecutionChanges() {
+        WorkoutSession saved = repository.save(newSession());
+        WorkoutSession stale = repository.findByIdAndPersonId(saved.getId(), owner).orElseThrow();
+        saved.recordSet(owner, 1, 1, null, null, null, "Primeiro registro", START);
+        WorkoutSession updated = repository.save(saved);
+        assertThat(updated.getVersion()).isGreaterThan(stale.getVersion());
+        stale.updateNotes(owner, "Versão antiga", START.plusSeconds(1));
+        assertThatThrownBy(() -> repository.save(stale)).isInstanceOf(PersistenceException.class);
+        assertThat(repository.findByIdAndPersonId(saved.getId(), owner).orElseThrow()
+                .getActivities().getFirst().getSets()).hasSize(1);
+    }
+
+    @Test
+    void shouldPreventConcurrentOpenSessionsAcrossDaysAndCyclesForSamePerson() throws Exception {
+        Long otherCycleId = id("""
+                INSERT INTO workout_cycles (person_id, name, training_goal_id, workout_status, workout_origin, created_at)
+                VALUES (?, 'Outro ciclo', ?, 'IN_PROGRESS', 'MANUAL', now()) RETURNING id
+                """, owner.value(), goalId);
+        Long otherDayId = id("""
+                INSERT INTO workout_days (workout_cycle_id, week_day, title, sort_order, created_at)
+                VALUES (?, 3, 'Outro dia', 1, now()) RETURNING id
+                """, otherCycleId);
+        WorkoutSession firstSession = newSession();
+        WorkoutSession secondSession = newSession(otherCycleId, otherDayId, List.of());
+        CyclicBarrier barrier = new CyclicBarrier(2);
+        try (ExecutorService executor = Executors.newFixedThreadPool(2)) {
+            java.util.function.Function<WorkoutSession, Callable<Boolean>> insert = session -> () -> {
+                barrier.await(10, TimeUnit.SECONDS);
+                try {
+                    repository.save(session);
+                    return true;
+                } catch (PersistenceException ex) {
+                    assertThat(rootCause(ex)).isInstanceOf(java.sql.SQLException.class);
+                    assertThat(((java.sql.SQLException) rootCause(ex)).getSQLState()).isEqualTo("23505");
+                    return false;
+                }
+            };
+            Future<Boolean> first = executor.submit(insert.apply(firstSession));
+            Future<Boolean> second = executor.submit(insert.apply(secondSession));
+            assertThat(List.of(first.get(30, TimeUnit.SECONDS), second.get(30, TimeUnit.SECONDS)))
+                    .containsExactlyInAnyOrder(true, false);
+        }
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM workout_sessions WHERE person_id = ? AND status = 'IN_PROGRESS'",
+                Long.class, owner.value())).isEqualTo(1);
+    }
+
+    @Test
+    void shouldRejectSavingSessionUnderAnotherOwner() {
+        WorkoutSession saved = repository.save(newSession());
+        WorkoutSession foreign = WorkoutSession.restore(saved.getId(), new PersonId(owner.value() + 1000),
+                saved.getWorkoutCycleId(), saved.getWorkoutDayId(), saved.getSnapshot(), saved.getPerformedOn(),
+                saved.getStartedAt(), saved.getFinishedAt(), saved.getStatus(), saved.getCloseReason(),
+                "Tentativa de alteração", saved.getCreatedAt(), saved.getUpdatedAt(), saved.getVersion(), saved.getActivities());
+        assertThatThrownBy(() -> repository.save(foreign)).isInstanceOf(PersistenceException.class);
+        assertThat(repository.findByIdAndPersonId(saved.getId(), owner).orElseThrow().getNotes()).isNull();
+    }
+
+    @Test
+    void shouldEnforceSetNumbersForeignKeysAndExecutionPairsInDatabase() {
+        WorkoutSession saved = repository.save(newSession());
+        Long activityId = saved.getActivities().getLast().getId().value();
+        jdbc.update("""
+                INSERT INTO workout_session_sets (workout_session_activity_id, set_number, notes, created_at)
+                VALUES (?, 1, 'Relato sem prescrição', now())
+                """, activityId);
+        assertThatThrownBy(() -> jdbc.update("""
+                INSERT INTO workout_session_sets (workout_session_activity_id, set_number, notes, created_at)
+                VALUES (?, 1, 'Duplicada', now())
+                """, activityId)).isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+        assertThatThrownBy(() -> jdbc.update("""
+                INSERT INTO workout_session_sets (workout_session_activity_id, set_number, notes, created_at)
+                VALUES (?, 0, 'Inválida', now())
+                """, activityId)).isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+        assertThatThrownBy(() -> jdbc.update("""
+                INSERT INTO workout_session_sets (workout_session_activity_id, set_number, actual_load_kg, created_at)
+                VALUES (?, 2, 10.00, now())
+                """, activityId)).isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+        assertThatThrownBy(() -> jdbc.update("""
+                INSERT INTO workout_session_sets (workout_session_activity_id, set_number, notes, created_at)
+                VALUES (-1, 1, 'Sem pai', now())
+                """)).isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
+    }
+
+    private WorkoutSession newSession() {
+        return newSession(cycleId, dayId, sources);
+    }
+
+    private WorkoutSession newSession(Long originCycleId, Long originDayId, List<WorkoutSessionActivitySource> activities) {
+        WorkoutCycle cycle = WorkoutCycle.restore(new WorkoutCycleId(originCycleId), owner, "Ciclo histórico",
+                new TrainingGoalId(goalId), LocalDate.of(2026, 10, 1), null, null, WeekDay.SUNDAY,
+                WorkoutStatus.IN_PROGRESS, WorkoutOrigin.MANUAL, null, CREATED, null);
+        WorkoutDay day = WorkoutDay.restore(new WorkoutDayId(originDayId), cycle.getId(), WeekDay.MONDAY,
+                "Treino misto", 1, CREATED, null);
+        return WorkoutSession.start(owner, cycle, day, activities, START);
+    }
+
+    private Long exercise(String name, Long typeId) {
+        return id("""
+                INSERT INTO exercises (name, equipment_type_id, activity_type_id, unilateral, compound, active, created_at)
+                VALUES (?, ?, ?, false, false, true, now()) RETURNING id
+                """, name, equipmentId, typeId);
+    }
+
+    private WorkoutSessionActivitySource activity(Long exerciseId, Long typeId, String code, int order, Integer sets) {
+        Long activityId = id("""
+                INSERT INTO workout_activities (workout_day_id, exercise_id, order_index, sets, created_at)
+                VALUES (?, ?, ?, ?, now()) RETURNING id
+                """, dayId, exerciseId, order, sets);
+        ActivityType type = ActivityType.restore(new ActivityTypeId(typeId), new ActivityTypeCode(code), code, true, order);
+        Exercise exercise = Exercise.restore(new ExerciseId(exerciseId), sets == null ? "Caminhada" : "Agachamento",
+                new EquipmentTypeId(equipmentId), type.getId(), false, false, null, true, CREATED, null);
+        WorkoutActivity activity = WorkoutActivity.restore(new WorkoutActivityId(activityId), new WorkoutDayId(dayId),
+                exercise.getId(), order, sets, sets == null ? null : 8, sets == null ? null : 12,
+                sets == null ? null : new BigDecimal("45.50"), sets == null ? null : "Cada lado",
+                sets == null ? 30 : null, sets == null ? new BigDecimal("3.00") : null,
+                "Moderada", 60, "Prescrição original", CREATED, null);
+        return new WorkoutSessionActivitySource(activity, exercise, type);
+    }
+
+    private Long id(String sql, Object... args) { return jdbc.queryForObject(sql, Long.class, args); }
+
+    private Throwable rootCause(Throwable ex) {
+        while (ex.getCause() != null) ex = ex.getCause();
+        return ex;
+    }
+}
