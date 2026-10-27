@@ -1,6 +1,11 @@
 package com.ironcore.interfaces.rest.workoutsession.workoutsession;
 
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
+import com.ironcore.application.shared.pagination.PageResult;
+import com.ironcore.application.workoutsession.workoutsession.list.ListWorkoutSessionsUseCase;
+import com.ironcore.application.workoutsession.workoutsession.list.ListWorkoutSessionsResult;
+import com.ironcore.interfaces.rest.workoutsession.WorkoutSessionController;
+import org.junit.jupiter.api.Test;
 import com.ironcore.application.workoutsession.workoutsession.close.CloseWorkoutSessionUseCase;
 import com.ironcore.application.workoutsession.workoutsession.detail.GetWorkoutSessionDetailUseCase;
 import com.ironcore.application.workoutsession.workoutsession.detail.WorkoutSessionActivityDetailResult;
@@ -42,6 +47,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(WorkoutSessionController.class)
 @Import(SecurityConfig.class)
 class WorkoutSessionExecutionSecurityTest {
+    @MockitoBean private ListWorkoutSessionsUseCase listWorkoutSessionsUseCase;
+
+    @Test
+    void shouldRequireAuthenticationForHistory() throws Exception {
+        mvc.perform(get("/api/users/me/workout-sessions")).andExpect(status().isUnauthorized());
+        verifyNoInteractions(listWorkoutSessionsUseCase);
+    }
+
+    @Test
+    void shouldAllowAuthenticatedHistoryWithoutCsrf() throws Exception {
+        var principal = new AuthenticatedUser(new UserId(77L), new Email("actor@example.com"), false);
+        when(listWorkoutSessionsUseCase.execute(any())).thenReturn(
+                new ListWorkoutSessionsResult(new PageResult<>(List.of(), 0, 20, 0, 0, true)));
+        mvc.perform(get("/api/users/me/workout-sessions").with(authentication(
+                new UsernamePasswordAuthenticationToken(principal, null, List.of()))))
+                .andExpect(status().isOk());
+        verify(listWorkoutSessionsUseCase).execute(argThat(command -> command.actorUserId().equals(principal.userId())));
+    }
     @Autowired private MockMvc mvc;
     @MockitoBean private UpdateWorkoutSessionNotesUseCase updateWorkoutSessionNotesUseCase;
     @MockitoBean private UpdateWorkoutSessionActivityExecutionUseCase updateWorkoutSessionActivityExecutionUseCase;

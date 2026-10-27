@@ -1,6 +1,9 @@
 package com.ironcore.interfaces.rest.workoutsession.workoutsession;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ironcore.application.shared.pagination.PageResult;
+import com.ironcore.application.exception.OperationNotAllowedException;
+import com.ironcore.application.workoutsession.workoutsession.list.*;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
@@ -48,7 +51,8 @@ import com.ironcore.domain.workoutsession.workoutsessionset.exception.InvalidWor
 import com.ironcore.domain.workoutsession.workoutsessionset.valueobject.WorkoutSessionSetId;
 import com.ironcore.infrastructure.exception.PersistenceException;
 import com.ironcore.infrastructure.security.jwt.JwtAccessTokenValidator;
-import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.start.StartWorkoutSessionRequest;
+import com.ironcore.interfaces.rest.workoutsession.WorkoutSessionController;
+import com.ironcore.interfaces.rest.workoutsession.dto.start.StartWorkoutSessionRequest;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -79,6 +83,100 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(WorkoutSessionController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class WorkoutSessionControllerTest {
+
+    @MockitoBean private ListWorkoutSessionsUseCase listWorkoutSessionsUseCase;
+
+    @Nested
+    class History {
+        @Test
+        void shouldUseDefaultsAndAuthenticatedUserIgnoringExternalOwnership() throws Exception {
+            when(listWorkoutSessionsUseCase.execute(any())).thenReturn(
+                    new ListWorkoutSessionsResult(new PageResult<>(List.of(), 0, 20, 0, 0, true)));
+            mockMvc.perform(get(ENDPOINT).param("personId", "999").with(authenticatedUser()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.sessions.content").isEmpty())
+                    .andExpect(jsonPath("$.sessions.page").value(0))
+                    .andExpect(jsonPath("$.sessions.size").value(20))
+                    .andExpect(jsonPath("$.sessions.totalElements").value(0))
+                    .andExpect(jsonPath("$.sessions.totalPages").value(0))
+                    .andExpect(jsonPath("$.sessions.last").value(true));
+            verify(listWorkoutSessionsUseCase).execute(new ListWorkoutSessionsCommand(
+                    new UserId(1L), null, null, null, null, 0, 20));
+        }
+
+        @Test
+        void shouldForwardAllFiltersAndReturnHistoricalSummary() throws Exception {
+            var date = LocalDate.of(2026, 10, 26);
+            var item = new ListWorkoutSessionsItemResult(new WorkoutSessionId(100L), null, null,
+                    "Ciclo histórico", "Treino original", WeekDay.MONDAY, date, START, START.plusSeconds(60),
+                    WorkoutSessionStatus.CLOSED, WorkoutSessionCloseReason.AUTO_EXPIRED);
+            when(listWorkoutSessionsUseCase.execute(any())).thenReturn(
+                    new ListWorkoutSessionsResult(new PageResult<>(List.of(item), 1, 2, 3, 2, true)));
+            mockMvc.perform(get(ENDPOINT).with(authenticatedUser())
+                            .param("workoutCycleId", "10").param("workoutDayId", "20")
+                            .param("startDate", "2026-10-26").param("endDate", "2026-10-26")
+                            .param("page", "1").param("size", "2"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.sessions.totalElements").value(3))
+                    .andExpect(jsonPath("$.sessions.totalPages").value(2))
+                    .andExpect(jsonPath("$.sessions.page").value(1))
+                    .andExpect(jsonPath("$.sessions.size").value(2))
+                    .andExpect(jsonPath("$.sessions.last").value(true))
+                    .andExpect(jsonPath("$.sessions.content[0].id").value(100))
+                    .andExpect(jsonPath("$.sessions.content[0].status").value("CLOSED"))
+                    .andExpect(jsonPath("$.sessions.content[0].closeReason").value("AUTO_EXPIRED"))
+                    .andExpect(jsonPath("$.sessions.content[0].workoutCycleId").value(nullValue()))
+                    .andExpect(jsonPath("$.sessions.content[0].workoutDayId").value(nullValue()))
+                    .andExpect(jsonPath("$.sessions.content[0].workoutCycleNameSnapshot").value("Ciclo histórico"))
+                    .andExpect(jsonPath("$.sessions.content[0].workoutDayTitleSnapshot").value("Treino original"))
+                    .andExpect(jsonPath("$.sessions.content[0].weekDaySnapshot").value("MONDAY"))
+                    .andExpect(jsonPath("$.sessions.content[0].performedOn").value("2026-10-26"))
+                    .andExpect(jsonPath("$.sessions.content[0].startedAt").value(START.toString()))
+                    .andExpect(jsonPath("$.sessions.content[0].finishedAt").value(START.plusSeconds(60).toString()))
+                    .andExpect(jsonPath("$.sessions.content[0].activities").doesNotExist());
+            verify(listWorkoutSessionsUseCase).execute(new ListWorkoutSessionsCommand(new UserId(1L),
+                    new WorkoutCycleId(10L), new WorkoutDayId(20L), date, date, 1, 2));
+        }
+
+        @ParameterizedTest
+        @CsvSource({"page,-1", "page,abc", "page,2147483648", "size,0", "size,101",
+                "workoutCycleId,0", "workoutCycleId,abc", "workoutDayId,-1", "workoutDayId,abc",
+                "startDate,2026-02-30", "endDate,2026-13-01", "startDate,invalid", "endDate,26/10/2026"})
+        void shouldRejectInvalidParameters(String parameter, String value) throws Exception {
+            mockMvc.perform(get(ENDPOINT).with(authenticatedUser()).param(parameter, value))
+                    .andExpect(status().isBadRequest());
+            verifyNoInteractions(listWorkoutSessionsUseCase);
+        }
+
+        @Test
+        void shouldKeepReversedIntervalAsUnprocessableEntity() throws Exception {
+            when(listWorkoutSessionsUseCase.execute(any())).thenThrow(
+                    new OperationNotAllowedException("Data inicial não pode ser posterior à data final."));
+            mockMvc.perform(get(ENDPOINT).with(authenticatedUser())
+                            .param("startDate", "2026-10-27").param("endDate", "2026-10-26"))
+                    .andExpect(status().isUnprocessableEntity());
+        }
+
+        @Test
+        void shouldAcceptMaximumPageSize() throws Exception {
+            when(listWorkoutSessionsUseCase.execute(any())).thenReturn(
+                    new ListWorkoutSessionsResult(new PageResult<>(List.of(), 0, 100, 0, 0, true)));
+            mockMvc.perform(get(ENDPOINT).with(authenticatedUser()).param("size", "100"))
+                    .andExpect(status().isOk());
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = {403, 404, 500})
+        void shouldReuseExistingErrorResponses(int code) throws Exception {
+            RuntimeException failure = switch (code) {
+                case 403 -> new UserInactiveException("Usuário inativo.");
+                case 404 -> new ResourceNotFoundException("Usuário não encontrado.");
+                default -> new PersistenceException("offline");
+            };
+            when(listWorkoutSessionsUseCase.execute(any())).thenThrow(failure);
+            mockMvc.perform(get(ENDPOINT).with(authenticatedUser())).andExpect(status().is(code));
+        }
+    }
 
     @MockitoBean private UpdateWorkoutSessionNotesUseCase updateWorkoutSessionNotesUseCase;
     @MockitoBean private UpdateWorkoutSessionActivityExecutionUseCase updateWorkoutSessionActivityExecutionUseCase;
@@ -362,12 +460,15 @@ class WorkoutSessionControllerTest {
                     .andExpect(jsonPath("$.activities[0].sets[0].setNumber").value(1))
                     .andExpect(jsonPath("$.activities[0].sets[0].actualLoadKg").value(42.50))
                     .andExpect(jsonPath("$.activities[0].sets[0].actualLoadMode").value("PER_SIDE"))
+                    .andExpect(jsonPath("$.activities[0].actualLoadMode").value("PER_SIDE"))
+                    .andExpect(jsonPath("$.activities[0].sets[0].normalizedLoadKg").value(85.0))
                     .andExpect(jsonPath("$.activities[0].sets[0].actualReps").value(9))
                     .andExpect(jsonPath("$.activities[0].sets[0].notes").value("Série registrada"))
                     .andExpect(jsonPath("$.activities[0].sets[0].createdAt").value(START.plusSeconds(1).toString()))
                     .andExpect(jsonPath("$.activities[0].sets[0].updatedAt").value(START.plusSeconds(2).toString()))
                     .andExpect(jsonPath("$.activities[0].sets[1].actualLoadKg").value(nullValue()))
                     .andExpect(jsonPath("$.activities[0].sets[1].actualLoadMode").value(nullValue()))
+                    .andExpect(jsonPath("$.activities[0].sets[1].normalizedLoadKg").value(nullValue()))
                     .andExpect(jsonPath("$.activities[0].sets[1].actualReps").value(nullValue()))
                     .andExpect(jsonPath("$.activities[0].sets[1].notes").value("Somente relato"));
             verify(getWorkoutSessionDetailUseCase).execute(command);

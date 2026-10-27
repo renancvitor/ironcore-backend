@@ -62,6 +62,32 @@ class GetWorkoutSessionDetailUseCaseTest {
     class SuccessfulDetail {
 
         @Test
+        void shouldReturnPartialSetsAndNormalizedLoadWithoutFillingExecutionFromPrescription() {
+            givenPerson();
+            var history = session();
+            history.addSet(person.getId(), ACTIVITY_ID, 1, null, null, 8, null, START);
+            history.addSet(person.getId(), ACTIVITY_ID, 2, new BigDecimal("20.25"),
+                    ActualLoadMode.PER_SIDE, null, null, START);
+            history = restoredSession(history);
+            when(workoutSessionRepository.findByIdAndPersonId(command.id(), person.getId()))
+                    .thenReturn(Optional.of(history));
+
+            var activity = useCase.execute(command).activities().getFirst();
+            assertThat(activity.actualDurationMinutes()).isNull();
+            assertThat(activity.actualDistanceKm()).isNull();
+            assertThat(activity.actualLoadMode()).isEqualTo(ActualLoadMode.PER_SIDE);
+            assertThat(activity.sets()).hasSize(2);
+            assertThat(activity.sets().getFirst().actualLoadKg()).isNull();
+            assertThat(activity.sets().getFirst().actualLoadMode()).isNull();
+            assertThat(activity.sets().getFirst().normalizedLoadKg()).isNull();
+            assertThat(activity.sets().getFirst().actualReps()).isEqualTo(8);
+            assertThat(activity.sets().getLast().actualReps()).isNull();
+            assertThat(activity.sets().getLast().actualLoadKg()).isEqualByComparingTo("20.25");
+            assertThat(activity.sets().getLast().normalizedLoadKg()).isEqualByComparingTo("40.50");
+            verify(workoutSessionRepository, never()).save(any());
+        }
+
+        @Test
         void shouldReturnHistoricalSnapshotsAndRecordedExecution() {
             givenPerson();
             WorkoutSession history = session();
@@ -129,6 +155,7 @@ class GetWorkoutSessionDetailUseCaseTest {
             assertThat(set.setNumber()).isEqualTo(1);
             assertThat(set.actualLoadKg()).isEqualByComparingTo("42.50");
             assertThat(set.actualLoadMode()).isEqualTo(ActualLoadMode.PER_SIDE);
+            assertThat(set.normalizedLoadKg()).isEqualByComparingTo("85.00");
             assertThat(set.actualReps()).isEqualTo(8);
             assertThat(set.notes()).isEqualTo("Série registrada");
             assertThat(set.createdAt()).isEqualTo(START.plusSeconds(1));
