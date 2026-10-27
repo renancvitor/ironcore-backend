@@ -133,6 +133,9 @@ public class WorkoutSession {
         if (cycle.getWorkoutStatus() != WorkoutStatus.IN_PROGRESS) {
             throw new InvalidWorkoutSessionException("Somente um ciclo em andamento permite iniciar sessão.");
         }
+        if (sources.isEmpty()) {
+            throw new InvalidWorkoutSessionException("O dia de treino deve possuir pelo menos uma atividade planejada.");
+        }
         List<WorkoutSessionActivity> captured = new ArrayList<>();
         for (WorkoutSessionActivitySource source : sources) {
             requireNonNull(source, "Atividade de origem");

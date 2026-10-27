@@ -1,4 +1,4 @@
-package com.ironcore.application.workoutsession.workoutsession.persistence;
+package com.ironcore.infrastructure.persistence.workoutsession.workoutsession.repository;
 
 import com.ironcore.domain.exercise.valueobject.ExerciseId;
 import com.ironcore.domain.person.valueobject.PersonId;
@@ -11,7 +11,7 @@ import com.ironcore.domain.workoutsession.workoutsessionactivity.valueobject.Wor
 
 import java.util.List;
 
-public record WorkoutSessionPlanningProjection(
+record WorkoutSessionPlanningProjection(
         PersonId personId,
         WorkoutCycleId cycleId,
         WorkoutDayId dayId,

@@ -10,6 +10,9 @@ import com.ironcore.infrastructure.persistence.workoutsession.workoutsession.map
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.PessimisticLockException;
+import jakarta.persistence.LockTimeoutException;
+import org.springframework.dao.CannotAcquireLockException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +36,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 @ExtendWith(MockitoExtension.class)
 class WorkoutSessionAdapterTest {
@@ -43,6 +47,8 @@ class WorkoutSessionAdapterTest {
     private PersonJpaRepository personJpaRepository;
     @Mock
     private EntityManager entityManager;
+    @Mock
+    private WorkoutSessionPlanningQueryAdapter workoutSessionPlanningQueryAdapter;
     @InjectMocks
     private WorkoutSessionAdapter adapter;
 
@@ -67,6 +73,25 @@ class WorkoutSessionAdapterTest {
 
         assertThatThrownBy(() -> adapter.save(workoutSession))
                 .isInstanceOf(WorkoutSessionConflictException.class).hasCause(conflict);
+    }
+
+    @Test
+    void shouldPreservePessimisticConflictsAndOriginalCauses() {
+        when(workoutSessionJpaRepository.findByIdAndPerson_Id(1L, OWNER.value())).thenReturn(Optional.of(entity));
+        for (RuntimeException conflict : new RuntimeException[]{new PessimisticLockException("Locked"),
+                new LockTimeoutException("Timeout"), new CannotAcquireLockException("Deadlock")}) {
+            doThrow(conflict).when(entityManager).lock(any(WorkoutSessionEntity.class),
+                    eq(LockModeType.PESSIMISTIC_FORCE_INCREMENT));
+            assertThatThrownBy(() -> adapter.save(workoutSession))
+                    .isInstanceOf(WorkoutSessionConflictException.class).hasCause(conflict);
+        }
+    }
+
+    @Test
+    void shouldUpdateHistoryWithoutConsultingPlanning() {
+        when(workoutSessionJpaRepository.findByIdAndPerson_Id(1L, OWNER.value())).thenReturn(Optional.of(entity));
+        adapter.save(workoutSession);
+        verifyNoInteractions(workoutSessionPlanningQueryAdapter, personJpaRepository);
     }
 
     @ParameterizedTest

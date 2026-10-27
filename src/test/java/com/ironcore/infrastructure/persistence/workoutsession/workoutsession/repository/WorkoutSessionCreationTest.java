@@ -1,13 +1,13 @@
-package com.ironcore.application.workoutsession.workoutsession.persistence;
+package com.ironcore.infrastructure.persistence.workoutsession.workoutsession.repository;
 
-import com.ironcore.application.workoutsession.workoutsession.port.WorkoutSessionCreationPort;
-import com.ironcore.application.workoutsession.workoutsession.port.WorkoutSessionPlanningQueryPort;
 import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.workoutplanning.workoutcycle.enums.WorkoutStatus;
 import com.ironcore.domain.workoutsession.workoutsession.exception.WorkoutSessionConflictException;
 import com.ironcore.domain.workoutsession.workoutsession.model.WorkoutSession;
-import com.ironcore.domain.workoutsession.workoutsession.repository.WorkoutSessionRepository;
 import com.ironcore.domain.workoutsession.workoutsessionactivity.valueobject.WorkoutSessionActivitySnapshot;
+import com.ironcore.infrastructure.persistence.person.entity.PersonEntity;
+import com.ironcore.infrastructure.persistence.person.repository.PersonJpaRepository;
+import com.ironcore.infrastructure.persistence.workoutsession.workoutsession.entity.WorkoutSessionEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,16 +37,16 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class SaveWorkoutSessionServiceTest {
+class WorkoutSessionCreationTest {
 
     @Mock
-    private WorkoutSessionRepository workoutSessionRepository;
+    private WorkoutSessionJpaRepository workoutSessionJpaRepository;
     @Mock
-    private WorkoutSessionCreationPort workoutSessionCreationPort;
+    private PersonJpaRepository personJpaRepository;
     @Mock
-    private WorkoutSessionPlanningQueryPort workoutSessionPlanningQueryPort;
+    private WorkoutSessionPlanningQueryAdapter workoutSessionPlanningQueryAdapter;
     @InjectMocks
-    private SaveWorkoutSessionService service;
+    private WorkoutSessionAdapter adapter;
 
     private WorkoutSession candidate;
 
@@ -58,30 +58,35 @@ class SaveWorkoutSessionServiceTest {
 
     @Test
     void shouldLockValidateAndInsertEquivalentPrescription() {
-        when(workoutSessionPlanningQueryPort.lockByDayIdAndPersonId(candidate.getWorkoutDayId(), OWNER))
+        when(workoutSessionPlanningQueryAdapter.lockByDayIdAndPersonId(candidate.getWorkoutDayId(), OWNER))
                 .thenReturn(Optional.of(planning(OWNER, WorkoutStatus.IN_PROGRESS,
                         List.of(activity(new BigDecimal("90.000"), new BigDecimal("6.0"))))));
         WorkoutSession saved = restoredSession(candidate);
-        when(workoutSessionCreationPort.insert(any(ValidatedWorkoutSession.class))).thenAnswer(invocation -> {
-            assertThat(invocation.<ValidatedWorkoutSession>getArgument(0).getSession()).isSameAs(candidate);
-            return saved;
+        PersonEntity owner = new PersonEntity();
+        owner.setId(OWNER.value());
+        when(personJpaRepository.getReferenceById(OWNER.value())).thenReturn(owner);
+        when(workoutSessionJpaRepository.saveAndFlush(any(WorkoutSessionEntity.class))).thenAnswer(invocation -> {
+            WorkoutSessionEntity entity = invocation.getArgument(0);
+            entity.setId(saved.getId().value());
+            entity.setVersion(0L);
+            entity.getActivities().getFirst().setId(saved.getActivities().getFirst().getId().value());
+            return entity;
         });
 
-        assertThat(service.save(candidate)).isSameAs(saved);
-        var order = inOrder(workoutSessionPlanningQueryPort, workoutSessionCreationPort);
-        order.verify(workoutSessionPlanningQueryPort).lockByDayIdAndPersonId(candidate.getWorkoutDayId(), OWNER);
-        order.verify(workoutSessionCreationPort).insert(any(ValidatedWorkoutSession.class));
-        verifyNoInteractions(workoutSessionRepository);
+        assertThat(adapter.save(candidate)).usingRecursiveComparison().isEqualTo(saved);
+        var order = inOrder(workoutSessionPlanningQueryAdapter, workoutSessionJpaRepository);
+        order.verify(workoutSessionPlanningQueryAdapter).lockByDayIdAndPersonId(candidate.getWorkoutDayId(), OWNER);
+        order.verify(workoutSessionJpaRepository).saveAndFlush(any(WorkoutSessionEntity.class));
     }
 
     @ParameterizedTest
     @CsvSource({"90.01,6.00", "90.00,6.01"})
     void shouldRejectRealDecimalChangesBeforeInserting(BigDecimal load, BigDecimal distance) {
-        when(workoutSessionPlanningQueryPort.lockByDayIdAndPersonId(candidate.getWorkoutDayId(), OWNER))
+        when(workoutSessionPlanningQueryAdapter.lockByDayIdAndPersonId(candidate.getWorkoutDayId(), OWNER))
                 .thenReturn(Optional.of(planning(OWNER, WorkoutStatus.IN_PROGRESS, List.of(activity(load, distance)))));
 
-        assertThatThrownBy(() -> service.save(candidate)).isInstanceOf(WorkoutSessionConflictException.class);
-        verifyNoInteractions(workoutSessionCreationPort, workoutSessionRepository);
+        assertThatThrownBy(() -> adapter.save(candidate)).isInstanceOf(WorkoutSessionConflictException.class);
+        verifyNoInteractions(personJpaRepository, workoutSessionJpaRepository);
     }
 
     @Test
@@ -92,27 +97,28 @@ class SaveWorkoutSessionServiceTest {
                         List.of(activity(new BigDecimal("90.00"), new BigDecimal("6.00")))),
                 planning(OWNER, WorkoutStatus.COMPLETED,
                         List.of(activity(new BigDecimal("90.00"), new BigDecimal("6.00")))))) {
-            when(workoutSessionPlanningQueryPort.lockByDayIdAndPersonId(candidate.getWorkoutDayId(), OWNER))
+            when(workoutSessionPlanningQueryAdapter.lockByDayIdAndPersonId(candidate.getWorkoutDayId(), OWNER))
                     .thenReturn(Optional.of(projection));
-            assertThatThrownBy(() -> service.save(candidate)).isInstanceOf(WorkoutSessionConflictException.class);
+            assertThatThrownBy(() -> adapter.save(candidate)).isInstanceOf(WorkoutSessionConflictException.class);
         }
-        verifyNoInteractions(workoutSessionCreationPort, workoutSessionRepository);
+        verifyNoInteractions(personJpaRepository, workoutSessionJpaRepository);
     }
 
     @Test
     void shouldRejectUnavailablePlanningBeforeInserting() {
-        when(workoutSessionPlanningQueryPort.lockByDayIdAndPersonId(candidate.getWorkoutDayId(), OWNER))
+        when(workoutSessionPlanningQueryAdapter.lockByDayIdAndPersonId(candidate.getWorkoutDayId(), OWNER))
                 .thenReturn(Optional.empty());
-        assertThatThrownBy(() -> service.save(candidate)).isInstanceOf(WorkoutSessionConflictException.class);
-        verifyNoInteractions(workoutSessionCreationPort, workoutSessionRepository);
+        assertThatThrownBy(() -> adapter.save(candidate)).isInstanceOf(WorkoutSessionConflictException.class);
+        verifyNoInteractions(personJpaRepository, workoutSessionJpaRepository);
     }
 
     @Test
-    void shouldUpdateHistoryWithoutConsultingPlanning() {
+    void shouldRejectUnavailableHistoryWithoutConsultingPlanning() {
         WorkoutSession history = session();
-        when(workoutSessionRepository.save(history)).thenReturn(history);
-        assertThat(service.save(history)).isSameAs(history);
-        verifyNoInteractions(workoutSessionPlanningQueryPort, workoutSessionCreationPort);
+        when(workoutSessionJpaRepository.findByIdAndPerson_Id(history.getId().value(), OWNER.value()))
+                .thenReturn(Optional.empty());
+        assertThatThrownBy(() -> adapter.save(history)).isInstanceOf(WorkoutSessionConflictException.class);
+        verifyNoInteractions(workoutSessionPlanningQueryAdapter, personJpaRepository);
     }
 
     private WorkoutSessionPlanningProjection planning(

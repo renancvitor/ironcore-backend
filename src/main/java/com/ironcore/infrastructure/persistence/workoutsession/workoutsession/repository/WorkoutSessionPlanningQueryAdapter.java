@@ -1,7 +1,5 @@
 package com.ironcore.infrastructure.persistence.workoutsession.workoutsession.repository;
 
-import com.ironcore.application.workoutsession.workoutsession.persistence.WorkoutSessionPlanningProjection;
-import com.ironcore.application.workoutsession.workoutsession.port.WorkoutSessionPlanningQueryPort;
 import com.ironcore.domain.activitytype.valueobject.ActivityTypeCode;
 import com.ironcore.domain.exercise.valueobject.ExerciseId;
 import com.ironcore.domain.person.valueobject.PersonId;
@@ -32,11 +30,10 @@ import java.util.Optional;
 @Repository
 @RequiredArgsConstructor
 @Transactional(propagation = Propagation.MANDATORY)
-public class WorkoutSessionPlanningQueryAdapter implements WorkoutSessionPlanningQueryPort {
+class WorkoutSessionPlanningQueryAdapter {
 
     private final EntityManager entityManager;
 
-    @Override
     public Optional<WorkoutSessionPlanningProjection> lockByDayIdAndPersonId(WorkoutDayId dayId, PersonId personId) {
         try {
             List<?> cycles = entityManager.createNativeQuery("""

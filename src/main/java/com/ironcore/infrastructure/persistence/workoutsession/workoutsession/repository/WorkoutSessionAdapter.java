@@ -1,14 +1,14 @@
 package com.ironcore.infrastructure.persistence.workoutsession.workoutsession.repository;
 
-import com.ironcore.application.workoutsession.workoutsession.persistence.ValidatedWorkoutSession;
-import com.ironcore.application.workoutsession.workoutsession.port.WorkoutSessionCreationPort;
 import com.ironcore.domain.person.valueobject.PersonId;
+import com.ironcore.domain.workoutplanning.workoutcycle.enums.WorkoutStatus;
 import com.ironcore.domain.workoutsession.workoutsession.enums.WorkoutSessionStatus;
 import com.ironcore.domain.workoutsession.workoutsession.exception.InvalidWorkoutSessionException;
 import com.ironcore.domain.workoutsession.workoutsession.exception.WorkoutSessionConflictException;
 import com.ironcore.domain.workoutsession.workoutsession.model.WorkoutSession;
 import com.ironcore.domain.workoutsession.workoutsession.repository.WorkoutSessionRepository;
 import com.ironcore.domain.workoutsession.workoutsession.valueobject.WorkoutSessionId;
+import com.ironcore.domain.workoutsession.workoutsessionactivity.model.WorkoutSessionActivity;
 import com.ironcore.infrastructure.exception.DataMappingException;
 import com.ironcore.infrastructure.exception.PersistenceException;
 import com.ironcore.infrastructure.persistence.person.repository.PersonJpaRepository;
@@ -16,53 +16,48 @@ import com.ironcore.infrastructure.persistence.workoutsession.workoutsession.ent
 import com.ironcore.infrastructure.persistence.workoutsession.workoutsession.mapper.WorkoutSessionMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
+import jakarta.persistence.LockTimeoutException;
 import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.PessimisticLockException;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.StaleStateException;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.LockAcquisitionException;
+import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class WorkoutSessionAdapter implements WorkoutSessionRepository, WorkoutSessionCreationPort {
+public class WorkoutSessionAdapter implements WorkoutSessionRepository {
 
     private final WorkoutSessionJpaRepository workoutSessionJpaRepository;
     private final PersonJpaRepository personJpaRepository;
     private final EntityManager entityManager;
+    private final WorkoutSessionPlanningQueryAdapter workoutSessionPlanningQueryAdapter;
 
     @Override
-    @Transactional(propagation = Propagation.MANDATORY)
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public WorkoutSession save(WorkoutSession workoutSession) {
-        if (workoutSession.getId() == null) {
-            throw new InvalidWorkoutSessionException("Sessão deve ser validada antes da criação.");
-        }
-        return persist(workoutSession);
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.MANDATORY)
-    public WorkoutSession insert(ValidatedWorkoutSession validatedSession) {
-        WorkoutSession session = validatedSession.getSession();
-        if (session.getId() != null) {
-            throw new InvalidWorkoutSessionException("Sessão já possui identificador.");
-        }
-        return persist(session);
-    }
-
-    private WorkoutSession persist(WorkoutSession workoutSession) {
         workoutSession.validateExecution();
 
         try {
             WorkoutSessionEntity entity;
             if (workoutSession.getId() == null) {
+                WorkoutSessionPlanningProjection planning = workoutSessionPlanningQueryAdapter.lockByDayIdAndPersonId(
+                                workoutSession.getWorkoutDayId(), workoutSession.getPersonId())
+                        .orElseThrow(() -> new WorkoutSessionConflictException("Planejamento de origem indisponível."));
+                validatePlanningSnapshot(workoutSession, planning);
                 entity = WorkoutSessionMapper.toEntity(workoutSession,
                         personJpaRepository.getReferenceById(workoutSession.getPersonId().value()));
                 entity = workoutSessionJpaRepository.saveAndFlush(entity);
@@ -75,21 +70,71 @@ public class WorkoutSessionAdapter implements WorkoutSessionRepository, WorkoutS
                     throw new WorkoutSessionConflictException("Sessão foi alterada por outra operação.");
                 }
 
-                WorkoutSessionMapper.applyExecution(workoutSession, entity);
                 // Version the entire aggregate, including edits restricted to activities or sets.
                 entityManager.lock(entity, LockModeType.PESSIMISTIC_FORCE_INCREMENT);
+                removeDeletedSets(workoutSession, entity);
+                WorkoutSessionMapper.applyExecution(workoutSession, entity);
                 workoutSessionJpaRepository.flush();
             }
 
             return WorkoutSessionMapper.toDomain(entity);
-        } catch (WorkoutSessionConflictException | DataMappingException exception) {
+        } catch (WorkoutSessionConflictException | InvalidWorkoutSessionException | DataMappingException exception) {
             throw exception;
-        } catch (OptimisticLockingFailureException | OptimisticLockException | StaleStateException exception) {
+        } catch (ConcurrencyFailureException | OptimisticLockException | StaleStateException
+                 | PessimisticLockException | LockTimeoutException | LockAcquisitionException exception) {
             throw new WorkoutSessionConflictException("Sessão foi alterada por outra operação.", exception);
         } catch (DataIntegrityViolationException exception) {
             throw translateIntegrityViolation(exception);
         } catch (RuntimeException exception) {
             throw new PersistenceException("Falha ao persistir sessão de treino.", exception);
+        }
+    }
+
+    private void validatePlanningSnapshot(WorkoutSession session, WorkoutSessionPlanningProjection planning) {
+        if (!planning.personId().equals(session.getPersonId())
+                || !planning.cycleId().equals(session.getWorkoutCycleId())
+                || !planning.dayId().equals(session.getWorkoutDayId())
+                || planning.status() != WorkoutStatus.IN_PROGRESS
+                || !planning.snapshot().equals(session.getSnapshot())) {
+            throw new WorkoutSessionConflictException("Planejamento de origem foi alterado. Recarregue a ficha.");
+        }
+        if (session.getActivities().isEmpty()) {
+            throw new InvalidWorkoutSessionException("O dia de treino deve possuir pelo menos uma atividade planejada.");
+        }
+
+        Map<Long, WorkoutSessionPlanningProjection.Activity> byId = planning.activities().stream()
+                .collect(Collectors.toMap(activity -> activity.activityId().value(), Function.identity()));
+        if (byId.size() != session.getActivities().size()) {
+            throw new WorkoutSessionConflictException("Snapshot não corresponde à ficha completa do planejamento.");
+        }
+        for (WorkoutSessionActivity activity : session.getActivities()) {
+            WorkoutSessionPlanningProjection.Activity planned = byId.get(activity.getWorkoutActivityId().value());
+            if (planned == null || !planned.exerciseId().equals(activity.getExerciseId())) {
+                throw new WorkoutSessionConflictException("Atividade de origem foi alterada.");
+            }
+            if (!planned.snapshot().equals(activity.getSnapshot())) {
+                throw new WorkoutSessionConflictException("Prescrição foi alterada. Recarregue a ficha.");
+            }
+        }
+    }
+
+    private void removeDeletedSets(WorkoutSession source, WorkoutSessionEntity entity) {
+        boolean removed = false;
+        for (WorkoutSessionActivity activity : source.getActivities()) {
+            if (activity.getId() == null) {
+                continue;
+            }
+            Set<Long> retained = activity.getSets().stream().filter(set -> set.getId() != null)
+                    .map(set -> set.getId().value()).collect(Collectors.toSet());
+            for (var target : entity.getActivities()) {
+                if (activity.getId().value().equals(target.getId())) {
+                    removed |= target.getSets().removeIf(set -> !retained.contains(set.getId()));
+                }
+            }
+        }
+        if (removed) {
+            // Delete orphans before IDENTITY inserts can reuse their unique set numbers.
+            workoutSessionJpaRepository.flush();
         }
     }
 

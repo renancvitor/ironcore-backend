@@ -111,10 +111,6 @@ public final class WorkoutSessionActivityMapper {
 
         for (WorkoutSessionSet set : source.getSets()) {
             if (set.getId() == null) {
-                if (entity.getSets().stream().anyMatch(s -> s.getSetNumber().equals(set.getSetNumber()))) {
-                    throw new DataMappingException("Série existente deve preservar seu identificador.");
-                }
-
                 entity.getSets().add(WorkoutSessionSetMapper.toEntity(set, entity));
             } else {
                 WorkoutSessionSetEntity target = existing.get(set.getId().value());

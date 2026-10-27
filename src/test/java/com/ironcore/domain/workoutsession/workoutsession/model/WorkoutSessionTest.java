@@ -47,6 +47,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class WorkoutSessionTest {
     @Test
+    void shouldRejectCreationWithoutPlannedActivities() {
+        assertThatThrownBy(() -> WorkoutSession.register(OWNER, inProgressWorkoutCycle(), restoredWorkoutDay(),
+                List.of(), START)).isInstanceOf(InvalidWorkoutSessionException.class)
+                .hasMessage("O dia de treino deve possuir pelo menos uma atividade planejada.");
+    }
+
+    @Test
     void shouldStartWithHistoricalPrescriptionAndNoExecution() {
         WorkoutSession session = session();
         assertThat(session.getStatus()).isEqualTo(WorkoutSessionStatus.IN_PROGRESS);
@@ -174,7 +181,7 @@ class WorkoutSessionTest {
         try {
             TimeZone.setDefault(TimeZone.getTimeZone("Asia/Tokyo"));
             WorkoutSession session = WorkoutSession.register(OWNER, inProgressWorkoutCycle(), restoredWorkoutDay(),
-                    List.of(), Instant.parse(instant));
+                    List.of(source(restoredWorkoutActivity())), Instant.parse(instant));
             assertThat(session.getPerformedOn()).isEqualTo(LocalDate.parse(date));
             assertThat(session.getExpiresAt()).isEqualTo(Instant.parse(expiry));
         } finally {

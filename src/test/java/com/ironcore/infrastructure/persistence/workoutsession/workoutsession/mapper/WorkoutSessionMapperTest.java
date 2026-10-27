@@ -22,6 +22,31 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class WorkoutSessionMapperTest {
     @Test
+    void shouldReplaceRemovedSetWhilePreservingOtherSetIdentities() {
+        WorkoutSession source = session();
+        source.addSet(OWNER, ACTIVITY_ID, 1, null, null, null, "Original", START);
+        source.addSet(OWNER, ACTIVITY_ID, 2, null, null, null, "Mantida", START);
+        WorkoutSessionEntity entity = persisted(source);
+        WorkoutSession restored = WorkoutSessionMapper.toDomain(entity);
+        var activity = restored.getActivities().getFirst();
+        var removed = activity.getSets().getFirst().getId();
+        var retained = entity.getActivities().getFirst().getSets().getLast();
+        restored.removeSet(OWNER, activity.getId(), removed, START.plusSeconds(1));
+        restored.addSet(OWNER, activity.getId(), 1, null, null, null, "Substituta", START.plusSeconds(2));
+
+        WorkoutSessionMapper.applyExecution(restored, entity);
+
+        assertThat(entity.getActivities().getFirst().getSets()).hasSize(2).contains(retained);
+        assertThat(entity.getActivities().getFirst().getSets()).noneSatisfy(set ->
+                assertThat(set.getId()).isEqualTo(removed.value()));
+        assertThat(entity.getActivities().getFirst().getSets()).anySatisfy(set -> {
+            assertThat(set.getSetNumber()).isEqualTo(1);
+            assertThat(set.getId()).isNull();
+            assertThat(set.getNotes()).isEqualTo("Substituta");
+        });
+    }
+
+    @Test
     void shouldRoundTripAllSnapshotsExecutionAndRelationships() {
         WorkoutSession source = session();
         source.addSet(OWNER, ACTIVITY_ID, 1, new BigDecimal("45.00"), ActualLoadMode.PER_SIDE, 10, "Série", START);
