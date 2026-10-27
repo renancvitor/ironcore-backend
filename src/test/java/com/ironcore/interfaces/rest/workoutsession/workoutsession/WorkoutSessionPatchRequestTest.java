@@ -2,11 +2,11 @@ package com.ironcore.interfaces.rest.workoutsession.workoutsession;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.execution.UpdateWorkoutSessionActivityExecutionRequest;
-import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.loadmode.ChangeWorkoutSessionActivityLoadModeRequest;
-import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.notes.UpdateWorkoutSessionNotesRequest;
-import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.set.CreateWorkoutSessionSetRequest;
-import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.set.UpdateWorkoutSessionSetRequest;
+import com.ironcore.interfaces.rest.workoutsession.dto.execution.UpdateWorkoutSessionActivityExecutionRequest;
+import com.ironcore.interfaces.rest.workoutsession.dto.loadmode.ChangeWorkoutSessionActivityLoadModeRequest;
+import com.ironcore.interfaces.rest.workoutsession.dto.notes.UpdateWorkoutSessionNotesRequest;
+import com.ironcore.interfaces.rest.workoutsession.dto.set.CreateWorkoutSessionSetRequest;
+import com.ironcore.interfaces.rest.workoutsession.dto.set.UpdateWorkoutSessionSetRequest;
 import jakarta.validation.Validation;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
