@@ -92,11 +92,7 @@ public class WorkoutSessionSet {
     }
 
     public BigDecimal getNormalizedLoadKg() {
-        if (actualLoadKg == null) {
-            return null;
-        }
-        return actualLoadMode == ActualLoadMode.PER_SIDE
-                ? actualLoadKg.multiply(BigDecimal.valueOf(2)) : actualLoadKg;
+        return ExecutedLoad.normalize(actualLoadKg, actualLoadMode);
     }
 
     private void validateExecution(
