@@ -72,7 +72,6 @@ public class WorkoutSessionAdapter implements WorkoutSessionRepository {
                     throw new WorkoutSessionConflictException("Sessão foi alterada por outra operação.");
                 }
 
-                // Version the entire aggregate, including edits restricted to activities or sets.
                 entityManager.lock(entity, LockModeType.PESSIMISTIC_FORCE_INCREMENT);
                 removeDeletedSets(workoutSession, entity);
                 WorkoutSessionMapper.applyExecution(workoutSession, entity);
@@ -135,7 +134,6 @@ public class WorkoutSessionAdapter implements WorkoutSessionRepository {
             }
         }
         if (removed) {
-            // Delete orphans before IDENTITY inserts can reuse their unique set numbers.
             workoutSessionJpaRepository.flush();
         }
     }

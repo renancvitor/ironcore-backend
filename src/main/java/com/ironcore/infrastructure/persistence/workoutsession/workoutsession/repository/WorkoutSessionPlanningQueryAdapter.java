@@ -51,7 +51,6 @@ class WorkoutSessionPlanningQueryAdapter {
                 return Optional.empty();
             }
 
-            // FOR UPDATE on the day also blocks new activities through the planning FK.
             lockRows("""
                     SELECT id FROM workout_activities WHERE workout_day_id = :day ORDER BY id FOR UPDATE
                     """, dayId);
@@ -75,7 +74,6 @@ class WorkoutSessionPlanningQueryAdapter {
                     """).setParameter("day", dayId.value()).setParameter("cycle", cycleId)
                     .setParameter("person", personId.value()).getSingleResult();
 
-            // Joined REPEATABLE READ and SERIALIZABLE transactions can hide inserts committed before the day lock.
             if ("repeatable read".equals(header[4]) || "serializable".equals(header[4])) {
                 throw new WorkoutSessionConflictException("Não foi possível validar a prescrição nesta transação. Tente novamente.");
             }

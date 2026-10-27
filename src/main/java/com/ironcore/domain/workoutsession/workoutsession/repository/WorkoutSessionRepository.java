@@ -12,6 +12,5 @@ public interface WorkoutSessionRepository {
     Optional<WorkoutSession> findByIdAndPersonId(WorkoutSessionId id, PersonId personId);
     Optional<WorkoutSession> findInProgressByPersonId(PersonId personId);
 
-    // A null cursor starts a new scan; only owners of IN_PROGRESS sessions are returned.
     List<PersonId> findInProgressPersonIdsAfter(PersonId afterPersonId, int limit);
 }
