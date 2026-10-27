@@ -9,5 +9,6 @@ public enum AuditTargetType {
     EQUIPMENT_TYPE,
     WORKOUT_CYCLE,
     WORKOUT_DAY,
-    WORKOUT_ACTIVITY
+    WORKOUT_ACTIVITY,
+    WORKOUT_SESSION
 }
