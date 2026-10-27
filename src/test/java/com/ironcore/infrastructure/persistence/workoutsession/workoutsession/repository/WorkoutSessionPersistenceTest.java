@@ -563,7 +563,7 @@ class WorkoutSessionPersistenceTest {
         assertThat(jdbc.queryForObject("""
                 SELECT version FROM flyway_schema_history
                 WHERE success AND type = 'SQL' ORDER BY installed_rank DESC LIMIT 1
-                """, String.class)).isEqualTo("26");
+                """, String.class)).isEqualTo("27");
     }
 
     @Test

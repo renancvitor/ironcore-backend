@@ -615,7 +615,8 @@ class WorkoutSessionControllerTest {
             when(createWorkoutSessionSetUseCase.execute(any())).thenThrow(exception);
             mockMvc.perform(post(ENDPOINT + ACTIVITY + "/sets").with(authenticatedUser())
                             .contentType(MediaType.APPLICATION_JSON).content("{\"setNumber\":1,\"actualReps\":8}"))
-                    .andExpect(status().is(code)).andExpect(jsonPath("$.message").value(exception.getMessage()));
+                    .andExpect(status().is(code)).andExpect(jsonPath("$.message").value(
+                            code == 500 ? "Erro interno de persistência." : exception.getMessage()));
         }
     }
 
