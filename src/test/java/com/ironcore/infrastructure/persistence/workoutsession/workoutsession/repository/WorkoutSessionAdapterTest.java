@@ -5,8 +5,6 @@ import com.ironcore.domain.workoutsession.workoutsession.model.WorkoutSession;
 import com.ironcore.infrastructure.exception.PersistenceException;
 import com.ironcore.infrastructure.persistence.person.entity.PersonEntity;
 import com.ironcore.infrastructure.persistence.person.repository.PersonJpaRepository;
-import com.ironcore.infrastructure.persistence.workoutplanning.workoutactivity.repository.WorkoutActivityJpaRepository;
-import com.ironcore.infrastructure.persistence.workoutplanning.workoutday.repository.WorkoutDayJpaRepository;
 import com.ironcore.infrastructure.persistence.workoutsession.workoutsession.entity.WorkoutSessionEntity;
 import com.ironcore.infrastructure.persistence.workoutsession.workoutsession.mapper.WorkoutSessionMapper;
 import jakarta.persistence.EntityManager;
@@ -43,10 +41,6 @@ class WorkoutSessionAdapterTest {
     private WorkoutSessionJpaRepository workoutSessionJpaRepository;
     @Mock
     private PersonJpaRepository personJpaRepository;
-    @Mock
-    private WorkoutDayJpaRepository workoutDayJpaRepository;
-    @Mock
-    private WorkoutActivityJpaRepository workoutActivityJpaRepository;
     @Mock
     private EntityManager entityManager;
     @InjectMocks

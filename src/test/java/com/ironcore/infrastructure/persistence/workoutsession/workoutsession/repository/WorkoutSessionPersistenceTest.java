@@ -1,5 +1,6 @@
 package com.ironcore.infrastructure.persistence.workoutsession.workoutsession.repository;
 
+import com.ironcore.application.workoutsession.workoutsession.persistence.SaveWorkoutSessionService;
 import com.ironcore.domain.activitytype.model.ActivityType;
 import com.ironcore.domain.activitytype.valueobject.ActivityTypeCode;
 import com.ironcore.domain.activitytype.valueobject.ActivityTypeId;
@@ -18,6 +19,7 @@ import com.ironcore.domain.workoutplanning.workoutday.enums.WeekDay;
 import com.ironcore.domain.workoutplanning.workoutday.model.WorkoutDay;
 import com.ironcore.domain.workoutplanning.workoutday.valueobject.WorkoutDayId;
 import com.ironcore.domain.workoutsession.workoutsession.enums.WorkoutSessionStatus;
+import com.ironcore.domain.workoutsession.workoutsession.exception.InvalidWorkoutSessionException;
 import com.ironcore.domain.workoutsession.workoutsession.exception.WorkoutSessionConflictException;
 import com.ironcore.domain.workoutsession.workoutsession.model.WorkoutSession;
 import com.ironcore.domain.workoutsession.workoutsession.repository.WorkoutSessionRepository;
@@ -27,6 +29,8 @@ import com.ironcore.domain.workoutsession.workoutsessionset.valueobject.WorkoutS
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -36,8 +40,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.test.util.AopTestUtils;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -48,6 +57,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -57,6 +67,8 @@ import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.awaitility.Awaitility.await;
+import static org.mockito.Mockito.doAnswer;
 
 @DataJpaTest(showSql = false, properties = {
         "spring.jpa.hibernate.ddl-auto=validate",
@@ -64,7 +76,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
         "spring.jpa.show-sql=false"
 })
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import(WorkoutSessionAdapter.class)
+@Import({WorkoutSessionAdapter.class, WorkoutSessionPlanningQueryAdapter.class, SaveWorkoutSessionService.class})
 @ActiveProfiles("test")
 @Testcontainers
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -87,6 +99,12 @@ class WorkoutSessionPersistenceTest {
 
     @Autowired
     private WorkoutSessionRepository repository;
+    @Autowired
+    private SaveWorkoutSessionService saveService;
+    @Autowired
+    private PlatformTransactionManager transactionManager;
+    @MockitoSpyBean
+    private WorkoutSessionPlanningQueryAdapter planningQueryAdapter;
     @Autowired
     private JdbcTemplate jdbc;
     private PersonId owner;
@@ -129,7 +147,7 @@ class WorkoutSessionPersistenceTest {
 
     @Test
     void shouldPersistMixedSnapshotsWithoutCreatingExecutedSets() {
-        WorkoutSession saved = repository.save(newSession());
+        WorkoutSession saved = saveService.save(newSession());
         assertThat(saved.getId()).isNotNull();
         assertThat(saved.getVersion()).isNotNull();
         assertThat(saved.getPerformedOn()).isEqualTo(LocalDate.of(2026, 10, 26));
@@ -151,11 +169,11 @@ class WorkoutSessionPersistenceTest {
 
     @Test
     void shouldPreserveExecutionAndSnapshotsAfterAllOriginsAreDeleted() {
-        WorkoutSession saved = repository.save(newSession());
+        WorkoutSession saved = saveService.save(newSession());
         saved.addSet(owner, saved.getActivities().getFirst().getId(), 5, new BigDecimal("50.00"), ActualLoadMode.PER_SIDE, 8, "Extra", START.plusSeconds(1));
         saved.addSet(owner, saved.getActivities().getLast().getId(), 1, null, null, null, "Pausa", START.plusSeconds(2));
         saved.updateActivityExecution(owner, saved.getActivities().getLast().getId(), 20, new BigDecimal("2.00"), "Executado", START.plusSeconds(3));
-        saved = repository.save(saved);
+        saved = saveService.save(saved);
         var snapshots = saved.getActivities().stream().map(a -> a.getSnapshot()).toList();
         jdbc.update("UPDATE workout_cycles SET name = 'Alterado' WHERE id = ?", cycleId);
         jdbc.update("UPDATE workout_days SET title = 'Alterado' WHERE id = ?", dayId);
@@ -172,7 +190,7 @@ class WorkoutSessionPersistenceTest {
         jdbc.update("DELETE FROM workout_cycles WHERE id = ?", cycleId);
         jdbc.update("DELETE FROM exercises WHERE id IN (?, ?)", strengthExerciseId, cardioExerciseId);
         saved.updateNotes(owner, "Relato durante remoção da origem", START.plusSeconds(4));
-        saved = repository.save(saved);
+        saved = saveService.save(saved);
         assertThat(saved.getWorkoutCycleId()).isNull();
         assertThat(saved.getWorkoutDayId()).isNull();
         WorkoutSession historical = repository.findByIdAndPersonId(saved.getId(), owner).orElseThrow();
@@ -186,44 +204,44 @@ class WorkoutSessionPersistenceTest {
         });
         historical.expireIfDue(EXPIRY.plusSeconds(3600));
         historical.updateNotes(owner, "Histórico corrigido", EXPIRY.plusSeconds(3601));
-        historical = repository.save(historical);
+        historical = saveService.save(historical);
         assertThat(historical.getFinishedAt()).isEqualTo(EXPIRY);
         assertThat(historical.getStatus()).isEqualTo(WorkoutSessionStatus.CLOSED);
     }
 
     @Test
     void shouldAllowSequentialSessionsOnSameDayAndEditClosedExecution() {
-        WorkoutSession first = repository.save(newSession());
-        assertThatThrownBy(() -> repository.save(newSession())).isInstanceOf(WorkoutSessionConflictException.class);
+        WorkoutSession first = saveService.save(newSession());
+        assertThatThrownBy(() -> saveService.save(newSession())).isInstanceOf(WorkoutSessionConflictException.class);
         first.closeManually(owner, START.plusSeconds(30));
-        first = repository.save(first);
-        WorkoutSession second = repository.save(newSession());
+        first = saveService.save(first);
+        WorkoutSession second = saveService.save(newSession());
         assertThat(second.getId()).isNotEqualTo(first.getId());
         assertThat(repository.findInProgressByPersonId(owner).orElseThrow().getId()).isEqualTo(second.getId());
         first.addSet(owner, first.getActivities().getFirst().getId(), 1, new BigDecimal("0.00"), ActualLoadMode.TOTAL, 10, null, EXPIRY.plusSeconds(1));
         first.updateNotes(owner, "Texto posterior", EXPIRY.plusSeconds(2));
-        first = repository.save(first);
+        first = saveService.save(first);
         Long setId = first.getActivities().getFirst().getSets().getFirst().getId().value();
         first.updateSet(owner, first.getActivities().getFirst().getId(), new WorkoutSessionSetId(setId), new BigDecimal("10.00"), ActualLoadMode.TOTAL, 12, "Correção", EXPIRY.plusSeconds(3));
-        first = repository.save(first);
+        first = saveService.save(first);
         assertThat(first.getActivities().getFirst().getSets().getFirst().getId().value()).isEqualTo(setId);
         assertThat(first.getStatus()).isEqualTo(WorkoutSessionStatus.CLOSED);
         assertThat(first.getFinishedAt()).isEqualTo(START.plusSeconds(30));
         first.removeSet(owner, first.getActivities().getFirst().getId(), new WorkoutSessionSetId(setId), EXPIRY.plusSeconds(4));
-        first = repository.save(first);
+        first = saveService.save(first);
         assertThat(first.getActivities().getFirst().getSets()).isEmpty();
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM workout_session_sets WHERE id = ?", Long.class, setId)).isZero();
     }
 
     @Test
     void shouldRejectStaleAggregateEvenWhenOnlyChildExecutionChanges() {
-        WorkoutSession saved = repository.save(newSession());
+        WorkoutSession saved = saveService.save(newSession());
         WorkoutSession stale = repository.findByIdAndPersonId(saved.getId(), owner).orElseThrow();
         saved.addSet(owner, saved.getActivities().getFirst().getId(), 1, null, null, null, "Primeiro registro", START);
-        WorkoutSession updated = repository.save(saved);
+        WorkoutSession updated = saveService.save(saved);
         assertThat(updated.getVersion()).isGreaterThan(stale.getVersion());
         stale.updateNotes(owner, "Versão antiga", START.plusSeconds(1));
-        assertThatThrownBy(() -> repository.save(stale)).isInstanceOf(WorkoutSessionConflictException.class);
+        assertThatThrownBy(() -> saveService.save(stale)).isInstanceOf(WorkoutSessionConflictException.class);
         assertThat(repository.findByIdAndPersonId(saved.getId(), owner).orElseThrow()
                 .getActivities().getFirst().getSets()).hasSize(1);
     }
@@ -245,7 +263,7 @@ class WorkoutSessionPersistenceTest {
             Function<WorkoutSession, Callable<Boolean>> insert = session -> () -> {
                 barrier.await(10, TimeUnit.SECONDS);
                 try {
-                    repository.save(session);
+                    saveService.save(session);
                     return true;
                 } catch (WorkoutSessionConflictException ex) {
                     assertThat(rootCause(ex)).isInstanceOf(java.sql.SQLException.class);
@@ -264,12 +282,12 @@ class WorkoutSessionPersistenceTest {
 
     @Test
     void shouldRejectSavingSessionUnderAnotherOwner() {
-        WorkoutSession saved = repository.save(newSession());
+        WorkoutSession saved = saveService.save(newSession());
         WorkoutSession foreign = WorkoutSession.restore(saved.getId(), new PersonId(owner.value() + 1000),
                 saved.getWorkoutCycleId(), saved.getWorkoutDayId(), saved.getSnapshot(), saved.getPerformedOn(),
                 saved.getStartedAt(), saved.getFinishedAt(), saved.getStatus(), saved.getCloseReason(),
                 "Tentativa de alteração", saved.getCreatedAt(), saved.getUpdatedAt(), saved.getVersion(), saved.getActivities());
-        assertThatThrownBy(() -> repository.save(foreign)).isInstanceOf(WorkoutSessionConflictException.class);
+        assertThatThrownBy(() -> saveService.save(foreign)).isInstanceOf(WorkoutSessionConflictException.class);
         assertThat(repository.findByIdAndPersonId(saved.getId(), owner).orElseThrow().getNotes()).isNull();
     }
 
@@ -277,18 +295,18 @@ class WorkoutSessionPersistenceTest {
     void shouldRejectIncompleteEmptyOrStalePlanningCaptures() {
         WorkoutSession incomplete = newSession(cycleId, dayId, List.of(sources.getFirst()));
         WorkoutSession empty = newSession(cycleId, dayId, List.of());
-        assertThatThrownBy(() -> repository.save(incomplete)).isInstanceOf(WorkoutSessionConflictException.class);
-        assertThatThrownBy(() -> repository.save(empty)).isInstanceOf(WorkoutSessionConflictException.class);
+        assertThatThrownBy(() -> saveService.save(incomplete)).isInstanceOf(WorkoutSessionConflictException.class);
+        assertThatThrownBy(() -> saveService.save(empty)).isInstanceOf(WorkoutSessionConflictException.class);
         WorkoutSession stale = newSession();
         jdbc.update("UPDATE workout_activities SET sets = 8 WHERE workout_day_id = ?", dayId);
-        assertThatThrownBy(() -> repository.save(stale)).isInstanceOf(WorkoutSessionConflictException.class);
+        assertThatThrownBy(() -> saveService.save(stale)).isInstanceOf(WorkoutSessionConflictException.class);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM workout_sessions WHERE person_id = ?",
                 Long.class, owner.value())).isZero();
     }
 
     @Test
     void shouldPreventConcurrentEditsFromOverwritingExecution() throws Exception {
-        WorkoutSession saved = repository.save(newSession());
+        WorkoutSession saved = saveService.save(newSession());
         WorkoutSession first = repository.findByIdAndPersonId(saved.getId(), owner).orElseThrow();
         WorkoutSession second = repository.findByIdAndPersonId(saved.getId(), owner).orElseThrow();
         first.addSet(owner, first.getActivities().getFirst().getId(), 1,
@@ -300,7 +318,7 @@ class WorkoutSessionPersistenceTest {
             Function<WorkoutSession, Callable<Boolean>> update = session -> () -> {
                 barrier.await(10, TimeUnit.SECONDS);
                 try {
-                    repository.save(session);
+                    saveService.save(session);
                     return true;
                 } catch (WorkoutSessionConflictException exception) {
                     return false;
@@ -317,7 +335,7 @@ class WorkoutSessionPersistenceTest {
 
     @Test
     void shouldAllowDistinctCreationTimestampWithFreshMigrations() {
-        WorkoutSession saved = repository.save(newSession());
+        WorkoutSession saved = saveService.save(newSession());
         jdbc.update("""
                 UPDATE workout_sessions SET created_at = started_at + INTERVAL '1 second' WHERE id = ?
                 """, saved.getId().value());
@@ -333,8 +351,162 @@ class WorkoutSessionPersistenceTest {
     }
 
     @Test
+    void shouldRequireApplicationValidationForInitialPersistence() {
+        WorkoutSession unvalidated = newSession();
+        TransactionTemplate transaction = new TransactionTemplate(transactionManager);
+        assertThatThrownBy(() -> transaction.execute(status -> repository.save(unvalidated)))
+                .isInstanceOf(InvalidWorkoutSessionException.class);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM workout_sessions WHERE person_id = ?",
+                Long.class, owner.value())).isZero();
+    }
+
+    @Test
+    void shouldAcceptEquivalentDecimalScalesFromPlanningAndOnHistoryEdits() {
+        List<WorkoutSessionActivitySource> scaled = sources.stream().map(source -> {
+            WorkoutActivity a = source.activity();
+            WorkoutActivity copy = WorkoutActivity.restore(a.getId(), a.getWorkoutDayId(), a.getExerciseId(),
+                    a.getOrderIndex(), a.getSets(), a.getRepRangeMin(), a.getRepRangeMax(),
+                    a.getTargetLoadKg() == null ? null : a.getTargetLoadKg().stripTrailingZeros(),
+                    a.getTargetLoadText(), a.getDurationMinutes(),
+                    a.getDistanceKm() == null ? null : a.getDistanceKm().stripTrailingZeros(),
+                    a.getIntensityText(), a.getRestSeconds(), a.getNotes(), a.getCreatedAt(), a.getUpdatedAt());
+            return new WorkoutSessionActivitySource(copy, source.exercise(), source.activityType());
+        }).toList();
+        WorkoutSession saved = saveService.save(newSession(cycleId, dayId, scaled));
+        saved.updateNotes(owner, "Escalas equivalentes", START.plusSeconds(1));
+        saved = saveService.save(saved);
+        assertThat(saved.getNotes()).isEqualTo("Escalas equivalentes");
+        assertThat(saved.getActivities().getFirst().getSnapshot().plannedTargetLoadKg()).isEqualByComparingTo("45.50");
+        assertThat(saved.getActivities().getLast().getSnapshot().plannedDistanceKm()).isEqualByComparingTo("3.00");
+    }
+
+    @Test
+    void shouldRejectJoinedTransactionThatCouldHidePlanningInserts() {
+        WorkoutSession candidate = newSession();
+        TransactionTemplate transaction = new TransactionTemplate(transactionManager);
+        transaction.setIsolationLevel(TransactionDefinition.ISOLATION_REPEATABLE_READ);
+        assertThatThrownBy(() -> transaction.execute(status -> saveService.save(candidate)))
+                .isInstanceOf(WorkoutSessionConflictException.class);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM workout_sessions WHERE person_id = ?",
+                Long.class, owner.value())).isZero();
+    }
+
+    @Test
+    void shouldReadPlanningWithTheExistingDomainTextConventions() {
+        WorkoutSession candidate = newSession();
+        jdbc.update("UPDATE exercises SET name = ' Agachamento ' WHERE id = ?", strengthExerciseId);
+        jdbc.update("UPDATE workout_cycles SET name = ' Ciclo histórico ' WHERE id = ?", cycleId);
+        jdbc.update("UPDATE workout_days SET title = ' Treino misto ' WHERE id = ?", dayId);
+        jdbc.update("UPDATE workout_activities SET notes = ' Prescrição original ' WHERE workout_day_id = ?", dayId);
+        jdbc.update("UPDATE activity_types SET code = ' strength ' WHERE id = ?", strengthTypeId);
+        try {
+            assertThat(saveService.save(candidate).getSnapshot()).isEqualTo(candidate.getSnapshot());
+        } finally {
+            jdbc.update("UPDATE activity_types SET code = 'STRENGTH' WHERE id = ?", strengthTypeId);
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"LOAD", "DISTANCE"})
+    void shouldRejectActualNumericChangesInPlanning(String field) {
+        WorkoutSession stale = newSession();
+        if ("LOAD".equals(field)) {
+            jdbc.update("UPDATE workout_activities SET target_load_kg = 45.51 WHERE id = ?",
+                    sources.getFirst().activity().getId().value());
+        } else {
+            jdbc.update("UPDATE workout_activities SET distance_km = 3.01 WHERE id = ?",
+                    sources.getLast().activity().getId().value());
+        }
+        assertThatThrownBy(() -> saveService.save(stale)).isInstanceOf(WorkoutSessionConflictException.class);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM workout_sessions WHERE person_id = ?",
+                Long.class, owner.value())).isZero();
+    }
+
+    @Test
+    void shouldRejectInitialSnapshotOwnedByAnotherPerson() {
+        PersonId other = new PersonId(owner.value() + 1000);
+        WorkoutCycle cycle = WorkoutCycle.restore(new WorkoutCycleId(cycleId), other, "Ciclo histórico",
+                new TrainingGoalId(goalId), LocalDate.of(2026, 10, 1), null, null, WeekDay.SUNDAY,
+                WorkoutStatus.IN_PROGRESS, WorkoutOrigin.MANUAL, null, CREATED, null);
+        WorkoutDay day = WorkoutDay.restore(new WorkoutDayId(dayId), cycle.getId(), WeekDay.MONDAY,
+                "Treino misto", 1, CREATED, null);
+        WorkoutSession foreign = WorkoutSession.register(other, cycle, day, sources, START);
+        assertThatThrownBy(() -> saveService.save(foreign)).isInstanceOf(WorkoutSessionConflictException.class);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM workout_sessions WHERE person_id = ?",
+                Long.class, owner.value())).isZero();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"UPDATE", "INSERT", "DELETE", "CATALOG", "CYCLE", "DAY"})
+    void shouldKeepPlanningStableUntilSessionIsPersisted(String operation) throws Exception {
+        CountDownLatch captured = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        WorkoutSession candidate = newSession();
+        Long extraExerciseId = "INSERT".equals(operation) ? exercise("Exercício adicional", strengthTypeId) : null;
+        WorkoutSessionPlanningQueryAdapter queryTarget = AopTestUtils.getUltimateTargetObject(planningQueryAdapter);
+        doAnswer(invocation -> {
+            Object projection = invocation.callRealMethod();
+            captured.countDown();
+            if (!release.await(10, TimeUnit.SECONDS)) {
+                throw new IllegalStateException("Session creation was not released");
+            }
+            return projection;
+        }).when(queryTarget).lockByDayIdAndPersonId(new WorkoutDayId(dayId), owner);
+
+        try (ExecutorService executor = Executors.newFixedThreadPool(2)) {
+            Future<WorkoutSession> creation = executor.submit(() -> saveService.save(candidate));
+            try {
+                assertThat(captured.await(10, TimeUnit.SECONDS)).isTrue();
+                Future<Integer> edit = executor.submit(() -> switch (operation) {
+                    case "UPDATE" -> jdbc.update("""
+                            /* session-planning-edit */ UPDATE workout_activities SET target_load_kg = 46.50 WHERE id = ?
+                            """, sources.getFirst().activity().getId().value());
+                    case "INSERT" -> jdbc.update("""
+                            /* session-planning-edit */ INSERT INTO workout_activities
+                                (workout_day_id, exercise_id, order_index, created_at) VALUES (?, ?, 3, now())
+                            """, dayId, extraExerciseId);
+                    case "DELETE" -> jdbc.update("""
+                            /* session-planning-edit */ DELETE FROM workout_activities WHERE id = ?
+                            """, sources.getLast().activity().getId().value());
+                    case "CATALOG" -> jdbc.update("""
+                            /* session-planning-edit */ UPDATE exercises SET name = 'Nome alterado' WHERE id = ?
+                            """, strengthExerciseId);
+                    case "CYCLE" -> jdbc.update("""
+                            /* session-planning-edit */ UPDATE workout_cycles SET workout_status = 'COMPLETED' WHERE id = ?
+                            """, cycleId);
+                    case "DAY" -> jdbc.update("""
+                            /* session-planning-edit */ UPDATE workout_days SET title = 'Título alterado' WHERE id = ?
+                            """, dayId);
+                    default -> throw new IllegalArgumentException(operation);
+                });
+                await().atMost(5, TimeUnit.SECONDS).until(() -> Boolean.TRUE.equals(jdbc.queryForObject("""
+                        SELECT EXISTS (SELECT 1 FROM pg_stat_activity
+                        WHERE datname = current_database() AND query LIKE '/* session-planning-edit */%'
+                          AND wait_event_type = 'Lock')
+                        """, Boolean.class)));
+                assertThat(edit.isDone()).isFalse();
+                release.countDown();
+                WorkoutSession saved = creation.get(10, TimeUnit.SECONDS);
+                assertThat(edit.get(10, TimeUnit.SECONDS)).isEqualTo(1);
+                WorkoutSession history = repository.findByIdAndPersonId(saved.getId(), owner).orElseThrow();
+                assertThat(history.getSnapshot()).isEqualTo(candidate.getSnapshot());
+                assertThat(history.getActivities()).extracting(activity -> activity.getSnapshot())
+                        .containsExactlyElementsOf(candidate.getActivities().stream()
+                                .map(activity -> activity.getSnapshot()).toList());
+            } finally {
+                release.countDown();
+            }
+        } finally {
+            if (extraExerciseId != null) {
+                jdbc.update("DELETE FROM workout_activities WHERE exercise_id = ?", extraExerciseId);
+                jdbc.update("DELETE FROM exercises WHERE id = ?", extraExerciseId);
+            }
+        }
+    }
+
+    @Test
     void shouldEnforceSetNumbersForeignKeysAndExecutionPairsInDatabase() {
-        WorkoutSession saved = repository.save(newSession());
+        WorkoutSession saved = saveService.save(newSession());
         Long activityId = saved.getActivities().getLast().getId().value();
         jdbc.update("""
                 INSERT INTO workout_session_sets (workout_session_activity_id, set_number, notes, created_at)

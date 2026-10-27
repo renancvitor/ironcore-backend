@@ -42,6 +42,9 @@ public record WorkoutSessionActivitySnapshot(
                 || (plannedIntensityText != null && plannedIntensityText.length() > 100)) {
             throw new InvalidWorkoutSessionActivityException("Texto planejado excede o tamanho máximo.");
         }
+
+        plannedTargetLoadKg = plannedTargetLoadKg == null ? null : plannedTargetLoadKg.stripTrailingZeros();
+        plannedDistanceKm = plannedDistanceKm == null ? null : plannedDistanceKm.stripTrailingZeros();
     }
 
     public static WorkoutSessionActivitySnapshot capture(WorkoutActivity activity, Exercise exercise, ActivityType type) {

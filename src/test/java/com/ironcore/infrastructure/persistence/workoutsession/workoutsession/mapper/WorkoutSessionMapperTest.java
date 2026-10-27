@@ -56,6 +56,25 @@ class WorkoutSessionMapperTest {
     }
 
     @Test
+    void shouldAcceptEquivalentDecimalScalesInPersistedSnapshots() {
+        WorkoutSessionEntity entity = persisted(session());
+        WorkoutSession source = WorkoutSessionMapper.toDomain(entity);
+        var activity = entity.getActivities().getFirst();
+        activity.setPlannedTargetLoadKgSnapshot(new BigDecimal("90.000"));
+        activity.setPlannedDistanceKmSnapshot(new BigDecimal("6.0"));
+        source.updateNotes(OWNER, "Relato", START.plusSeconds(1));
+        WorkoutSessionMapper.applyExecution(source, entity);
+        assertThat(WorkoutSessionMapper.toDomain(entity).getNotes()).isEqualTo("Relato");
+        activity.setPlannedTargetLoadKgSnapshot(new BigDecimal("90.01"));
+        assertThatThrownBy(() -> WorkoutSessionMapper.applyExecution(source, entity))
+                .isInstanceOf(DataMappingException.class);
+        activity.setPlannedTargetLoadKgSnapshot(new BigDecimal("90.00"));
+        activity.setPlannedDistanceKmSnapshot(new BigDecimal("6.01"));
+        assertThatThrownBy(() -> WorkoutSessionMapper.applyExecution(source, entity))
+                .isInstanceOf(DataMappingException.class);
+    }
+
+    @Test
     void shouldRejectSnapshotChangesAndReopening() {
         WorkoutSessionEntity entity = persisted(session());
         WorkoutSession original = WorkoutSessionMapper.toDomain(entity);
