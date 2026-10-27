@@ -91,6 +91,14 @@ public class WorkoutSessionSet {
         updateSet(actualLoadKg, actualLoadKg == null ? null : mode, actualReps, notes, updatedAt);
     }
 
+    public BigDecimal getNormalizedLoadKg() {
+        if (actualLoadKg == null) {
+            return null;
+        }
+        return actualLoadMode == ActualLoadMode.PER_SIDE
+                ? actualLoadKg.multiply(BigDecimal.valueOf(2)) : actualLoadKg;
+    }
+
     private void validateExecution(
             BigDecimal actualLoadKg,
             ActualLoadMode actualLoadMode,
@@ -99,16 +107,13 @@ public class WorkoutSessionSet {
     ) {
         validateDecimal(actualLoadKg, "Carga executada");
         requirePositiveIfPresent(actualReps, "Repetições executadas");
-        if ((actualLoadKg == null) != (actualReps == null)) {
-            throw new InvalidWorkoutSessionSetException("Carga e repetições devem ser informadas juntas.");
-        }
         if (actualLoadKg != null && actualLoadMode == null) {
             throw new InvalidWorkoutSessionSetException("Modo da carga é obrigatório quando houver carga.");
         }
         if (actualLoadKg == null && actualLoadMode != null) {
             throw new InvalidWorkoutSessionSetException("Modo da carga exige carga informada.");
         }
-        if (actualLoadKg == null && (notes == null || notes.isBlank())) {
+        if (actualLoadKg == null && actualReps == null && (notes == null || notes.isBlank())) {
             throw new InvalidWorkoutSessionSetException("Série vazia não deve ser persistida.");
         }
     }

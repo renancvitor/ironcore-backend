@@ -4,6 +4,7 @@ import com.ironcore.domain.exercise.valueobject.ExerciseId;
 import com.ironcore.domain.workoutplanning.workoutactivity.valueobject.WorkoutActivityId;
 import com.ironcore.domain.workoutsession.workoutsessionactivity.model.WorkoutSessionActivity;
 import com.ironcore.domain.workoutsession.workoutsessionactivity.valueobject.WorkoutSessionActivityId;
+import com.ironcore.domain.workoutsession.workoutsessionset.enums.ActualLoadMode;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -31,7 +32,8 @@ public record WorkoutSessionActivityDetailResult(
         String notes,
         Instant createdAt,
         Instant updatedAt,
-        List<WorkoutSessionSetDetailResult> sets
+        List<WorkoutSessionSetDetailResult> sets,
+        ActualLoadMode actualLoadMode
 ) {
 
     public static WorkoutSessionActivityDetailResult from(WorkoutSessionActivity activity) {
@@ -57,7 +59,8 @@ public record WorkoutSessionActivityDetailResult(
                 activity.getNotes(),
                 activity.getCreatedAt(),
                 activity.getUpdatedAt(),
-                activity.getSets().stream().map(WorkoutSessionSetDetailResult::from).toList()
+                activity.getSets().stream().map(WorkoutSessionSetDetailResult::from).toList(),
+                activity.getActualLoadMode()
         );
     }
 }

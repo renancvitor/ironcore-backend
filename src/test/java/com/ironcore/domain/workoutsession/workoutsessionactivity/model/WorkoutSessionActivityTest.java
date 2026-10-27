@@ -3,6 +3,8 @@ package com.ironcore.domain.workoutsession.workoutsessionactivity.model;
 import com.ironcore.domain.workoutsession.workoutsessionactivity.exception.InvalidWorkoutSessionActivityException;
 import com.ironcore.domain.workoutsession.workoutsessionactivity.valueobject.WorkoutSessionActivityId;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -42,5 +44,31 @@ class WorkoutSessionActivityTest {
         assertThat(activity.getActualDurationMinutes()).isNull();
         assertThat(activity.getNotes()).isNull();
         assertThat(activity.getUpdatedAt()).isNull();
+    }
+
+    @Test
+    void shouldRecordDurationDistanceAndNotesIndependently() {
+        var activity = session().getActivities().getFirst();
+        activity.updateExecution(null, new BigDecimal("0.00"), null, START.plusSeconds(1));
+        assertThat(activity.getActualDurationMinutes()).isNull();
+        assertThat(activity.getActualDistanceKm()).isEqualByComparingTo("0");
+        activity.updateExecution(30, null, null, START.plusSeconds(2));
+        assertThat(activity.getActualDurationMinutes()).isEqualTo(30);
+        assertThat(activity.getActualDistanceKm()).isNull();
+        activity.updateExecution(null, null, "Relato", START.plusSeconds(3));
+        assertThat(activity.getActualDurationMinutes()).isNull();
+        assertThat(activity.getNotes()).isEqualTo("Relato");
+        assertThat(activity.getSets()).isEmpty();
+    }
+
+    @ParameterizedTest
+    @CsvSource({"0,", "-1,", ",-0.01", ",0.001", ",1000000.00"})
+    void shouldRejectInvalidIndependentMetrics(Integer duration, BigDecimal distance) {
+        var activity = session().getActivities().getFirst();
+        assertThatThrownBy(() -> activity.updateExecution(duration, distance, "Inválido", START.plusSeconds(1)))
+                .isInstanceOf(InvalidWorkoutSessionActivityException.class);
+        assertThat(activity.getActualDurationMinutes()).isNull();
+        assertThat(activity.getActualDistanceKm()).isNull();
+        assertThat(activity.getNotes()).isNull();
     }
 }

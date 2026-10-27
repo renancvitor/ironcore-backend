@@ -7,22 +7,83 @@ import com.ironcore.application.workoutsession.workoutsession.detail.WorkoutSess
 import com.ironcore.application.workoutsession.workoutsession.detail.WorkoutSessionDetailResult;
 import com.ironcore.application.workoutsession.workoutsession.detail.WorkoutSessionSetDetailResult;
 import com.ironcore.application.workoutsession.workoutsession.inprogress.GetInProgressWorkoutSessionCommand;
+import com.ironcore.application.workoutsession.workoutsession.notes.UpdateWorkoutSessionNotesCommand;
 import com.ironcore.application.workoutsession.workoutsession.start.StartWorkoutSessionCommand;
 import com.ironcore.application.workoutsession.workoutsession.start.StartWorkoutSessionResult;
+import com.ironcore.application.workoutsession.workoutsessionactivity.execution.UpdateWorkoutSessionActivityExecutionCommand;
+import com.ironcore.application.workoutsession.workoutsessionactivity.loadmode.ChangeWorkoutSessionActivityLoadModeCommand;
+import com.ironcore.application.workoutsession.workoutsessionset.create.CreateWorkoutSessionSetCommand;
+import com.ironcore.application.workoutsession.workoutsessionset.delete.DeleteWorkoutSessionSetCommand;
+import com.ironcore.application.workoutsession.workoutsessionset.update.UpdateWorkoutSessionSetCommand;
 import com.ironcore.domain.workoutplanning.workoutcycle.valueobject.WorkoutCycleId;
 import com.ironcore.domain.workoutplanning.workoutday.valueobject.WorkoutDayId;
 import com.ironcore.domain.workoutsession.workoutsession.valueobject.WorkoutSessionId;
+import com.ironcore.domain.workoutsession.workoutsessionactivity.valueobject.WorkoutSessionActivityId;
+import com.ironcore.domain.workoutsession.workoutsessionset.valueobject.WorkoutSessionSetId;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
 import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.close.CloseWorkoutSessionResponse;
 import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.detail.GetWorkoutSessionDetailResponse;
 import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.detail.WorkoutSessionActivityDetailResponse;
 import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.detail.WorkoutSessionSetDetailResponse;
+import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.execution.UpdateWorkoutSessionActivityExecutionRequest;
+import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.loadmode.ChangeWorkoutSessionActivityLoadModeRequest;
+import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.notes.UpdateWorkoutSessionNotesRequest;
+import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.set.CreateWorkoutSessionSetRequest;
+import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.set.UpdateWorkoutSessionSetRequest;
 import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.start.StartWorkoutSessionRequest;
 import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.start.StartWorkoutSessionResponse;
 
 public final class WorkoutSessionRestMapper {
 
     private WorkoutSessionRestMapper() {
+    }
+
+    public static UpdateWorkoutSessionNotesCommand toUpdateWorkoutSessionNotesCommand(
+            AuthenticatedUser authenticatedUser, Long id, UpdateWorkoutSessionNotesRequest request
+    ) {
+        return new UpdateWorkoutSessionNotesCommand(authenticatedUser.userId(), new WorkoutSessionId(id),
+                request.getNotes(), request.hasNotes());
+    }
+
+    public static UpdateWorkoutSessionActivityExecutionCommand toUpdateWorkoutSessionActivityExecutionCommand(
+            AuthenticatedUser authenticatedUser, Long id, Long activityId, UpdateWorkoutSessionActivityExecutionRequest request
+    ) {
+        return new UpdateWorkoutSessionActivityExecutionCommand(authenticatedUser.userId(), new WorkoutSessionId(id),
+                new WorkoutSessionActivityId(activityId),
+                request.getActualDurationMinutes(), request.hasActualDurationMinutes(),
+                request.getActualDistanceKm(), request.hasActualDistanceKm(), request.getNotes(), request.hasNotes());
+    }
+
+    public static CreateWorkoutSessionSetCommand toCreateWorkoutSessionSetCommand(
+            AuthenticatedUser authenticatedUser, Long id, Long activityId, CreateWorkoutSessionSetRequest request
+    ) {
+        return new CreateWorkoutSessionSetCommand(authenticatedUser.userId(), new WorkoutSessionId(id),
+                new WorkoutSessionActivityId(activityId),
+                request.setNumber(), request.actualLoadKg(), request.actualLoadMode(), request.actualReps(), request.notes());
+    }
+
+    public static UpdateWorkoutSessionSetCommand toUpdateWorkoutSessionSetCommand(
+            AuthenticatedUser authenticatedUser, Long id, Long activityId, Long setId, UpdateWorkoutSessionSetRequest request
+    ) {
+        return new UpdateWorkoutSessionSetCommand(authenticatedUser.userId(), new WorkoutSessionId(id),
+                new WorkoutSessionActivityId(activityId), new WorkoutSessionSetId(setId),
+                request.getActualLoadKg(), request.hasActualLoadKg(), request.getActualLoadMode(), request.hasActualLoadMode(),
+                request.getActualReps(), request.hasActualReps(), request.getNotes(), request.hasNotes());
+    }
+
+    public static DeleteWorkoutSessionSetCommand toDeleteWorkoutSessionSetCommand(
+            AuthenticatedUser authenticatedUser, Long id, Long activityId, Long setId
+    ) {
+        return new DeleteWorkoutSessionSetCommand(authenticatedUser.userId(), new WorkoutSessionId(id),
+                new WorkoutSessionActivityId(activityId), new WorkoutSessionSetId(setId));
+    }
+
+    public static ChangeWorkoutSessionActivityLoadModeCommand toChangeWorkoutSessionActivityLoadModeCommand(
+            AuthenticatedUser authenticatedUser, Long id, Long activityId, ChangeWorkoutSessionActivityLoadModeRequest request
+    ) {
+        return new ChangeWorkoutSessionActivityLoadModeCommand(authenticatedUser.userId(), new WorkoutSessionId(id),
+                new WorkoutSessionActivityId(activityId),
+                request.actualLoadMode());
     }
 
     public static CloseWorkoutSessionCommand toCloseCommand(AuthenticatedUser authenticatedUser, Long id) {
@@ -93,7 +154,7 @@ public final class WorkoutSessionRestMapper {
         );
     }
 
-    private static WorkoutSessionActivityDetailResponse toActivityResponse(WorkoutSessionActivityDetailResult result) {
+    public static WorkoutSessionActivityDetailResponse toActivityResponse(WorkoutSessionActivityDetailResult result) {
         return new WorkoutSessionActivityDetailResponse(
                 result.id().value(),
                 result.workoutActivityId() == null ? null : result.workoutActivityId().value(),
@@ -116,11 +177,12 @@ public final class WorkoutSessionRestMapper {
                 result.notes(),
                 result.createdAt(),
                 result.updatedAt(),
-                result.sets().stream().map(WorkoutSessionRestMapper::toSetResponse).toList()
+                result.sets().stream().map(WorkoutSessionRestMapper::toSetResponse).toList(),
+                result.actualLoadMode()
         );
     }
 
-    private static WorkoutSessionSetDetailResponse toSetResponse(WorkoutSessionSetDetailResult result) {
+    public static WorkoutSessionSetDetailResponse toSetResponse(WorkoutSessionSetDetailResult result) {
         return new WorkoutSessionSetDetailResponse(
                 result.id().value(),
                 result.setNumber(),
@@ -129,7 +191,8 @@ public final class WorkoutSessionRestMapper {
                 result.actualReps(),
                 result.notes(),
                 result.createdAt(),
-                result.updatedAt()
+                result.updatedAt(),
+                result.normalizedLoadKg()
         );
     }
 }
