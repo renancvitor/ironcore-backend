@@ -3,6 +3,7 @@ package com.ironcore.interfaces.rest.exception.handler;
 import com.ironcore.application.exception.*;
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
 import com.ironcore.domain.exception.DomainException;
+import com.ironcore.domain.workoutsession.workoutsession.exception.WorkoutSessionConflictException;
 import com.ironcore.domain.logging.error.enums.ErrorCodeType;
 import com.ironcore.infrastructure.exception.*;
 import com.ironcore.infrastructure.security.jwt.exception.JwtTokenException;
@@ -38,6 +39,20 @@ import java.util.UUID;
 public class GlobalExceptionHandler {
 
     private final ErrorLogPublisher publisher;
+
+    @ExceptionHandler(WorkoutSessionConflictException.class)
+    public ResponseEntity<ApiErrorResponse> handleWorkoutSessionConflictException(
+            WorkoutSessionConflictException exception,
+            HttpServletRequest request
+    ) {
+        publishErrorLog(ErrorCodeType.VALIDATION_ERROR, exception, request);
+
+        ApiErrorResponse response = ApiErrorResponseFactory.create(
+                HttpStatus.CONFLICT, exception.getMessage(), request
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
 
     @ExceptionHandler(DomainException.class)
     public ResponseEntity<ApiErrorResponse> handleDomainException(
