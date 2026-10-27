@@ -37,9 +37,14 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class GetWorkoutSessionDetailUseCaseTest {
 
-    @Mock private UserRepository userRepository;
-    @Mock private PersonRepository personRepository;
-    @Mock private WorkoutSessionRepository workoutSessionRepository;
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private PersonRepository personRepository;
+
+    @Mock
+    private WorkoutSessionRepository workoutSessionRepository;
 
     private GetWorkoutSessionDetailUseCase useCase;
     private final User user = User.restore(new UserId(77L), "Renan", restoredPerson().getId(),
@@ -101,11 +106,16 @@ class GetWorkoutSessionDetailUseCaseTest {
             assertThat(activity.plannedSetsSnapshot()).isEqualTo(source.getSnapshot().plannedSets());
             assertThat(activity.plannedRepRangeMinSnapshot()).isEqualTo(source.getSnapshot().plannedRepRangeMin());
             assertThat(activity.plannedRepRangeMaxSnapshot()).isEqualTo(source.getSnapshot().plannedRepRangeMax());
-            assertThat(activity.plannedTargetLoadKgSnapshot()).isEqualByComparingTo(source.getSnapshot().plannedTargetLoadKg());
-            assertThat(activity.plannedTargetLoadTextSnapshot()).isEqualTo(source.getSnapshot().plannedTargetLoadText());
-            assertThat(activity.plannedDurationMinutesSnapshot()).isEqualTo(source.getSnapshot().plannedDurationMinutes());
-            assertThat(activity.plannedDistanceKmSnapshot()).isEqualByComparingTo(source.getSnapshot().plannedDistanceKm());
-            assertThat(activity.plannedIntensityTextSnapshot()).isEqualTo(source.getSnapshot().plannedIntensityText());
+            assertThat(activity.plannedTargetLoadKgSnapshot())
+                    .isEqualByComparingTo(source.getSnapshot().plannedTargetLoadKg());
+            assertThat(activity.plannedTargetLoadTextSnapshot())
+                    .isEqualTo(source.getSnapshot().plannedTargetLoadText());
+            assertThat(activity.plannedDurationMinutesSnapshot())
+                    .isEqualTo(source.getSnapshot().plannedDurationMinutes());
+            assertThat(activity.plannedDistanceKmSnapshot())
+                    .isEqualByComparingTo(source.getSnapshot().plannedDistanceKm());
+            assertThat(activity.plannedIntensityTextSnapshot())
+                    .isEqualTo(source.getSnapshot().plannedIntensityText());
             assertThat(activity.plannedRestSecondsSnapshot()).isEqualTo(source.getSnapshot().plannedRestSeconds());
             assertThat(activity.plannedNotesSnapshot()).isEqualTo(source.getSnapshot().plannedNotes());
             assertThat(activity.actualDurationMinutes()).isEqualTo(20);
@@ -152,7 +162,8 @@ class GetWorkoutSessionDetailUseCaseTest {
             assertThat(result.workoutCycleNameSnapshot()).isEqualTo(original.getSnapshot().workoutCycleName());
             assertThat(result.activities().getFirst().workoutActivityId()).isNull();
             assertThat(result.activities().getFirst().exerciseId()).isNull();
-            assertThat(result.activities().getFirst().exerciseNameSnapshot()).isEqualTo(source.getSnapshot().exerciseName());
+            assertThat(result.activities().getFirst().exerciseNameSnapshot())
+                    .isEqualTo(source.getSnapshot().exerciseName());
             assertThat(result.activities().getFirst().sets()).isEmpty();
             verify(workoutSessionRepository, never()).save(any());
         }
@@ -198,7 +209,8 @@ class GetWorkoutSessionDetailUseCaseTest {
 
     private void assertSessionNotFound() {
         givenPerson();
-        when(workoutSessionRepository.findByIdAndPersonId(command.id(), person.getId())).thenReturn(Optional.empty());
+        when(workoutSessionRepository.findByIdAndPersonId(command.id(), person.getId()))
+                .thenReturn(Optional.empty());
         assertThatThrownBy(() -> useCase.execute(command)).isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Sessão de treino não encontrada.");
         verify(workoutSessionRepository).findByIdAndPersonId(command.id(), person.getId());

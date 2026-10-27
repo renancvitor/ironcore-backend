@@ -67,16 +67,35 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class StartWorkoutSessionUseCaseTest {
 
-    @Mock private UserRepository userRepository;
-    @Mock private PersonRepository personRepository;
-    @Mock private WorkoutCycleRepository workoutCycleRepository;
-    @Mock private WorkoutDayRepository workoutDayRepository;
-    @Mock private WorkoutActivityRepository workoutActivityRepository;
-    @Mock private ExerciseRepository exerciseRepository;
-    @Mock private ActivityTypeRepository activityTypeRepository;
-    @Mock private WorkoutSessionRepository workoutSessionRepository;
-    @Mock private Clock clock;
-    @Mock private AuditLogPublisher publisher;
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private PersonRepository personRepository;
+
+    @Mock
+    private WorkoutCycleRepository workoutCycleRepository;
+
+    @Mock
+    private WorkoutDayRepository workoutDayRepository;
+
+    @Mock
+    private WorkoutActivityRepository workoutActivityRepository;
+
+    @Mock
+    private ExerciseRepository exerciseRepository;
+
+    @Mock
+    private ActivityTypeRepository activityTypeRepository;
+
+    @Mock
+    private WorkoutSessionRepository workoutSessionRepository;
+
+    @Mock
+    private Clock clock;
+
+    @Mock
+    private AuditLogPublisher publisher;
 
     private StartWorkoutSessionUseCase useCase;
     private final User user = User.restore(new UserId(77L), "Renan", restoredPerson().getId(),
@@ -106,7 +125,8 @@ class StartWorkoutSessionUseCaseTest {
             ActivityType type = restoreActivityType();
             givenCatalog(exercise, type);
             when(clock.instant()).thenReturn(START);
-            when(workoutSessionRepository.save(any())).thenAnswer(invocation -> restoredSession(invocation.getArgument(0)));
+            when(workoutSessionRepository.save(any()))
+                    .thenAnswer(invocation -> restoredSession(invocation.getArgument(0)));
 
             StartWorkoutSessionResult result = useCase.execute(command);
 
@@ -184,7 +204,8 @@ class StartWorkoutSessionUseCaseTest {
             when(exerciseRepository.findById(cardio.getId())).thenReturn(Optional.of(cardio));
             when(activityTypeRepository.findById(cardioType.getId())).thenReturn(Optional.of(cardioType));
             when(clock.instant()).thenReturn(START);
-            when(workoutSessionRepository.save(any())).thenAnswer(invocation -> restoredSession(invocation.getArgument(0)));
+            when(workoutSessionRepository.save(any()))
+                    .thenAnswer(invocation -> restoredSession(invocation.getArgument(0)));
 
             useCase.execute(command);
 
@@ -212,14 +233,16 @@ class StartWorkoutSessionUseCaseTest {
             givenCatalog(restoreInactiveExercise(), ActivityType.restore(
                     type.getId(), type.getCode(), type.getDisplayName(), false, type.getSortOrder()));
             when(clock.instant()).thenReturn(START);
-            when(workoutSessionRepository.save(any())).thenAnswer(invocation -> restoredSession(invocation.getArgument(0)));
+            when(workoutSessionRepository.save(any()))
+                    .thenAnswer(invocation -> restoredSession(invocation.getArgument(0)));
 
             assertThat(useCase.execute(command).id()).isNotNull();
         }
 
         @Test
         void shouldAllowNewSessionForSameDayWhenPreviousSessionIsClosed() {
-            WorkoutSession previous = com.ironcore.domain.workoutsession.workoutsession.WorkoutSessionTestFactory.session();
+            WorkoutSession previous =
+                    com.ironcore.domain.workoutsession.workoutsession.WorkoutSessionTestFactory.session();
             previous.closeManually(person.getId(), START.plusSeconds(10));
             givenPlanning(cycle, day, List.of(activity));
             givenCatalog(restoreExercise(), restoreActivityType());

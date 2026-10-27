@@ -33,19 +33,26 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class GetInProgressWorkoutSessionUseCaseTest {
 
-    @Mock private UserRepository userRepository;
-    @Mock private PersonRepository personRepository;
-    @Mock private WorkoutSessionRepository workoutSessionRepository;
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private PersonRepository personRepository;
+
+    @Mock
+    private WorkoutSessionRepository workoutSessionRepository;
 
     private GetInProgressWorkoutSessionUseCase useCase;
     private final User user = User.restore(new UserId(77L), "Renan", restoredPerson().getId(),
             activeUser().getEmail(), activeUser().getPasswordHash(), false, true, activeUser().getCreatedAt(), null);
     private final Person person = restoredPerson();
-    private final GetInProgressWorkoutSessionCommand command = new GetInProgressWorkoutSessionCommand(user.getId());
+    private final GetInProgressWorkoutSessionCommand command =
+            new GetInProgressWorkoutSessionCommand(user.getId());
 
     @BeforeEach
     void setUp() {
-        useCase = new GetInProgressWorkoutSessionUseCase(userRepository, personRepository, workoutSessionRepository);
+        useCase = new GetInProgressWorkoutSessionUseCase(
+                userRepository, personRepository, workoutSessionRepository);
     }
 
     @Test
@@ -71,7 +78,8 @@ class GetInProgressWorkoutSessionUseCaseTest {
         assertThat(result.workoutCycleNameSnapshot()).isEqualTo(open.getSnapshot().workoutCycleName());
         var activity = result.activities().getFirst();
         assertThat(activity.id()).isEqualTo(ACTIVITY_ID);
-        assertThat(activity.plannedSetsSnapshot()).isEqualTo(open.getActivities().getFirst().getSnapshot().plannedSets());
+        assertThat(activity.plannedSetsSnapshot())
+                .isEqualTo(open.getActivities().getFirst().getSnapshot().plannedSets());
         assertThat(activity.actualDurationMinutes()).isEqualTo(15);
         assertThat(activity.actualDistanceKm()).isEqualByComparingTo("1.25");
         assertThat(activity.notes()).isEqualTo("Parcial");
