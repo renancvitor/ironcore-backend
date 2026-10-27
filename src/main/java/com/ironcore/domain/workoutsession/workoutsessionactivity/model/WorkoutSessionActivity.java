@@ -104,6 +104,11 @@ public class WorkoutSessionActivity {
         return List.copyOf(sets);
     }
 
+    public ActualLoadMode getActualLoadMode() {
+        return sets.stream().map(WorkoutSessionSet::getActualLoadMode)
+                .filter(Objects::nonNull).findFirst().orElse(null);
+    }
+
     public void updateExecution(
             Integer duration,
             BigDecimal distance,

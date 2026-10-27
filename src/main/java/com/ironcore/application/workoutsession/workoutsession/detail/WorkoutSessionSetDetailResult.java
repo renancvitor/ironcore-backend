@@ -15,7 +15,8 @@ public record WorkoutSessionSetDetailResult(
         Integer actualReps,
         String notes,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        BigDecimal normalizedLoadKg
 ) {
 
     public static WorkoutSessionSetDetailResult from(WorkoutSessionSet set) {
@@ -27,7 +28,8 @@ public record WorkoutSessionSetDetailResult(
                 set.getActualReps(),
                 set.getNotes(),
                 set.getCreatedAt(),
-                set.getUpdatedAt()
+                set.getUpdatedAt(),
+                set.getNormalizedLoadKg()
         );
     }
 }

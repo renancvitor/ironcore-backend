@@ -4,6 +4,13 @@ import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
 import com.ironcore.interfaces.rest.openapi.*;
 import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.close.CloseWorkoutSessionResponse;
 import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.detail.GetWorkoutSessionDetailResponse;
+import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.detail.WorkoutSessionActivityDetailResponse;
+import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.detail.WorkoutSessionSetDetailResponse;
+import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.execution.UpdateWorkoutSessionActivityExecutionRequest;
+import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.loadmode.ChangeWorkoutSessionActivityLoadModeRequest;
+import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.notes.UpdateWorkoutSessionNotesRequest;
+import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.set.CreateWorkoutSessionSetRequest;
+import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.set.UpdateWorkoutSessionSetRequest;
 import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.start.StartWorkoutSessionRequest;
 import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.start.StartWorkoutSessionResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,6 +24,82 @@ import org.springframework.http.ResponseEntity;
 
 @Tag(name = "Sessão de treino")
 public interface WorkoutSessionApi {
+
+    @Operation(summary = "Atualizar relato da sessão",
+            description = "Atualiza ou limpa o relato geral. Omitir notes é inválido. Correções em sessões encerradas são permitidas sem reabertura.")
+    @ApiResponse(responseCode = "200", description = "Operação concluída.",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = GetWorkoutSessionDetailResponse.class)))
+    @BadRequestResponse
+    @NotFoundResponse
+    @ForbiddenResponse
+    @UnauthorizedResponse
+    @ConflictResponse
+    @InternalServerErrorResponse
+    ResponseEntity<GetWorkoutSessionDetailResponse> updateNotes(AuthenticatedUser authenticatedUser, Long id, @Valid UpdateWorkoutSessionNotesRequest request);
+
+    @Operation(summary = "Atualizar execução da atividade",
+            description = "Atualiza somente campos presentes; null solicita limpeza. Duração e distância são independentes. Correções em sessões encerradas são permitidas sem reabertura.")
+    @ApiResponse(responseCode = "200", description = "Operação concluída.",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = WorkoutSessionActivityDetailResponse.class)))
+    @BadRequestResponse
+    @NotFoundResponse
+    @ForbiddenResponse
+    @UnauthorizedResponse
+    @ConflictResponse
+    @InternalServerErrorResponse
+    ResponseEntity<WorkoutSessionActivityDetailResponse> updateActivityExecution(AuthenticatedUser authenticatedUser, Long id, Long activityId, @Valid UpdateWorkoutSessionActivityExecutionRequest request);
+
+    @Operation(summary = "Criar série executada",
+            description = "Cria somente a série informada, sem copiar prescrições. Carga e repetições são independentes. Correções em sessões encerradas são permitidas sem reabertura.")
+    @ApiResponse(responseCode = "201", description = "Operação concluída.",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = WorkoutSessionSetDetailResponse.class)))
+    @BadRequestResponse
+    @NotFoundResponse
+    @ForbiddenResponse
+    @UnauthorizedResponse
+    @ConflictResponse
+    @InternalServerErrorResponse
+    ResponseEntity<WorkoutSessionSetDetailResponse> createSet(AuthenticatedUser authenticatedUser, Long id, Long activityId, @Valid CreateWorkoutSessionSetRequest request);
+
+    @Operation(summary = "Atualizar série executada",
+            description = "Atualiza somente campos presentes; null solicita limpeza. Uma série vazia deve ser excluída. Correções em sessões encerradas são permitidas sem reabertura.")
+    @ApiResponse(responseCode = "200", description = "Operação concluída.",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = WorkoutSessionSetDetailResponse.class)))
+    @BadRequestResponse
+    @NotFoundResponse
+    @ForbiddenResponse
+    @UnauthorizedResponse
+    @ConflictResponse
+    @InternalServerErrorResponse
+    ResponseEntity<WorkoutSessionSetDetailResponse> updateSet(AuthenticatedUser authenticatedUser, Long id, Long activityId, Long setId, @Valid UpdateWorkoutSessionSetRequest request);
+
+    @Operation(summary = "Excluir série executada",
+            description = "Exclui a série sem renumerar as demais. Correções em sessões encerradas são permitidas sem reabertura.")
+    @ApiResponse(responseCode = "204", description = "Operação concluída.")
+    @BadRequestResponse
+    @NotFoundResponse
+    @ForbiddenResponse
+    @UnauthorizedResponse
+    @ConflictResponse
+    @InternalServerErrorResponse
+    ResponseEntity<Void> deleteSet(AuthenticatedUser authenticatedUser, Long id, Long activityId, Long setId);
+
+    @Operation(summary = "Alterar modo de carga da atividade",
+            description = "Reinterpreta as cargas de todos os sets carregados sem alterar os valores digitados. PER_SIDE considera dois lados equivalentes explicitamente informados; não presume peso de barra ou corpo. Correções em sessões encerradas são permitidas sem reabertura.")
+    @ApiResponse(responseCode = "200", description = "Operação concluída.",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = WorkoutSessionActivityDetailResponse.class)))
+    @BadRequestResponse
+    @NotFoundResponse
+    @ForbiddenResponse
+    @UnauthorizedResponse
+    @ConflictResponse
+    @InternalServerErrorResponse
+    ResponseEntity<WorkoutSessionActivityDetailResponse> changeActivityLoadMode(AuthenticatedUser authenticatedUser, Long id, Long activityId, @Valid ChangeWorkoutSessionActivityLoadModeRequest request);
 
     @Operation(
             summary = "Encerrar sessão de treino",

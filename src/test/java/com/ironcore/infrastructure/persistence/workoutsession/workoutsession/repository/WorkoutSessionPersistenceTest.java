@@ -1,38 +1,50 @@
 package com.ironcore.infrastructure.persistence.workoutsession.workoutsession.repository;
 
-import com.ironcore.domain.activitytype.model.ActivityType;
 import com.ironcore.application.logging.audit.port.AuditLogPublisher;
 import com.ironcore.application.workoutsession.workoutsession.expire.ExpireWorkoutSessionCommand;
 import com.ironcore.application.workoutsession.workoutsession.expire.ExpireWorkoutSessionUseCase;
 import com.ironcore.application.workoutsession.workoutsession.expire.ExpireWorkoutSessionsUseCase;
+import com.ironcore.application.workoutsession.workoutsession.notes.UpdateWorkoutSessionNotesCommand;
+import com.ironcore.application.workoutsession.workoutsession.notes.UpdateWorkoutSessionNotesUseCase;
 import com.ironcore.application.workoutsession.workoutsession.start.StartWorkoutSessionCommand;
 import com.ironcore.application.workoutsession.workoutsession.start.StartWorkoutSessionUseCase;
-import com.ironcore.domain.person.model.Person;
-import com.ironcore.domain.person.repository.PersonRepository;
-import com.ironcore.domain.user.model.User;
-import com.ironcore.domain.user.repository.UserRepository;
+import com.ironcore.application.workoutsession.workoutsessionactivity.execution.UpdateWorkoutSessionActivityExecutionCommand;
+import com.ironcore.application.workoutsession.workoutsessionactivity.execution.UpdateWorkoutSessionActivityExecutionUseCase;
+import com.ironcore.application.workoutsession.workoutsessionactivity.loadmode.ChangeWorkoutSessionActivityLoadModeCommand;
+import com.ironcore.application.workoutsession.workoutsessionactivity.loadmode.ChangeWorkoutSessionActivityLoadModeUseCase;
+import com.ironcore.application.workoutsession.workoutsessionset.create.CreateWorkoutSessionSetCommand;
+import com.ironcore.application.workoutsession.workoutsessionset.create.CreateWorkoutSessionSetUseCase;
+import com.ironcore.application.workoutsession.workoutsessionset.delete.DeleteWorkoutSessionSetCommand;
+import com.ironcore.application.workoutsession.workoutsessionset.delete.DeleteWorkoutSessionSetUseCase;
+import com.ironcore.application.workoutsession.workoutsessionset.update.UpdateWorkoutSessionSetCommand;
+import com.ironcore.application.workoutsession.workoutsessionset.update.UpdateWorkoutSessionSetUseCase;
+import com.ironcore.domain.activitytype.model.ActivityType;
 import com.ironcore.domain.activitytype.repository.ActivityTypeRepository;
-import com.ironcore.domain.exercise.repository.ExerciseRepository;
-import com.ironcore.domain.workoutplanning.workoutactivity.repository.WorkoutActivityRepository;
-import com.ironcore.domain.workoutplanning.workoutcycle.repository.WorkoutCycleRepository;
-import com.ironcore.domain.workoutplanning.workoutday.repository.WorkoutDayRepository;
-import com.ironcore.domain.workoutsession.workoutsession.enums.WorkoutSessionCloseReason;
 import com.ironcore.domain.activitytype.valueobject.ActivityTypeCode;
 import com.ironcore.domain.activitytype.valueobject.ActivityTypeId;
 import com.ironcore.domain.equipmenttype.valueobject.EquipmentTypeId;
 import com.ironcore.domain.exercise.model.Exercise;
+import com.ironcore.domain.exercise.repository.ExerciseRepository;
 import com.ironcore.domain.exercise.valueobject.ExerciseId;
+import com.ironcore.domain.person.model.Person;
+import com.ironcore.domain.person.repository.PersonRepository;
 import com.ironcore.domain.person.valueobject.PersonId;
+import com.ironcore.domain.user.model.User;
+import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.workoutplanning.traininggoal.valueobject.TrainingGoalId;
 import com.ironcore.domain.workoutplanning.workoutactivity.model.WorkoutActivity;
+import com.ironcore.domain.workoutplanning.workoutactivity.repository.WorkoutActivityRepository;
 import com.ironcore.domain.workoutplanning.workoutactivity.valueobject.WorkoutActivityId;
 import com.ironcore.domain.workoutplanning.workoutcycle.enums.WorkoutOrigin;
 import com.ironcore.domain.workoutplanning.workoutcycle.enums.WorkoutStatus;
 import com.ironcore.domain.workoutplanning.workoutcycle.model.WorkoutCycle;
+import com.ironcore.domain.workoutplanning.workoutcycle.repository.WorkoutCycleRepository;
 import com.ironcore.domain.workoutplanning.workoutcycle.valueobject.WorkoutCycleId;
 import com.ironcore.domain.workoutplanning.workoutday.enums.WeekDay;
 import com.ironcore.domain.workoutplanning.workoutday.model.WorkoutDay;
+import com.ironcore.domain.workoutplanning.workoutday.repository.WorkoutDayRepository;
 import com.ironcore.domain.workoutplanning.workoutday.valueobject.WorkoutDayId;
+import com.ironcore.domain.workoutsession.workoutsession.enums.WorkoutSessionCloseReason;
 import com.ironcore.domain.workoutsession.workoutsession.enums.WorkoutSessionStatus;
 import com.ironcore.domain.workoutsession.workoutsession.exception.InvalidWorkoutSessionException;
 import com.ironcore.domain.workoutsession.workoutsession.exception.WorkoutSessionConflictException;
@@ -55,8 +67,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.util.AopTestUtils;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -68,9 +80,9 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -84,15 +96,15 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
+import static com.ironcore.domain.person.PersonTestFactory.restoredPerson;
+import static com.ironcore.domain.user.UserTestFactory.activeUser;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
-import static org.mockito.ArgumentMatchers.any;
-import static com.ironcore.domain.person.PersonTestFactory.restoredPerson;
-import static com.ironcore.domain.user.UserTestFactory.activeUser;
 
 @DataJpaTest(showSql = false, properties = {
         "spring.jpa.hibernate.ddl-auto=validate",
@@ -101,7 +113,13 @@ import static com.ironcore.domain.user.UserTestFactory.activeUser;
 })
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import({WorkoutSessionAdapter.class, WorkoutSessionPlanningQueryAdapter.class,
-        ExpireWorkoutSessionUseCase.class, ExpireWorkoutSessionsUseCase.class, StartWorkoutSessionUseCase.class})
+        ExpireWorkoutSessionUseCase.class, ExpireWorkoutSessionsUseCase.class, StartWorkoutSessionUseCase.class,
+        UpdateWorkoutSessionNotesUseCase.class,
+        UpdateWorkoutSessionActivityExecutionUseCase.class,
+        CreateWorkoutSessionSetUseCase.class,
+        UpdateWorkoutSessionSetUseCase.class,
+        DeleteWorkoutSessionSetUseCase.class,
+        ChangeWorkoutSessionActivityLoadModeUseCase.class})
 @ActiveProfiles("test")
 @Testcontainers
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -166,6 +184,18 @@ class WorkoutSessionPersistenceTest {
 
     @MockitoBean
     private AuditLogPublisher publisher;
+    @Autowired
+    private UpdateWorkoutSessionNotesUseCase updateWorkoutSessionNotesUseCase;
+    @Autowired
+    private UpdateWorkoutSessionActivityExecutionUseCase updateWorkoutSessionActivityExecutionUseCase;
+    @Autowired
+    private CreateWorkoutSessionSetUseCase createWorkoutSessionSetUseCase;
+    @Autowired
+    private UpdateWorkoutSessionSetUseCase updateWorkoutSessionSetUseCase;
+    @Autowired
+    private DeleteWorkoutSessionSetUseCase deleteWorkoutSessionSetUseCase;
+    @Autowired
+    private ChangeWorkoutSessionActivityLoadModeUseCase changeWorkoutSessionActivityLoadModeUseCase;
     private PersonId owner;
     private Long cycleId;
     private Long dayId;
@@ -889,6 +919,123 @@ class WorkoutSessionPersistenceTest {
         assertThat(expireWorkoutSessionUseCase.execute(new ExpireWorkoutSessionCommand(owner))).isEmpty();
         assertThat(repository.findByIdAndPersonId(saved.getId(), owner).orElseThrow())
                 .usingRecursiveComparison().isEqualTo(history);
+    }
+
+    @Test
+    void shouldRoundTripPartialExecutionThroughTransactionalUseCases() {
+        WorkoutSession saved = repository.save(newSession());
+        var actor = givenExecutionActor(START.plusSeconds(60));
+        var activityId = saved.getActivities().getFirst().getId();
+        var snapshots = saved.getActivities().stream().map(value -> value.getSnapshot()).toList();
+
+        var repsOnly = createWorkoutSessionSetUseCase.execute(new CreateWorkoutSessionSetCommand(
+                actor, saved.getId(), activityId, 1, null, null, 12, null));
+        var loadOnly = createWorkoutSessionSetUseCase.execute(new CreateWorkoutSessionSetCommand(
+                actor, saved.getId(), activityId, 3, new BigDecimal("20.25"), ActualLoadMode.TOTAL, null, null));
+        assertThat(repsOnly.normalizedLoadKg()).isNull();
+        assertThat(loadOnly.actualReps()).isNull();
+        assertThat(loadOnly.normalizedLoadKg()).isEqualByComparingTo("20.25");
+
+        changeWorkoutSessionActivityLoadModeUseCase.execute(new ChangeWorkoutSessionActivityLoadModeCommand(
+                actor, saved.getId(), activityId, ActualLoadMode.PER_SIDE));
+        updateWorkoutSessionActivityExecutionUseCase.execute(new UpdateWorkoutSessionActivityExecutionCommand(
+                actor, saved.getId(), activityId, null, false, new BigDecimal("2.50"), true, "Relato da atividade", true));
+        updateWorkoutSessionNotesUseCase.execute(new UpdateWorkoutSessionNotesCommand(actor, saved.getId(), "Relato geral", true));
+
+        var loaded = repository.findByIdAndPersonId(saved.getId(), owner).orElseThrow();
+        assertThat(loaded.getVersion()).isGreaterThan(saved.getVersion());
+        assertThat(loaded.getNotes()).isEqualTo("Relato geral");
+        assertThat(loaded.getActivities()).extracting(value -> value.getSnapshot()).containsExactlyElementsOf(snapshots);
+        var activity = loaded.getActivities().getFirst();
+        assertThat(activity.getActualDurationMinutes()).isNull();
+        assertThat(activity.getActualDistanceKm()).isEqualByComparingTo("2.50");
+        assertThat(activity.getActualLoadMode()).isEqualTo(ActualLoadMode.PER_SIDE);
+        assertThat(activity.getSets()).hasSize(2);
+        assertThat(activity.getSets().getFirst().getActualLoadMode()).isNull();
+        assertThat(activity.getSets().getLast().getActualLoadKg()).isEqualByComparingTo("20.25");
+        assertThat(activity.getSets().getLast().getNormalizedLoadKg()).isEqualByComparingTo("40.50");
+        assertThat(loaded.getActivities().getLast().getSets()).isEmpty();
+
+        updateWorkoutSessionSetUseCase.execute(new UpdateWorkoutSessionSetCommand(
+                actor, saved.getId(), activityId, loadOnly.id(),
+                null, true, null, true, null, false, "Somente relato", true));
+        deleteWorkoutSessionSetUseCase.execute(new DeleteWorkoutSessionSetCommand(actor, saved.getId(), activityId, repsOnly.id()));
+        loaded = repository.findByIdAndPersonId(saved.getId(), owner).orElseThrow();
+        var remaining = loaded.getActivities().getFirst().getSets();
+        assertThat(remaining).hasSize(1);
+        assertThat(remaining.getFirst().getId()).isEqualTo(loadOnly.id());
+        assertThat(remaining.getFirst().getSetNumber()).isEqualTo(3);
+        assertThat(remaining.getFirst().getActualReps()).isNull();
+        assertThat(remaining.getFirst().getActualLoadKg()).isNull();
+        assertThat(remaining.getFirst().getNormalizedLoadKg()).isNull();
+        assertThat(remaining.getFirst().getNotes()).isEqualTo("Somente relato");
+        assertThat(loaded.getActivities().getFirst().getActualLoadMode()).isNull();
+    }
+
+    @Test
+    void shouldEnforcePartialSetExecutionConstraintWithoutEmptyOrUnpairedLoad() {
+        WorkoutSession saved = repository.save(newSession());
+        Long activityId = saved.getActivities().getFirst().getId().value();
+        jdbc.update("""
+                INSERT INTO workout_session_sets (workout_session_activity_id, set_number, actual_reps, created_at)
+                VALUES (?, 1, 12, now())
+                """, activityId);
+        jdbc.update("""
+                INSERT INTO workout_session_sets (workout_session_activity_id, set_number, actual_load_kg, actual_load_mode, created_at)
+                VALUES (?, 2, 20.25, 'PER_SIDE', now())
+                """, activityId);
+        assertThat(repository.findByIdAndPersonId(saved.getId(), owner).orElseThrow().getActivities().getFirst().getSets()).hasSize(2);
+        assertThatThrownBy(() -> jdbc.update("""
+                INSERT INTO workout_session_sets (workout_session_activity_id, set_number, created_at)
+                VALUES (?, 3, now())
+                """, activityId)).isInstanceOf(DataIntegrityViolationException.class);
+        assertThatThrownBy(() -> jdbc.update("""
+                INSERT INTO workout_session_sets (workout_session_activity_id, set_number, actual_load_kg, created_at)
+                VALUES (?, 3, 20, now())
+                """, activityId)).isInstanceOf(DataIntegrityViolationException.class);
+        assertThatThrownBy(() -> jdbc.update("""
+                INSERT INTO workout_session_sets (workout_session_activity_id, set_number, actual_reps, actual_load_mode, created_at)
+                VALUES (?, 3, 12, 'TOTAL', now())
+                """, activityId)).isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void shouldRollBackPendingExpirationWhenExecutionValidationFails() {
+        WorkoutSession saved = repository.save(newSession());
+        var actor = givenExecutionActor(EXPIRY.plusSeconds(60));
+        assertThatThrownBy(() -> createWorkoutSessionSetUseCase.execute(new CreateWorkoutSessionSetCommand(
+                actor, saved.getId(), saved.getActivities().getFirst().getId(), 1,
+                null, null, null, null)))
+                .isInstanceOf(com.ironcore.domain.workoutsession.workoutsessionset.exception.InvalidWorkoutSessionSetException.class);
+        var loaded = repository.findByIdAndPersonId(saved.getId(), owner).orElseThrow();
+        assertThat(loaded).usingRecursiveComparison().isEqualTo(saved);
+        org.mockito.Mockito.verifyNoInteractions(publisher);
+    }
+
+    @Test
+    void shouldRollBackExpirationAndFlushedExecutionWhenAuditPublicationFails() {
+        WorkoutSession saved = repository.save(newSession());
+        var actor = givenExecutionActor(EXPIRY.plusSeconds(60));
+        doThrow(new IllegalStateException("Falha ao publicar auditoria"))
+                .when(publisher).publish(any(), any(), any(), any(), any(), any(), any());
+        assertThatThrownBy(() -> createWorkoutSessionSetUseCase.execute(new CreateWorkoutSessionSetCommand(
+                actor, saved.getId(), saved.getActivities().getFirst().getId(), 1,
+                null, null, 12, null))).isInstanceOf(IllegalStateException.class);
+        var loaded = repository.findByIdAndPersonId(saved.getId(), owner).orElseThrow();
+        assertThat(loaded).usingRecursiveComparison().isEqualTo(saved);
+    }
+
+    private com.ironcore.domain.user.valueobject.UserId givenExecutionActor(Instant processing) {
+        User template = activeUser();
+        User user = User.restore(template.getId(), template.getNickname(), owner, template.getEmail(),
+                template.getPasswordHash(), false, true, template.getCreatedAt(), template.getUpdatedAt());
+        Person templatePerson = restoredPerson();
+        Person person = Person.restore(owner, templatePerson.getName(), templatePerson.getSex(),
+                templatePerson.getBirthDate(), templatePerson.getCreatedAt(), templatePerson.getUpdatedAt());
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(personRepository.findById(owner)).thenReturn(Optional.of(person));
+        when(clock.instant()).thenReturn(processing);
+        return user.getId();
     }
 
     private StartWorkoutSessionCommand givenStartPlanning(Instant processing) {

@@ -5,9 +5,12 @@ import com.ironcore.domain.workoutplanning.workoutday.enums.WeekDay;
 import com.ironcore.domain.workoutsession.workoutsession.enums.WorkoutSessionCloseReason;
 import com.ironcore.domain.workoutsession.workoutsession.enums.WorkoutSessionStatus;
 import com.ironcore.domain.workoutsession.workoutsession.model.WorkoutSession;
+import com.ironcore.domain.workoutsession.workoutsessionset.enums.ActualLoadMode;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 
 public record WorkoutSessionAuditData(
         Long id,
@@ -22,8 +25,24 @@ public record WorkoutSessionAuditData(
         Instant finishedAt,
         WorkoutSessionStatus status,
         WorkoutSessionCloseReason closeReason,
-        String notes
+        String notes,
+        List<Activity> activities
 ) implements LoggableData {
+
+    public WorkoutSessionAuditData {
+        activities = List.copyOf(activities);
+    }
+
+    public record Activity(Long id, Integer actualDurationMinutes, BigDecimal actualDistanceKm,
+                           String notes, List<Set> sets) {
+        public Activity {
+            sets = List.copyOf(sets);
+        }
+    }
+
+    public record Set(Long id, Integer setNumber, BigDecimal actualLoadKg, ActualLoadMode actualLoadMode,
+                      Integer actualReps, String notes) {
+    }
 
     public static WorkoutSessionAuditData from(WorkoutSession session) {
         return new WorkoutSessionAuditData(
@@ -39,7 +58,12 @@ public record WorkoutSessionAuditData(
                 session.getFinishedAt(),
                 session.getStatus(),
                 session.getCloseReason(),
-                session.getNotes()
+                session.getNotes(),
+                session.getActivities().stream().map(activity -> new Activity(
+                        activity.getId().value(), activity.getActualDurationMinutes(), activity.getActualDistanceKm(),
+                        activity.getNotes(), activity.getSets().stream().map(set -> new Set(
+                                set.getId().value(), set.getSetNumber(), set.getActualLoadKg(), set.getActualLoadMode(),
+                                set.getActualReps(), set.getNotes())).toList())).toList()
         );
     }
 }

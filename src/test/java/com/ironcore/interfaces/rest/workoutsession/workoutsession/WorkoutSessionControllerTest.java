@@ -14,9 +14,21 @@ import com.ironcore.application.workoutsession.workoutsession.detail.WorkoutSess
 import com.ironcore.application.workoutsession.workoutsession.detail.WorkoutSessionSetDetailResult;
 import com.ironcore.application.workoutsession.workoutsession.inprogress.GetInProgressWorkoutSessionCommand;
 import com.ironcore.application.workoutsession.workoutsession.inprogress.GetInProgressWorkoutSessionUseCase;
+import com.ironcore.application.workoutsession.workoutsession.notes.UpdateWorkoutSessionNotesCommand;
+import com.ironcore.application.workoutsession.workoutsession.notes.UpdateWorkoutSessionNotesUseCase;
 import com.ironcore.application.workoutsession.workoutsession.start.StartWorkoutSessionCommand;
 import com.ironcore.application.workoutsession.workoutsession.start.StartWorkoutSessionResult;
 import com.ironcore.application.workoutsession.workoutsession.start.StartWorkoutSessionUseCase;
+import com.ironcore.application.workoutsession.workoutsessionactivity.execution.UpdateWorkoutSessionActivityExecutionCommand;
+import com.ironcore.application.workoutsession.workoutsessionactivity.execution.UpdateWorkoutSessionActivityExecutionUseCase;
+import com.ironcore.application.workoutsession.workoutsessionactivity.loadmode.ChangeWorkoutSessionActivityLoadModeCommand;
+import com.ironcore.application.workoutsession.workoutsessionactivity.loadmode.ChangeWorkoutSessionActivityLoadModeUseCase;
+import com.ironcore.application.workoutsession.workoutsessionset.create.CreateWorkoutSessionSetCommand;
+import com.ironcore.application.workoutsession.workoutsessionset.create.CreateWorkoutSessionSetUseCase;
+import com.ironcore.application.workoutsession.workoutsessionset.delete.DeleteWorkoutSessionSetCommand;
+import com.ironcore.application.workoutsession.workoutsessionset.delete.DeleteWorkoutSessionSetUseCase;
+import com.ironcore.application.workoutsession.workoutsessionset.update.UpdateWorkoutSessionSetCommand;
+import com.ironcore.application.workoutsession.workoutsessionset.update.UpdateWorkoutSessionSetUseCase;
 import com.ironcore.domain.exercise.valueobject.ExerciseId;
 import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.user.repository.UserRepository;
@@ -25,13 +37,14 @@ import com.ironcore.domain.workoutplanning.workoutactivity.valueobject.WorkoutAc
 import com.ironcore.domain.workoutplanning.workoutcycle.valueobject.WorkoutCycleId;
 import com.ironcore.domain.workoutplanning.workoutday.enums.WeekDay;
 import com.ironcore.domain.workoutplanning.workoutday.valueobject.WorkoutDayId;
-import com.ironcore.domain.workoutsession.workoutsession.enums.WorkoutSessionStatus;
 import com.ironcore.domain.workoutsession.workoutsession.enums.WorkoutSessionCloseReason;
+import com.ironcore.domain.workoutsession.workoutsession.enums.WorkoutSessionStatus;
 import com.ironcore.domain.workoutsession.workoutsession.exception.InvalidWorkoutSessionException;
 import com.ironcore.domain.workoutsession.workoutsession.exception.WorkoutSessionConflictException;
 import com.ironcore.domain.workoutsession.workoutsession.valueobject.WorkoutSessionId;
 import com.ironcore.domain.workoutsession.workoutsessionactivity.valueobject.WorkoutSessionActivityId;
 import com.ironcore.domain.workoutsession.workoutsessionset.enums.ActualLoadMode;
+import com.ironcore.domain.workoutsession.workoutsessionset.exception.InvalidWorkoutSessionSetException;
 import com.ironcore.domain.workoutsession.workoutsessionset.valueobject.WorkoutSessionSetId;
 import com.ironcore.infrastructure.exception.PersistenceException;
 import com.ironcore.infrastructure.security.jwt.JwtAccessTokenValidator;
@@ -56,15 +69,23 @@ import java.util.List;
 import static com.ironcore.interfaces.rest.support.security.AuthenticatedUserRequestPostProcessorFactory.authenticatedUser;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(WorkoutSessionController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class WorkoutSessionControllerTest {
+
+    @MockitoBean private UpdateWorkoutSessionNotesUseCase updateWorkoutSessionNotesUseCase;
+    @MockitoBean private UpdateWorkoutSessionActivityExecutionUseCase updateWorkoutSessionActivityExecutionUseCase;
+    @MockitoBean private CreateWorkoutSessionSetUseCase createWorkoutSessionSetUseCase;
+    @MockitoBean private UpdateWorkoutSessionSetUseCase updateWorkoutSessionSetUseCase;
+    @MockitoBean private DeleteWorkoutSessionSetUseCase deleteWorkoutSessionSetUseCase;
+    @MockitoBean private ChangeWorkoutSessionActivityLoadModeUseCase changeWorkoutSessionActivityLoadModeUseCase;
 
     private static final String ENDPOINT = "/api/users/me/workout-sessions";
     private static final Instant START = Instant.parse("2026-10-27T02:30:00Z");
@@ -437,6 +458,167 @@ class WorkoutSessionControllerTest {
         }
     }
 
+    @Nested
+    class Execution {
+        private static final String ACTIVITY = "/100/activities/30";
+        private static final String SET = ACTIVITY + "/sets/60";
+
+        @Test
+        void shouldClearSessionNotesWithExplicitNull() throws Exception {
+            when(updateWorkoutSessionNotesUseCase.execute(any())).thenReturn(detailResult(false, false));
+            mockMvc.perform(patch(ENDPOINT + "/100/notes").with(authenticatedUser())
+                            .contentType(MediaType.APPLICATION_JSON).content("{\"notes\":null}"))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.notes").value(nullValue()));
+            verify(updateWorkoutSessionNotesUseCase).execute(new UpdateWorkoutSessionNotesCommand(
+                    new UserId(1L), new WorkoutSessionId(100L), null, true));
+        }
+
+        @Test
+        void shouldPreserveActivityFieldPresenceThroughRestMapper() throws Exception {
+            when(updateWorkoutSessionActivityExecutionUseCase.execute(any())).thenReturn(detailResult(false, true).activities().getFirst());
+            mockMvc.perform(patch(ENDPOINT + ACTIVITY + "/execution").with(authenticatedUser())
+                            .contentType(MediaType.APPLICATION_JSON).content("{\"actualDurationMinutes\":null,\"notes\":\"Relato\"}"))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.actualLoadMode").value("PER_SIDE"))
+                    .andExpect(jsonPath("$.sets[0].normalizedLoadKg").value(85.0));
+            verify(updateWorkoutSessionActivityExecutionUseCase).execute(new UpdateWorkoutSessionActivityExecutionCommand(
+                    new UserId(1L), new WorkoutSessionId(100L), new WorkoutSessionActivityId(30L),
+                    null, true, null, false, "Relato", true));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"TOTAL", "PER_SIDE"})
+        void shouldCreateLoadedSetWithoutReps(String mode) throws Exception {
+            ActualLoadMode loadMode = ActualLoadMode.valueOf(mode);
+            var domain = com.ironcore.domain.workoutsession.workoutsessionset.model.WorkoutSessionSet.restore(
+                    new WorkoutSessionSetId(60L), 4, new BigDecimal("20"), loadMode, null, null, START, null);
+            when(createWorkoutSessionSetUseCase.execute(any())).thenReturn(WorkoutSessionSetDetailResult.from(domain));
+            mockMvc.perform(post(ENDPOINT + ACTIVITY + "/sets").with(authenticatedUser())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"setNumber\":4,\"actualLoadKg\":20,\"actualLoadMode\":\"" + mode + "\"}"))
+                    .andExpect(status().isCreated()).andExpect(jsonPath("$.id").value(60))
+                    .andExpect(jsonPath("$.actualReps").value(nullValue()))
+                    .andExpect(jsonPath("$.normalizedLoadKg").value(mode.equals("TOTAL") ? 20 : 40));
+            verify(createWorkoutSessionSetUseCase).execute(new CreateWorkoutSessionSetCommand(
+                    new UserId(1L), new WorkoutSessionId(100L), new WorkoutSessionActivityId(30L),
+                    4, new BigDecimal("20"), loadMode, null, null));
+        }
+
+        @Test
+        void shouldCreateSetWithRepsAndNoExternalLoad() throws Exception {
+            var domain = com.ironcore.domain.workoutsession.workoutsessionset.model.WorkoutSessionSet.restore(
+                    new WorkoutSessionSetId(60L), 1, null, null, 12, null, START, null);
+            when(createWorkoutSessionSetUseCase.execute(any())).thenReturn(WorkoutSessionSetDetailResult.from(domain));
+            mockMvc.perform(post(ENDPOINT + ACTIVITY + "/sets").with(authenticatedUser())
+                            .contentType(MediaType.APPLICATION_JSON).content("{\"setNumber\":1,\"actualReps\":12}"))
+                    .andExpect(status().isCreated()).andExpect(jsonPath("$.actualLoadKg").value(nullValue()))
+                    .andExpect(jsonPath("$.normalizedLoadKg").value(nullValue()));
+        }
+
+        @Test
+        void shouldPreserveSetFieldPresenceThroughRestMapper() throws Exception {
+            when(updateWorkoutSessionSetUseCase.execute(any())).thenReturn(detailResult(false, true).activities().getFirst().sets().getFirst());
+            mockMvc.perform(patch(ENDPOINT + SET).with(authenticatedUser())
+                            .contentType(MediaType.APPLICATION_JSON).content("{\"actualLoadKg\":null,\"actualLoadMode\":null}"))
+                    .andExpect(status().isOk());
+            verify(updateWorkoutSessionSetUseCase).execute(new UpdateWorkoutSessionSetCommand(
+                    new UserId(1L), new WorkoutSessionId(100L), new WorkoutSessionActivityId(30L), new WorkoutSessionSetId(60L),
+                    null, true, null, true, null, false, null, false));
+        }
+
+        @Test
+        void shouldDeleteSetWithoutResponseBody() throws Exception {
+            mockMvc.perform(delete(ENDPOINT + SET).with(authenticatedUser())).andExpect(status().isNoContent());
+            verify(deleteWorkoutSessionSetUseCase).execute(new DeleteWorkoutSessionSetCommand(
+                    new UserId(1L), new WorkoutSessionId(100L), new WorkoutSessionActivityId(30L), new WorkoutSessionSetId(60L)));
+        }
+
+        @Test
+        void shouldChangeLoadModeForActivity() throws Exception {
+            when(changeWorkoutSessionActivityLoadModeUseCase.execute(any())).thenReturn(detailResult(false, true).activities().getFirst());
+            mockMvc.perform(patch(ENDPOINT + ACTIVITY + "/load-mode").with(authenticatedUser())
+                            .contentType(MediaType.APPLICATION_JSON).content("{\"actualLoadMode\":\"PER_SIDE\"}"))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.actualLoadMode").value("PER_SIDE"));
+            verify(changeWorkoutSessionActivityLoadModeUseCase).execute(new ChangeWorkoutSessionActivityLoadModeCommand(
+                    new UserId(1L), new WorkoutSessionId(100L), new WorkoutSessionActivityId(30L), ActualLoadMode.PER_SIDE));
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"/100/notes", "/100/activities/30/execution", "/100/activities/30/sets/60"})
+        void shouldRejectPatchWithoutRecognizedFields(String path) throws Exception {
+            mockMvc.perform(patch(ENDPOINT + path).with(authenticatedUser())
+                            .contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().isBadRequest());
+            verifyNoInteractions(updateWorkoutSessionNotesUseCase, updateWorkoutSessionActivityExecutionUseCase, updateWorkoutSessionSetUseCase);
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"{}", "{\"actualLoadMode\":null}", "{\"actualLoadMode\":\"UNKNOWN\"}"})
+        void shouldRejectMissingNullOrUnknownLoadMode(String body) throws Exception {
+            mockMvc.perform(patch(ENDPOINT + ACTIVITY + "/load-mode").with(authenticatedUser())
+                            .contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isBadRequest());
+            verifyNoInteractions(changeWorkoutSessionActivityLoadModeUseCase);
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"0", "-1", "invalid"})
+        void shouldRejectInvalidChildIdentifiers(String id) throws Exception {
+            mockMvc.perform(patch(ENDPOINT + "/100/activities/" + id + "/execution").with(authenticatedUser())
+                            .contentType(MediaType.APPLICATION_JSON).content("{\"notes\":null}")).andExpect(status().isBadRequest());
+            mockMvc.perform(delete(ENDPOINT + ACTIVITY + "/sets/" + id).with(authenticatedUser())).andExpect(status().isBadRequest());
+            verifyNoInteractions(updateWorkoutSessionActivityExecutionUseCase, deleteWorkoutSessionSetUseCase);
+        }
+
+        @ParameterizedTest
+        @CsvSource({"NOTES,404", "ACTIVITY,404", "CREATE,404", "UPDATE,404", "DELETE,404", "MODE,404",
+                "NOTES,409", "ACTIVITY,409", "CREATE,409", "UPDATE,409", "DELETE,409", "MODE,409"})
+        void shouldMapOwnershipAndConcurrencyErrors(String operation, int status) throws Exception {
+            RuntimeException exception = status == 404 ? new ResourceNotFoundException("Registro não encontrado.")
+                    : new WorkoutSessionConflictException("Conflito");
+            var request = switch (operation) {
+                case "NOTES" -> {
+                    doThrow(exception).when(updateWorkoutSessionNotesUseCase).execute(any());
+                    yield patch(ENDPOINT + "/100/notes").content("{\"notes\":null}");
+                }
+                case "ACTIVITY" -> {
+                    doThrow(exception).when(updateWorkoutSessionActivityExecutionUseCase).execute(any());
+                    yield patch(ENDPOINT + ACTIVITY + "/execution").content("{\"notes\":null}");
+                }
+                case "CREATE" -> {
+                    doThrow(exception).when(createWorkoutSessionSetUseCase).execute(any());
+                    yield post(ENDPOINT + ACTIVITY + "/sets").content("{\"setNumber\":1,\"actualReps\":8}");
+                }
+                case "UPDATE" -> {
+                    doThrow(exception).when(updateWorkoutSessionSetUseCase).execute(any());
+                    yield patch(ENDPOINT + SET).content("{\"notes\":null}");
+                }
+                case "DELETE" -> {
+                    doThrow(exception).when(deleteWorkoutSessionSetUseCase).execute(any());
+                    yield delete(ENDPOINT + SET);
+                }
+                default -> {
+                    doThrow(exception).when(changeWorkoutSessionActivityLoadModeUseCase).execute(any());
+                    yield patch(ENDPOINT + ACTIVITY + "/load-mode").content("{\"actualLoadMode\":\"TOTAL\"}");
+                }
+            };
+            mockMvc.perform(request.with(authenticatedUser()).contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().is(status)).andExpect(jsonPath("$.status").value(status));
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = {400, 403, 409, 500})
+        void shouldReuseExistingExceptionMapping(int code) throws Exception {
+            RuntimeException exception = switch (code) {
+                case 400 -> new InvalidWorkoutSessionSetException("Série vazia.");
+                case 403 -> new UserInactiveException("Usuário inativo.");
+                case 409 -> new com.ironcore.application.exception.ResourceAlreadyExistsException("Número repetido.");
+                default -> new PersistenceException("Indisponível.");
+            };
+            when(createWorkoutSessionSetUseCase.execute(any())).thenThrow(exception);
+            mockMvc.perform(post(ENDPOINT + ACTIVITY + "/sets").with(authenticatedUser())
+                            .contentType(MediaType.APPLICATION_JSON).content("{\"setNumber\":1,\"actualReps\":8}"))
+                    .andExpect(status().is(code)).andExpect(jsonPath("$.message").value(exception.getMessage()));
+        }
+    }
+
     private StartWorkoutSessionCommand startCommand() {
         return new StartWorkoutSessionCommand(new UserId(1L), new WorkoutCycleId(10L), new WorkoutDayId(20L));
     }
@@ -449,15 +631,16 @@ class WorkoutSessionControllerTest {
     private WorkoutSessionDetailResult detailResult(boolean withoutOrigins, boolean withExecution) {
         List<WorkoutSessionSetDetailResult> sets = withExecution ? List.of(
                 new WorkoutSessionSetDetailResult(new WorkoutSessionSetId(60L), 1, new BigDecimal("42.50"),
-                        ActualLoadMode.PER_SIDE, 9, "Série registrada", START.plusSeconds(1), START.plusSeconds(2)),
+                        ActualLoadMode.PER_SIDE, 9, "Série registrada", START.plusSeconds(1), START.plusSeconds(2), new BigDecimal("85.00")),
                 new WorkoutSessionSetDetailResult(new WorkoutSessionSetId(61L), 2, null, null, null,
-                        "Somente relato", START.plusSeconds(3), null)) : List.of();
+                        "Somente relato", START.plusSeconds(3), null, null)) : List.of();
         WorkoutSessionActivityDetailResult activity = new WorkoutSessionActivityDetailResult(
                 new WorkoutSessionActivityId(30L), withoutOrigins ? null : new WorkoutActivityId(40L),
                 withoutOrigins ? null : new ExerciseId(50L), "Exercício histórico", "STRENGTH", 1,
                 4, 8, 12, new BigDecimal("90.50"), "Cada lado", 40, new BigDecimal("5.50"), "Moderada", 90,
                 "Prescrição histórica", withExecution ? 20 : null, withExecution ? new BigDecimal("2.25") : null,
-                withExecution ? "Execução parcial" : null, START, withExecution ? START.plusSeconds(4) : null, sets);
+                withExecution ? "Execução parcial" : null, START, withExecution ? START.plusSeconds(4) : null, sets,
+                withExecution ? ActualLoadMode.PER_SIDE : null);
         return new WorkoutSessionDetailResult(new WorkoutSessionId(100L), new PersonId(3L),
                 withoutOrigins ? null : new WorkoutCycleId(10L), withoutOrigins ? null : new WorkoutDayId(20L),
                 "Ciclo histórico", "Treino A histórico", WeekDay.MONDAY, LocalDate.of(2026, 10, 26), START, null,
