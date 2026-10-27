@@ -2,6 +2,7 @@ package com.ironcore.interfaces.rest.workoutsession.workoutsession.api;
 
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
 import com.ironcore.interfaces.rest.openapi.*;
+import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.close.CloseWorkoutSessionResponse;
 import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.detail.GetWorkoutSessionDetailResponse;
 import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.start.StartWorkoutSessionRequest;
 import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.start.StartWorkoutSessionResponse;
@@ -18,10 +19,33 @@ import org.springframework.http.ResponseEntity;
 public interface WorkoutSessionApi {
 
     @Operation(
+            summary = "Encerrar sessão de treino",
+            description = "Encerra a sessão do usuário autenticado preservando snapshots e execução registrada. "
+                    + "No horário limite ou depois, o domínio registra AUTO_EXPIRED com o horário limite como "
+                    + "finishedAt e o instante do processamento como updatedAt. Sessões já encerradas são rejeitadas."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Sessão de treino encerrada com sucesso.",
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = CloseWorkoutSessionResponse.class)
+            )
+    )
+    @BadRequestResponse
+    @NotFoundResponse
+    @ForbiddenResponse
+    @UnauthorizedResponse
+    @ConflictResponse
+    @InternalServerErrorResponse
+    ResponseEntity<CloseWorkoutSessionResponse> close(AuthenticatedUser authenticatedUser, Long id);
+
+    @Operation(
             summary = "Iniciar sessão de treino",
             description = "Inicia uma sessão a partir de um dia do ciclo em andamento do usuário autenticado. "
                     + "Preserva a prescrição como snapshot, sem criar séries executadas ou preencher dados de execução. "
-                    + "Somente uma sessão pode permanecer em andamento por pessoa."
+                    + "Somente uma sessão pode permanecer em andamento por pessoa. "
+                    + "Uma sessão anterior vencida é expirada antes de persistir o novo início."
     )
     @ApiResponse(
             responseCode = "201",

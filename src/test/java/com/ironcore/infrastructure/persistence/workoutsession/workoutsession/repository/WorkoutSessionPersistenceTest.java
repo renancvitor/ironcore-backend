@@ -1,6 +1,22 @@
 package com.ironcore.infrastructure.persistence.workoutsession.workoutsession.repository;
 
 import com.ironcore.domain.activitytype.model.ActivityType;
+import com.ironcore.application.logging.audit.port.AuditLogPublisher;
+import com.ironcore.application.workoutsession.workoutsession.expire.ExpireWorkoutSessionCommand;
+import com.ironcore.application.workoutsession.workoutsession.expire.ExpireWorkoutSessionUseCase;
+import com.ironcore.application.workoutsession.workoutsession.expire.ExpireWorkoutSessionsUseCase;
+import com.ironcore.application.workoutsession.workoutsession.start.StartWorkoutSessionCommand;
+import com.ironcore.application.workoutsession.workoutsession.start.StartWorkoutSessionUseCase;
+import com.ironcore.domain.person.model.Person;
+import com.ironcore.domain.person.repository.PersonRepository;
+import com.ironcore.domain.user.model.User;
+import com.ironcore.domain.user.repository.UserRepository;
+import com.ironcore.domain.activitytype.repository.ActivityTypeRepository;
+import com.ironcore.domain.exercise.repository.ExerciseRepository;
+import com.ironcore.domain.workoutplanning.workoutactivity.repository.WorkoutActivityRepository;
+import com.ironcore.domain.workoutplanning.workoutcycle.repository.WorkoutCycleRepository;
+import com.ironcore.domain.workoutplanning.workoutday.repository.WorkoutDayRepository;
+import com.ironcore.domain.workoutsession.workoutsession.enums.WorkoutSessionCloseReason;
 import com.ironcore.domain.activitytype.valueobject.ActivityTypeCode;
 import com.ironcore.domain.activitytype.valueobject.ActivityTypeId;
 import com.ironcore.domain.equipmenttype.valueobject.EquipmentTypeId;
@@ -40,6 +56,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.AopTestUtils;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -52,9 +69,12 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.Clock;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
@@ -68,6 +88,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static com.ironcore.domain.person.PersonTestFactory.restoredPerson;
+import static com.ironcore.domain.user.UserTestFactory.activeUser;
 
 @DataJpaTest(showSql = false, properties = {
         "spring.jpa.hibernate.ddl-auto=validate",
@@ -75,7 +100,8 @@ import static org.mockito.Mockito.doAnswer;
         "spring.jpa.show-sql=false"
 })
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({WorkoutSessionAdapter.class, WorkoutSessionPlanningQueryAdapter.class})
+@Import({WorkoutSessionAdapter.class, WorkoutSessionPlanningQueryAdapter.class,
+        ExpireWorkoutSessionUseCase.class, ExpireWorkoutSessionsUseCase.class, StartWorkoutSessionUseCase.class})
 @ActiveProfiles("test")
 @Testcontainers
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -104,6 +130,42 @@ class WorkoutSessionPersistenceTest {
     private WorkoutSessionPlanningQueryAdapter planningQueryAdapter;
     @Autowired
     private JdbcTemplate jdbc;
+
+    @Autowired
+    private StartWorkoutSessionUseCase startWorkoutSessionUseCase;
+
+    @Autowired
+    private ExpireWorkoutSessionsUseCase expireWorkoutSessionsUseCase;
+
+    @MockitoSpyBean
+    private ExpireWorkoutSessionUseCase expireWorkoutSessionUseCase;
+
+    @MockitoBean
+    private Clock clock;
+
+    @MockitoBean
+    private UserRepository userRepository;
+
+    @MockitoBean
+    private PersonRepository personRepository;
+
+    @MockitoBean
+    private WorkoutCycleRepository workoutCycleRepository;
+
+    @MockitoBean
+    private WorkoutDayRepository workoutDayRepository;
+
+    @MockitoBean
+    private WorkoutActivityRepository workoutActivityRepository;
+
+    @MockitoBean
+    private ExerciseRepository exerciseRepository;
+
+    @MockitoBean
+    private ActivityTypeRepository activityTypeRepository;
+
+    @MockitoBean
+    private AuditLogPublisher publisher;
     private PersonId owner;
     private Long cycleId;
     private Long dayId;
@@ -680,6 +742,179 @@ class WorkoutSessionPersistenceTest {
                 INSERT INTO workout_session_sets (workout_session_activity_id, set_number, notes, created_at)
                 VALUES (-1, 1, 'Sem pai', now())
                 """)).isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void shouldKeepExpirationCommittedWhenSubsequentStartRollsBack() {
+        WorkoutSession previous = repository.save(newSession());
+        Instant processing = EXPIRY.plus(Duration.ofDays(2));
+        StartWorkoutSessionCommand command = givenStartPlanning(processing);
+        doThrow(new IllegalStateException("Falha após persistir nova sessão"))
+                .when(publisher).publish(any(), any(), any(), any(), any(), any(), any());
+
+        assertThatThrownBy(() -> startWorkoutSessionUseCase.execute(command))
+                .isInstanceOf(IllegalStateException.class);
+
+        WorkoutSession history = repository.findByIdAndPersonId(previous.getId(), owner).orElseThrow();
+        assertThat(history.getStatus()).isEqualTo(WorkoutSessionStatus.CLOSED);
+        assertThat(history.getCloseReason()).isEqualTo(WorkoutSessionCloseReason.AUTO_EXPIRED);
+        assertThat(history.getFinishedAt()).isEqualTo(EXPIRY);
+        assertThat(history.getUpdatedAt()).isEqualTo(processing);
+        assertThat(repository.findInProgressByPersonId(owner)).isEmpty();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM workout_sessions WHERE person_id = ?",
+                Long.class, owner.value())).isEqualTo(1);
+    }
+
+    @Test
+    void shouldReleaseOpenSessionConstraintBeforeStartingNextWorkout() {
+        WorkoutSession previous = repository.save(newSession());
+        StartWorkoutSessionCommand command = givenStartPlanning(EXPIRY.plusSeconds(1));
+
+        var result = startWorkoutSessionUseCase.execute(command);
+
+        assertThat(result.id()).isNotEqualTo(previous.getId());
+        assertThat(repository.findByIdAndPersonId(previous.getId(), owner).orElseThrow().getCloseReason())
+                .isEqualTo(WorkoutSessionCloseReason.AUTO_EXPIRED);
+        assertThat(repository.findInProgressByPersonId(owner).orElseThrow().getId()).isEqualTo(result.id());
+    }
+
+    @Test
+    void shouldRecoverAfterDowntimeAndNotChangeClosedSessionsOnRepeatedRuns() {
+        WorkoutSession previous = repository.save(newSession());
+        previous.addSet(owner, previous.getActivities().getFirst().getId(), 1, new BigDecimal("42.50"),
+                ActualLoadMode.PER_SIDE, 8, "Relato da série", START.plusSeconds(1));
+        previous.updateActivityExecution(owner, previous.getActivities().getLast().getId(), 20,
+                new BigDecimal("2.00"), "Caminhada", START.plusSeconds(2));
+        previous.updateNotes(owner, "Relato geral", START.plusSeconds(3));
+        previous = repository.save(previous);
+        Instant processing = EXPIRY.plus(Duration.ofDays(3));
+        when(clock.instant()).thenReturn(processing);
+
+        expireWorkoutSessionsUseCase.execute();
+
+        WorkoutSession expired = repository.findByIdAndPersonId(previous.getId(), owner).orElseThrow();
+        assertThat(expired.getFinishedAt()).isEqualTo(EXPIRY);
+        assertThat(expired.getUpdatedAt()).isEqualTo(processing);
+        assertThat(expired.getCloseReason()).isEqualTo(WorkoutSessionCloseReason.AUTO_EXPIRED);
+        assertThat(expired).usingRecursiveComparison()
+                .ignoringFields("version", "status", "closeReason", "finishedAt", "updatedAt").isEqualTo(previous);
+
+        new ExpireWorkoutSessionsUseCase(repository, expireWorkoutSessionUseCase).execute();
+
+        assertThat(repository.findByIdAndPersonId(previous.getId(), owner).orElseThrow())
+                .usingRecursiveComparison().isEqualTo(expired);
+    }
+
+    @Test
+    void shouldRollBackOnlyProblematicExpirationAndContinueWithNextPerson() {
+        WorkoutSession previous = repository.save(newSession());
+        PersonId other = new PersonId(id("""
+                INSERT INTO persons (name, sex, birth_date, created_at)
+                VALUES ('Outra pessoa', 'MALE', DATE '1990-01-01', now()) RETURNING id
+                """));
+        try {
+            id("""
+                    INSERT INTO workout_sessions (person_id, workout_cycle_name_snapshot, workout_day_title_snapshot,
+                        week_day_snapshot, performed_on, started_at, status, created_at)
+                    VALUES (?, 'Ciclo removido', 'Dia removido', 1, DATE '2026-10-26', ?, 'IN_PROGRESS', ?)
+                    RETURNING id
+                    """, other.value(), java.sql.Timestamp.from(START), java.sql.Timestamp.from(START));
+            assertThat(repository.findInProgressPersonIdsAfter(null, 1)).containsExactly(owner);
+            assertThat(repository.findInProgressPersonIdsAfter(owner, 1)).containsExactly(other);
+            assertThat(repository.findInProgressPersonIdsAfter(other, 1)).isEmpty();
+            when(clock.instant()).thenReturn(EXPIRY.plus(Duration.ofDays(2)));
+            ExpireWorkoutSessionUseCase target = AopTestUtils.getUltimateTargetObject(expireWorkoutSessionUseCase);
+            doAnswer(invocation -> {
+                invocation.callRealMethod();
+                throw new IllegalStateException("Falha isolada após flush");
+            }).when(target).execute(new ExpireWorkoutSessionCommand(owner));
+
+            expireWorkoutSessionsUseCase.execute();
+
+            assertThat(repository.findByIdAndPersonId(previous.getId(), owner).orElseThrow())
+                    .usingRecursiveComparison().isEqualTo(previous);
+            assertThat(repository.findInProgressByPersonId(other)).isEmpty();
+            assertThat(jdbc.queryForObject("SELECT close_reason FROM workout_sessions WHERE person_id = ?",
+                    String.class, other.value())).isEqualTo("AUTO_EXPIRED");
+        } finally {
+            jdbc.update("DELETE FROM persons WHERE id = ?", other.value());
+        }
+    }
+
+    @Test
+    void shouldSelectOnlyOpenPersonIdsInLimitedCursorPages() {
+        WorkoutSession previous = repository.save(newSession());
+        assertThat(repository.findInProgressPersonIdsAfter(null, 1)).containsExactly(owner);
+        assertThat(repository.findInProgressPersonIdsAfter(owner, 1)).isEmpty();
+        previous.expireIfDue(EXPIRY);
+        repository.save(previous);
+
+        assertThat(repository.findInProgressPersonIdsAfter(null, 1)).isEmpty();
+    }
+
+    @Test
+    void shouldPreserveWinnerOfConcurrentManualAndAutomaticClosure() throws Exception {
+        WorkoutSession saved = repository.save(newSession());
+        saved.addSet(owner, saved.getActivities().getFirst().getId(), 1,
+                null, null, null, "Registro preservado", START.plusSeconds(1));
+        saved = repository.save(saved);
+        WorkoutSession manual = repository.findByIdAndPersonId(saved.getId(), owner).orElseThrow();
+        WorkoutSession automatic = repository.findByIdAndPersonId(saved.getId(), owner).orElseThrow();
+        manual.closeManually(owner, EXPIRY.minusSeconds(1));
+        automatic.expireIfDue(EXPIRY.plus(Duration.ofDays(2)));
+        CyclicBarrier barrier = new CyclicBarrier(2);
+        boolean manualWon;
+        try (ExecutorService executor = Executors.newFixedThreadPool(2)) {
+            Function<WorkoutSession, Callable<Boolean>> close = session -> () -> {
+                barrier.await(10, TimeUnit.SECONDS);
+                try {
+                    repository.save(session);
+                    return true;
+                } catch (WorkoutSessionConflictException exception) {
+                    return false;
+                }
+            };
+            Future<Boolean> manualResult = executor.submit(close.apply(manual));
+            Future<Boolean> automaticResult = executor.submit(close.apply(automatic));
+            manualWon = manualResult.get(30, TimeUnit.SECONDS);
+            assertThat(List.of(manualWon, automaticResult.get(30, TimeUnit.SECONDS)))
+                    .containsExactlyInAnyOrder(true, false);
+        }
+        WorkoutSession history = repository.findByIdAndPersonId(saved.getId(), owner).orElseThrow();
+        assertThat(history.getCloseReason()).isEqualTo(manualWon
+                ? WorkoutSessionCloseReason.MANUAL : WorkoutSessionCloseReason.AUTO_EXPIRED);
+        assertThat(history.getFinishedAt()).isEqualTo(manualWon ? EXPIRY.minusSeconds(1) : EXPIRY);
+        assertThat(history.getActivities()).usingRecursiveComparison().isEqualTo(saved.getActivities());
+
+        assertThat(expireWorkoutSessionUseCase.execute(new ExpireWorkoutSessionCommand(owner))).isEmpty();
+        assertThat(repository.findByIdAndPersonId(saved.getId(), owner).orElseThrow())
+                .usingRecursiveComparison().isEqualTo(history);
+    }
+
+    private StartWorkoutSessionCommand givenStartPlanning(Instant processing) {
+        User template = activeUser();
+        User user = User.restore(template.getId(), template.getNickname(), owner, template.getEmail(),
+                template.getPasswordHash(), false, true, template.getCreatedAt(), template.getUpdatedAt());
+        Person templatePerson = restoredPerson();
+        Person person = Person.restore(owner, templatePerson.getName(), templatePerson.getSex(),
+                templatePerson.getBirthDate(), templatePerson.getCreatedAt(), templatePerson.getUpdatedAt());
+        WorkoutCycle cycle = WorkoutCycle.restore(new WorkoutCycleId(cycleId), owner, "Ciclo histórico",
+                new TrainingGoalId(goalId), LocalDate.of(2026, 10, 1), null, null, WeekDay.SUNDAY,
+                WorkoutStatus.IN_PROGRESS, WorkoutOrigin.MANUAL, null, CREATED, null);
+        WorkoutDay day = WorkoutDay.restore(new WorkoutDayId(dayId), cycle.getId(), WeekDay.MONDAY,
+                "Treino misto", 1, CREATED, null);
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(personRepository.findById(owner)).thenReturn(Optional.of(person));
+        when(workoutCycleRepository.findByIdAndPersonId(cycle.getId(), owner)).thenReturn(Optional.of(cycle));
+        when(workoutDayRepository.findByIdAndPersonId(day.getId(), owner)).thenReturn(Optional.of(day));
+        when(workoutActivityRepository.findByPersonIdAndWorkoutDayId(owner, day.getId()))
+                .thenReturn(sources.stream().map(WorkoutSessionActivitySource::activity).toList());
+        for (WorkoutSessionActivitySource source : sources) {
+            when(exerciseRepository.findById(source.exercise().getId())).thenReturn(Optional.of(source.exercise()));
+            when(activityTypeRepository.findById(source.activityType().getId())).thenReturn(Optional.of(source.activityType()));
+        }
+        when(clock.instant()).thenReturn(processing);
+        return new StartWorkoutSessionCommand(user.getId(), cycle.getId(), day.getId());
     }
 
     private WorkoutSession newSession() {

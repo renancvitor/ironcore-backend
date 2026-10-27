@@ -1,5 +1,8 @@
 package com.ironcore.interfaces.rest.workoutsession.workoutsession;
 
+import com.ironcore.application.workoutsession.workoutsession.close.CloseWorkoutSessionCommand;
+import com.ironcore.application.workoutsession.workoutsession.close.CloseWorkoutSessionResult;
+import com.ironcore.application.workoutsession.workoutsession.close.CloseWorkoutSessionUseCase;
 import com.ironcore.application.workoutsession.workoutsession.detail.GetWorkoutSessionDetailCommand;
 import com.ironcore.application.workoutsession.workoutsession.detail.GetWorkoutSessionDetailUseCase;
 import com.ironcore.application.workoutsession.workoutsession.detail.WorkoutSessionDetailResult;
@@ -10,6 +13,7 @@ import com.ironcore.application.workoutsession.workoutsession.start.StartWorkout
 import com.ironcore.application.workoutsession.workoutsession.start.StartWorkoutSessionUseCase;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
 import com.ironcore.interfaces.rest.workoutsession.workoutsession.api.WorkoutSessionApi;
+import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.close.CloseWorkoutSessionResponse;
 import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.detail.GetWorkoutSessionDetailResponse;
 import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.start.StartWorkoutSessionRequest;
 import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.start.StartWorkoutSessionResponse;
@@ -31,6 +35,19 @@ public class WorkoutSessionController implements WorkoutSessionApi {
     private final StartWorkoutSessionUseCase startWorkoutSessionUseCase;
     private final GetWorkoutSessionDetailUseCase getWorkoutSessionDetailUseCase;
     private final GetInProgressWorkoutSessionUseCase getInProgressWorkoutSessionUseCase;
+    private final CloseWorkoutSessionUseCase closeWorkoutSessionUseCase;
+
+    @PatchMapping("/{id}/close")
+    public ResponseEntity<CloseWorkoutSessionResponse> close(
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
+            @PathVariable Long id
+    ) {
+        CloseWorkoutSessionCommand command = WorkoutSessionRestMapper.toCloseCommand(authenticatedUser, id);
+        CloseWorkoutSessionResult result = closeWorkoutSessionUseCase.execute(command);
+        CloseWorkoutSessionResponse response = WorkoutSessionRestMapper.toResponse(result);
+
+        return ResponseEntity.ok(response);
+    }
 
     @PostMapping
     public ResponseEntity<StartWorkoutSessionResponse> start(

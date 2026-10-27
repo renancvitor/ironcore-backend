@@ -4,6 +4,8 @@ import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
 import com.ironcore.application.logging.audit.port.AuditLogPublisher;
 import com.ironcore.application.workoutsession.workoutsession.WorkoutSessionAuditData;
+import com.ironcore.application.workoutsession.workoutsession.expire.ExpireWorkoutSessionCommand;
+import com.ironcore.application.workoutsession.workoutsession.expire.ExpireWorkoutSessionUseCase;
 import com.ironcore.domain.activitytype.model.ActivityType;
 import com.ironcore.domain.activitytype.repository.ActivityTypeRepository;
 import com.ironcore.domain.exercise.model.Exercise;
@@ -24,6 +26,8 @@ import com.ironcore.domain.workoutsession.workoutsession.model.WorkoutSession;
 import com.ironcore.domain.workoutsession.workoutsession.repository.WorkoutSessionRepository;
 import com.ironcore.domain.workoutsession.workoutsessionactivity.valueobject.WorkoutSessionActivitySource;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +41,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class StartWorkoutSessionUseCase {
 
+    private static final Logger log = LoggerFactory.getLogger(StartWorkoutSessionUseCase.class);
+
     private final UserRepository userRepository;
     private final PersonRepository personRepository;
     private final WorkoutCycleRepository workoutCycleRepository;
@@ -47,6 +53,7 @@ public class StartWorkoutSessionUseCase {
     private final WorkoutSessionRepository workoutSessionRepository;
     private final Clock clock;
     private final AuditLogPublisher publisher;
+    private final ExpireWorkoutSessionUseCase expireWorkoutSessionUseCase;
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public StartWorkoutSessionResult execute(StartWorkoutSessionCommand command) {
@@ -79,6 +86,10 @@ public class StartWorkoutSessionUseCase {
 
         Instant now = clock.instant();
         WorkoutSession session = WorkoutSession.register(person.getId(), cycle, day, sources, now);
+        expireWorkoutSessionUseCase.execute(new ExpireWorkoutSessionCommand(person.getId()))
+                .ifPresent(result -> log.info(
+                        "Sessão expirada antes de novo treino: sessionId={}, personId={}, finishedAt={}, updatedAt={}",
+                        result.id().value(), person.getId().value(), result.finishedAt(), result.updatedAt()));
         WorkoutSession savedSession = workoutSessionRepository.save(session);
 
         publisher.publish(

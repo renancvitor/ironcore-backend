@@ -25,10 +25,12 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -161,6 +163,19 @@ public class WorkoutSessionAdapter implements WorkoutSessionRepository {
         }
 
         return entity.map(WorkoutSessionMapper::toDomain);
+    }
+
+    @Override
+    public List<PersonId> findInProgressPersonIdsAfter(PersonId afterPersonId, int limit) {
+        try {
+            return workoutSessionJpaRepository.findInProgressPersonIdsAfter(
+                            WorkoutSessionStatus.IN_PROGRESS,
+                            afterPersonId == null ? null : afterPersonId.value(),
+                            PageRequest.of(0, limit))
+                    .stream().map(PersonId::new).toList();
+        } catch (RuntimeException exception) {
+            throw new PersistenceException("Falha ao buscar pessoas com sessão em andamento.", exception);
+        }
     }
 
     private RuntimeException translateIntegrityViolation(DataIntegrityViolationException exception) {

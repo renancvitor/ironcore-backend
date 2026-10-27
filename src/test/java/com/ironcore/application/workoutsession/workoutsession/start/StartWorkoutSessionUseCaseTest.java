@@ -4,6 +4,9 @@ import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
 import com.ironcore.application.logging.audit.port.AuditLogPublisher;
 import com.ironcore.application.workoutsession.workoutsession.WorkoutSessionAuditData;
+import com.ironcore.application.workoutsession.workoutsession.expire.ExpireWorkoutSessionCommand;
+import com.ironcore.application.workoutsession.workoutsession.expire.ExpireWorkoutSessionResult;
+import com.ironcore.application.workoutsession.workoutsession.expire.ExpireWorkoutSessionUseCase;
 import com.ironcore.domain.activitytype.model.ActivityType;
 import com.ironcore.domain.activitytype.repository.ActivityTypeRepository;
 import com.ironcore.domain.activitytype.valueobject.ActivityTypeCode;
@@ -97,6 +100,9 @@ class StartWorkoutSessionUseCaseTest {
     @Mock
     private AuditLogPublisher publisher;
 
+    @Mock
+    private ExpireWorkoutSessionUseCase expireWorkoutSessionUseCase;
+
     private StartWorkoutSessionUseCase useCase;
     private final User user = User.restore(new UserId(77L), "Renan", restoredPerson().getId(),
             activeUser().getEmail(), activeUser().getPasswordHash(), false, true, activeUser().getCreatedAt(), null);
@@ -112,11 +118,29 @@ class StartWorkoutSessionUseCaseTest {
         useCase = new StartWorkoutSessionUseCase(
                 userRepository, personRepository, workoutCycleRepository, workoutDayRepository,
                 workoutActivityRepository, exerciseRepository, activityTypeRepository,
-                workoutSessionRepository, clock, publisher);
+                workoutSessionRepository, clock, publisher, expireWorkoutSessionUseCase);
     }
 
     @Nested
     class SuccessfulStart {
+
+        @Test
+        void shouldRegularizeExpiredSessionBeforeSavingNewSession() {
+            givenPlanning(cycle, day, List.of(activity));
+            givenCatalog(restoreExercise(), restoreActivityType());
+            var previous = com.ironcore.domain.workoutsession.workoutsession.WorkoutSessionTestFactory.session();
+            var now = previous.getExpiresAt().plusSeconds(3600);
+            when(clock.instant()).thenReturn(now);
+            when(expireWorkoutSessionUseCase.execute(new ExpireWorkoutSessionCommand(person.getId())))
+                    .thenReturn(Optional.of(new ExpireWorkoutSessionResult(previous.getId(), previous.getExpiresAt(), now)));
+            when(workoutSessionRepository.save(any())).thenAnswer(invocation -> restoredSession(invocation.getArgument(0)));
+
+            useCase.execute(command);
+
+            var order = inOrder(expireWorkoutSessionUseCase, workoutSessionRepository);
+            order.verify(expireWorkoutSessionUseCase).execute(new ExpireWorkoutSessionCommand(person.getId()));
+            order.verify(workoutSessionRepository).save(any());
+        }
 
         @Test
         void shouldCaptureCompletePrescriptionWithoutRecordingExecution() {
@@ -312,6 +336,20 @@ class StartWorkoutSessionUseCaseTest {
 
     @Nested
     class PlanningValidation {
+
+        @Test
+        void shouldPropagateExpirationConflictBeforeSavingNewSession() {
+            givenPlanning(cycle, day, List.of(activity));
+            givenCatalog(restoreExercise(), restoreActivityType());
+            when(clock.instant()).thenReturn(START);
+            when(expireWorkoutSessionUseCase.execute(new ExpireWorkoutSessionCommand(person.getId())))
+                    .thenThrow(new WorkoutSessionConflictException("Sessão alterada concorrentemente."));
+
+            assertThatThrownBy(() -> useCase.execute(command)).isInstanceOf(WorkoutSessionConflictException.class);
+
+            verify(workoutSessionRepository, never()).save(any());
+            verifyNoInteractions(publisher);
+        }
 
         @ParameterizedTest
         @EnumSource(value = WorkoutStatus.class, names = {"NOT_STARTED", "COMPLETED", "CANCELLED"})
