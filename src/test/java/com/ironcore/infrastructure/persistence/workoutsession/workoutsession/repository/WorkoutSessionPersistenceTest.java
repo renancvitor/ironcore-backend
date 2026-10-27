@@ -520,13 +520,15 @@ class WorkoutSessionPersistenceTest {
         assertThat(saved.getActivities().getLast().getSnapshot().plannedDistanceKm()).isEqualByComparingTo("3.00");
     }
 
-    @Test
-    void shouldRejectJoinedTransactionThatCouldHidePlanningInserts() {
+    @ParameterizedTest
+    @ValueSource(ints = {TransactionDefinition.ISOLATION_REPEATABLE_READ, TransactionDefinition.ISOLATION_SERIALIZABLE})
+    void shouldRejectJoinedTransactionThatCouldHidePlanningInserts(int isolationLevel) {
         WorkoutSession candidate = newSession();
         TransactionTemplate transaction = new TransactionTemplate(transactionManager);
-        transaction.setIsolationLevel(TransactionDefinition.ISOLATION_REPEATABLE_READ);
+        transaction.setIsolationLevel(isolationLevel);
         assertThatThrownBy(() -> transaction.execute(status -> repository.save(candidate)))
-                .isInstanceOf(WorkoutSessionConflictException.class);
+                .isInstanceOf(WorkoutSessionConflictException.class)
+                .hasMessage("Não foi possível validar a prescrição nesta transação. Tente novamente.");
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM workout_sessions WHERE person_id = ?",
                 Long.class, owner.value())).isZero();
     }

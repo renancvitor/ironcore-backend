@@ -75,8 +75,8 @@ class WorkoutSessionPlanningQueryAdapter {
                     """).setParameter("day", dayId.value()).setParameter("cycle", cycleId)
                     .setParameter("person", personId.value()).getSingleResult();
 
-            // A joined REPEATABLE READ transaction can hide inserts committed before the day lock.
-            if ("repeatable read".equals(header[4])) {
+            // Joined REPEATABLE READ and SERIALIZABLE transactions can hide inserts committed before the day lock.
+            if ("repeatable read".equals(header[4]) || "serializable".equals(header[4])) {
                 throw new WorkoutSessionConflictException("Não foi possível validar a prescrição nesta transação. Tente novamente.");
             }
 
