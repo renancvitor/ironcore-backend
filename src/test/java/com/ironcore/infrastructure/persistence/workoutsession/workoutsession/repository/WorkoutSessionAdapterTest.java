@@ -2,6 +2,8 @@ package com.ironcore.infrastructure.persistence.workoutsession.workoutsession.re
 
 import com.ironcore.domain.workoutsession.workoutsession.exception.WorkoutSessionConflictException;
 import com.ironcore.domain.workoutsession.workoutsession.model.WorkoutSession;
+import com.ironcore.domain.person.valueobject.PersonId;
+import com.ironcore.domain.workoutsession.workoutsession.enums.WorkoutSessionStatus;
 import com.ironcore.infrastructure.exception.PersistenceException;
 import com.ironcore.infrastructure.persistence.person.entity.PersonEntity;
 import com.ironcore.infrastructure.persistence.person.repository.PersonJpaRepository;
@@ -24,14 +26,17 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 
 import static com.ironcore.domain.workoutsession.workoutsession.WorkoutSessionTestFactory.OWNER;
 import static com.ironcore.domain.workoutsession.workoutsession.WorkoutSessionTestFactory.START;
 import static com.ironcore.domain.workoutsession.workoutsession.WorkoutSessionTestFactory.session;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -128,5 +133,29 @@ class WorkoutSessionAdapterTest {
     private DataIntegrityViolationException integrityViolation(String constraint) {
         return new DataIntegrityViolationException("Constraint violation",
                 new ConstraintViolationException("Constraint violation", new SQLException("Violation"), constraint));
+    }
+
+    @Test
+    void shouldLimitCandidateQueryAndMapOnlyPersonIds() {
+        when(workoutSessionJpaRepository.findInProgressPersonIdsAfter(
+                WorkoutSessionStatus.IN_PROGRESS, null, PageRequest.of(0, 100)))
+                .thenReturn(List.of(OWNER.value()));
+        when(workoutSessionJpaRepository.findInProgressPersonIdsAfter(
+                WorkoutSessionStatus.IN_PROGRESS, OWNER.value(), PageRequest.of(0, 100)))
+                .thenReturn(List.of(OWNER.value() + 1));
+
+        assertThat(adapter.findInProgressPersonIdsAfter(null, 100)).containsExactly(OWNER);
+        assertThat(adapter.findInProgressPersonIdsAfter(OWNER, 100)).containsExactly(new PersonId(OWNER.value() + 1));
+        verifyNoInteractions(personJpaRepository, entityManager, workoutSessionPlanningQueryAdapter);
+    }
+
+    @Test
+    void shouldTranslateCandidateSelectionFailure() {
+        DataAccessResourceFailureException failure = new DataAccessResourceFailureException("Indisponível");
+        when(workoutSessionJpaRepository.findInProgressPersonIdsAfter(
+                WorkoutSessionStatus.IN_PROGRESS, null, PageRequest.of(0, 100))).thenThrow(failure);
+
+        assertThatThrownBy(() -> adapter.findInProgressPersonIdsAfter(null, 100))
+                .isInstanceOf(PersistenceException.class).hasCause(failure);
     }
 }

@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
+import com.ironcore.application.workoutsession.workoutsession.close.CloseWorkoutSessionCommand;
+import com.ironcore.application.workoutsession.workoutsession.close.CloseWorkoutSessionResult;
+import com.ironcore.application.workoutsession.workoutsession.close.CloseWorkoutSessionUseCase;
 import com.ironcore.application.workoutsession.workoutsession.detail.GetWorkoutSessionDetailCommand;
 import com.ironcore.application.workoutsession.workoutsession.detail.GetWorkoutSessionDetailUseCase;
 import com.ironcore.application.workoutsession.workoutsession.detail.WorkoutSessionActivityDetailResult;
@@ -23,6 +26,7 @@ import com.ironcore.domain.workoutplanning.workoutcycle.valueobject.WorkoutCycle
 import com.ironcore.domain.workoutplanning.workoutday.enums.WeekDay;
 import com.ironcore.domain.workoutplanning.workoutday.valueobject.WorkoutDayId;
 import com.ironcore.domain.workoutsession.workoutsession.enums.WorkoutSessionStatus;
+import com.ironcore.domain.workoutsession.workoutsession.enums.WorkoutSessionCloseReason;
 import com.ironcore.domain.workoutsession.workoutsession.exception.InvalidWorkoutSessionException;
 import com.ironcore.domain.workoutsession.workoutsession.exception.WorkoutSessionConflictException;
 import com.ironcore.domain.workoutsession.workoutsession.valueobject.WorkoutSessionId;
@@ -54,6 +58,7 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -71,6 +76,82 @@ class WorkoutSessionControllerTest {
     @MockitoBean private ErrorLogPublisher errorLogPublisher;
     @MockitoBean private JwtAccessTokenValidator jwtAccessTokenValidator;
     @MockitoBean private UserRepository userRepository;
+
+    @MockitoBean
+    private CloseWorkoutSessionUseCase closeWorkoutSessionUseCase;
+
+    @Nested
+    class Close {
+
+        @ParameterizedTest
+        @ValueSource(strings = {"MANUAL", "AUTO_EXPIRED"})
+        void shouldCloseUsingAuthenticatedUserAndReturnPersistedLifecycle(String reason) throws Exception {
+            CloseWorkoutSessionCommand command = new CloseWorkoutSessionCommand(new UserId(77L), new WorkoutSessionId(100L));
+            boolean expired = reason.equals("AUTO_EXPIRED");
+            Instant finishedAt = expired ? Instant.parse("2026-10-27T06:00:00Z") : START.plusSeconds(60);
+            Instant updatedAt = expired ? finishedAt.plusSeconds(172800) : finishedAt;
+            when(closeWorkoutSessionUseCase.execute(command)).thenReturn(new CloseWorkoutSessionResult(
+                    command.id(), LocalDate.of(2026, 10, 26), START, finishedAt,
+                    WorkoutSessionStatus.CLOSED, WorkoutSessionCloseReason.valueOf(reason), updatedAt));
+
+            mockMvc.perform(patch(ENDPOINT + "/100/close").with(authenticatedUser(77L, "actor@example.com", false)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").value(100))
+                    .andExpect(jsonPath("$.status").value("CLOSED"))
+                    .andExpect(jsonPath("$.closeReason").value(reason))
+                    .andExpect(jsonPath("$.performedOn").value("2026-10-26"))
+                    .andExpect(jsonPath("$.startedAt").value(START.toString()))
+                    .andExpect(jsonPath("$.finishedAt").value(finishedAt.toString()))
+                    .andExpect(jsonPath("$.updatedAt").value(updatedAt.toString()));
+            verify(closeWorkoutSessionUseCase).execute(command);
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"0", "-1", "invalid"})
+        void shouldRejectInvalidSessionId(String id) throws Exception {
+            mockMvc.perform(patch(ENDPOINT + "/" + id + "/close").with(authenticatedUser()))
+                    .andExpect(status().isBadRequest());
+            verifyNoInteractions(closeWorkoutSessionUseCase);
+        }
+
+        @Test
+        void shouldRejectClosedSessionWithExistingDomainErrorContract() throws Exception {
+            when(closeWorkoutSessionUseCase.execute(any()))
+                    .thenThrow(new InvalidWorkoutSessionException("Sessão já encerrada."));
+            mockMvc.perform(patch(ENDPOINT + "/100/close").with(authenticatedUser()))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message").value("Sessão já encerrada."));
+        }
+
+        @Test
+        void shouldReturnNotFoundForMissingOrForeignSession() throws Exception {
+            when(closeWorkoutSessionUseCase.execute(any()))
+                    .thenThrow(new ResourceNotFoundException("Sessão de treino não encontrada."));
+            mockMvc.perform(patch(ENDPOINT + "/100/close").with(authenticatedUser()))
+                    .andExpect(status().isNotFound());
+        }
+
+        @Test
+        void shouldReturnForbiddenForInactiveUser() throws Exception {
+            when(closeWorkoutSessionUseCase.execute(any())).thenThrow(new UserInactiveException("Usuário inativo."));
+            mockMvc.perform(patch(ENDPOINT + "/100/close").with(authenticatedUser()))
+                    .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void shouldReturnConflictForConcurrentClosure() throws Exception {
+            when(closeWorkoutSessionUseCase.execute(any())).thenThrow(new WorkoutSessionConflictException("Conflito"));
+            mockMvc.perform(patch(ENDPOINT + "/100/close").with(authenticatedUser()))
+                    .andExpect(status().isConflict());
+        }
+
+        @Test
+        void shouldReturnInternalServerErrorForUnexpectedPersistenceFailure() throws Exception {
+            when(closeWorkoutSessionUseCase.execute(any())).thenThrow(new PersistenceException("Falha"));
+            mockMvc.perform(patch(ENDPOINT + "/100/close").with(authenticatedUser()))
+                    .andExpect(status().isInternalServerError());
+        }
+    }
 
     @Nested
     class Start {
@@ -186,6 +267,30 @@ class WorkoutSessionControllerTest {
 
     @Nested
     class Detail {
+
+        @Test
+        void shouldRecoverExpiredSessionWithHistoricalData() throws Exception {
+            var original = detailResult(true, true);
+            Instant deadline = Instant.parse("2026-10-27T06:00:00Z");
+            Instant processing = deadline.plusSeconds(172800);
+            var expired = new WorkoutSessionDetailResult(
+                    original.id(), original.personId(), original.workoutCycleId(), original.workoutDayId(),
+                    original.workoutCycleNameSnapshot(), original.workoutDayTitleSnapshot(), original.weekDaySnapshot(),
+                    original.performedOn(), original.startedAt(), deadline, WorkoutSessionStatus.CLOSED,
+                    WorkoutSessionCloseReason.AUTO_EXPIRED, original.notes(), original.createdAt(), processing,
+                    original.activities());
+            when(getWorkoutSessionDetailUseCase.execute(any())).thenReturn(expired);
+
+            mockMvc.perform(get(ENDPOINT + "/100").with(authenticatedUser()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.status").value("CLOSED"))
+                    .andExpect(jsonPath("$.closeReason").value("AUTO_EXPIRED"))
+                    .andExpect(jsonPath("$.finishedAt").value(deadline.toString()))
+                    .andExpect(jsonPath("$.updatedAt").value(processing.toString()))
+                    .andExpect(jsonPath("$.workoutDayId").value(nullValue()))
+                    .andExpect(jsonPath("$.activities[0].exerciseNameSnapshot").value("Exercício histórico"))
+                    .andExpect(jsonPath("$.activities[0].sets.length()").value(2));
+        }
 
         @Test
         void shouldReturnCompleteSnapshotAndRegisteredExecution() throws Exception {

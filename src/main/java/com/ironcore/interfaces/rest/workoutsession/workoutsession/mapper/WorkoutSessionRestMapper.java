@@ -1,5 +1,7 @@
 package com.ironcore.interfaces.rest.workoutsession.workoutsession.mapper;
 
+import com.ironcore.application.workoutsession.workoutsession.close.CloseWorkoutSessionCommand;
+import com.ironcore.application.workoutsession.workoutsession.close.CloseWorkoutSessionResult;
 import com.ironcore.application.workoutsession.workoutsession.detail.GetWorkoutSessionDetailCommand;
 import com.ironcore.application.workoutsession.workoutsession.detail.WorkoutSessionActivityDetailResult;
 import com.ironcore.application.workoutsession.workoutsession.detail.WorkoutSessionDetailResult;
@@ -11,6 +13,7 @@ import com.ironcore.domain.workoutplanning.workoutcycle.valueobject.WorkoutCycle
 import com.ironcore.domain.workoutplanning.workoutday.valueobject.WorkoutDayId;
 import com.ironcore.domain.workoutsession.workoutsession.valueobject.WorkoutSessionId;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
+import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.close.CloseWorkoutSessionResponse;
 import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.detail.GetWorkoutSessionDetailResponse;
 import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.detail.WorkoutSessionActivityDetailResponse;
 import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.detail.WorkoutSessionSetDetailResponse;
@@ -20,6 +23,22 @@ import com.ironcore.interfaces.rest.workoutsession.workoutsession.dto.start.Star
 public final class WorkoutSessionRestMapper {
 
     private WorkoutSessionRestMapper() {
+    }
+
+    public static CloseWorkoutSessionCommand toCloseCommand(AuthenticatedUser authenticatedUser, Long id) {
+        return new CloseWorkoutSessionCommand(authenticatedUser.userId(), new WorkoutSessionId(id));
+    }
+
+    public static CloseWorkoutSessionResponse toResponse(CloseWorkoutSessionResult result) {
+        return new CloseWorkoutSessionResponse(
+                result.id().value(),
+                result.performedOn(),
+                result.startedAt(),
+                result.finishedAt(),
+                result.status(),
+                result.closeReason(),
+                result.updatedAt()
+        );
     }
 
     public static StartWorkoutSessionCommand toStartCommand(
