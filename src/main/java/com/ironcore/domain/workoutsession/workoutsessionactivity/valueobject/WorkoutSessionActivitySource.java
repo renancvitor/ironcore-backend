@@ -7,7 +7,8 @@ import com.ironcore.domain.workoutsession.workoutsessionactivity.exception.Inval
 
 public record WorkoutSessionActivitySource(WorkoutActivity activity, Exercise exercise, ActivityType activityType) {
     public WorkoutSessionActivitySource {
-        if (activity == null || exercise == null || activityType == null)
+        if (activity == null || exercise == null || activityType == null) {
             throw new InvalidWorkoutSessionActivityException("Origem da atividade é obrigatória.");
+        }
     }
 }

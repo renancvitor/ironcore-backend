@@ -11,7 +11,8 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 
 import static com.ironcore.domain.workoutsession.workoutsession.WorkoutSessionTestFactory.START;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class WorkoutSessionSetTest {
     @ParameterizedTest
@@ -35,14 +36,24 @@ class WorkoutSessionSetTest {
     }
 
     @Test
-    void shouldReturnUpdatedSetWithoutMutatingOriginal() {
-        WorkoutSessionSet original = WorkoutSessionSet.register(1, new BigDecimal("45.00"),
-                ActualLoadMode.PER_SIDE, 10, null, START);
-        WorkoutSessionSet updated = original.update(new BigDecimal("50.00"), ActualLoadMode.PER_SIDE,
-                8, "Correção", START.plusSeconds(1));
-        assertThat(original.getActualLoadKg()).isEqualByComparingTo("45");
-        assertThat(original.getUpdatedAt()).isNull();
-        assertThat(updated.getActualLoadKg()).isEqualByComparingTo("50");
-        assertThat(updated.getCreatedAt()).isEqualTo(START);
+    void shouldUpdateSetInPlaceAndPreserveIdentityAndCreation() {
+        WorkoutSessionSet set = WorkoutSessionSet.restore(new WorkoutSessionSetId(50L), 1,
+                new BigDecimal("45.00"), ActualLoadMode.PER_SIDE, 10, null, START, null);
+        set.updateSet(new BigDecimal("50.00"), ActualLoadMode.PER_SIDE, 8, "Correção", START.plusSeconds(1));
+        assertThat(set.getId()).isEqualTo(new WorkoutSessionSetId(50L));
+        assertThat(set.getActualLoadKg()).isEqualByComparingTo("50");
+        assertThat(set.getCreatedAt()).isEqualTo(START);
+        assertThat(set.getUpdatedAt()).isEqualTo(START.plusSeconds(1));
+        assertThatThrownBy(() -> set.updateSet(new BigDecimal("-1"), ActualLoadMode.PER_SIDE,
+                8, "Inválido", START.plusSeconds(2))).isInstanceOf(InvalidWorkoutSessionSetException.class);
+        assertThat(set.getActualLoadKg()).isEqualByComparingTo("50");
+        assertThat(set.getNotes()).isEqualTo("Correção");
+    }
+
+    @Test
+    void shouldAcceptTrailingZerosWithoutLosingPrecision() {
+        WorkoutSessionSet set = WorkoutSessionSet.register(1, new BigDecimal("10.000"),
+                ActualLoadMode.TOTAL, 10, null, START);
+        assertThat(set.getActualLoadKg()).isEqualByComparingTo("10");
     }
 }

@@ -20,8 +20,7 @@ CREATE TABLE workout_sessions (
         OR (status = 'CLOSED' AND finished_at IS NOT NULL AND close_reason IS NOT NULL)
     ),
     CONSTRAINT ck_workout_sessions_dates CHECK (
-        created_at = started_at
-        AND performed_on = (started_at AT TIME ZONE 'America/Sao_Paulo')::DATE
+        performed_on = (started_at AT TIME ZONE 'America/Sao_Paulo')::DATE
         AND (finished_at IS NULL OR (finished_at >= started_at AND
             finished_at <= ((performed_on + 1) + TIME '03:00') AT TIME ZONE 'America/Sao_Paulo'))
         AND (close_reason IS DISTINCT FROM 'AUTO_EXPIRED' OR

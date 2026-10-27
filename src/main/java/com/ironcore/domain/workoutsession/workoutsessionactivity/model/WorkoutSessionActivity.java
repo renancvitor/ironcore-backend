@@ -10,114 +10,223 @@ import com.ironcore.domain.workoutsession.workoutsessionactivity.valueobject.Wor
 import com.ironcore.domain.workoutsession.workoutsessionactivity.valueobject.WorkoutSessionActivitySnapshot;
 import com.ironcore.domain.workoutsession.workoutsessionset.enums.ActualLoadMode;
 import com.ironcore.domain.workoutsession.workoutsessionset.model.WorkoutSessionSet;
+import com.ironcore.domain.workoutsession.workoutsessionset.valueobject.WorkoutSessionSetId;
+import lombok.AccessLevel;
 import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.*;
-
-import static com.ironcore.domain.workoutsession.workoutsessionactivity.model.WorkoutSessionActivityValidation.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
 
 @Getter
-public final class WorkoutSessionActivity {
+public class WorkoutSessionActivity {
+
     private final WorkoutSessionActivityId id;
     private final WorkoutActivityId workoutActivityId;
     private final ExerciseId exerciseId;
     private final WorkoutSessionActivitySnapshot snapshot;
-    private final Integer actualDurationMinutes;
-    private final BigDecimal actualDistanceKm;
-    private final String notes;
+    private Integer actualDurationMinutes;
+    private BigDecimal actualDistanceKm;
+    private String notes;
     private final Instant createdAt;
-    private final Instant updatedAt;
-    @Getter(lombok.AccessLevel.NONE)
+    private Instant updatedAt;
+
+    @Getter(AccessLevel.NONE)
     private final List<WorkoutSessionSet> sets;
 
-    private WorkoutSessionActivity(WorkoutSessionActivityId id, WorkoutActivityId origin, ExerciseId exerciseId,
-                                  WorkoutSessionActivitySnapshot snapshot, Integer duration, BigDecimal distance,
-                                  String notes, Instant createdAt, Instant updatedAt, List<WorkoutSessionSet> sets) {
+    private WorkoutSessionActivity(
+            WorkoutSessionActivityId id,
+            WorkoutActivityId origin,
+            ExerciseId exerciseId,
+            WorkoutSessionActivitySnapshot snapshot,
+            Integer duration,
+            BigDecimal distance,
+            String notes,
+            Instant createdAt,
+            Instant updatedAt,
+            List<WorkoutSessionSet> sets
+    ) {
         this.id = id;
         this.workoutActivityId = origin;
         this.exerciseId = exerciseId;
-        this.snapshot = required(snapshot, "Snapshot da atividade");
-        positive(duration, "Duração executada");
-        decimal(distance, "Distância executada");
+        this.snapshot = requireNonNull(snapshot, "Snapshot da atividade");
+        requirePositiveIfPresent(duration, "Duração executada");
+        validateDecimal(distance, "Distância executada");
         this.actualDurationMinutes = duration;
         this.actualDistanceKm = distance;
         this.notes = notes;
-        this.createdAt = required(createdAt, "Data de criação");
-        if (updatedAt != null) timestamp(updatedAt, createdAt);
+        this.createdAt = requireNonNull(createdAt, "Data de criação");
+        if (updatedAt != null) {
+            validateUpdateTime(updatedAt, createdAt);
+        }
         this.updatedAt = updatedAt;
-        this.sets = new ArrayList<>(required(sets, "Séries"));
+        this.sets = new ArrayList<>(requireNonNull(sets, "Séries"));
         if (this.sets.stream().anyMatch(Objects::isNull)
-                || this.sets.stream().map(WorkoutSessionSet::getSetNumber).distinct().count() != this.sets.size())
+                || this.sets.stream().map(WorkoutSessionSet::getSetNumber).distinct().count() != this.sets.size()) {
             throw new InvalidWorkoutSessionActivityException("Números de série devem ser únicos.");
+        }
         validateModes(this.sets);
     }
 
-    public static WorkoutSessionActivity capture(WorkoutActivity activity, Exercise exercise, ActivityType type, Instant now) {
-        required(activity, "Atividade de origem");
-        return new WorkoutSessionActivity(null, required(activity.getId(), "Id da atividade de origem"),
-                required(exercise, "Exercício").getId(),
+    public static WorkoutSessionActivity register(
+            WorkoutActivity activity,
+            Exercise exercise,
+            ActivityType type,
+            Instant now
+    ) {
+        requireNonNull(activity, "Atividade de origem");
+        return new WorkoutSessionActivity(null, requireNonNull(activity.getId(), "Id da atividade de origem"),
+                requireNonNull(exercise, "Exercício").getId(),
                 WorkoutSessionActivitySnapshot.capture(activity, exercise, type),
                 null, null, null, now, null, List.of());
     }
 
-    public static WorkoutSessionActivity restore(WorkoutSessionActivityId id, WorkoutActivityId origin, ExerciseId exerciseId,
-                                                 WorkoutSessionActivitySnapshot snapshot, Integer duration, BigDecimal distance,
-                                                 String notes, Instant createdAt, Instant updatedAt, List<WorkoutSessionSet> sets) {
-        return new WorkoutSessionActivity(required(id, "Id da atividade"), origin, exerciseId, snapshot,
+    public static WorkoutSessionActivity restore(
+            WorkoutSessionActivityId id,
+            WorkoutActivityId origin,
+            ExerciseId exerciseId,
+            WorkoutSessionActivitySnapshot snapshot,
+            Integer duration,
+            BigDecimal distance,
+            String notes,
+            Instant createdAt,
+            Instant updatedAt,
+            List<WorkoutSessionSet> sets
+    ) {
+        return new WorkoutSessionActivity(requireNonNull(id, "Id da atividade"), origin, exerciseId, snapshot,
                 duration, distance, notes, createdAt, updatedAt, sets);
     }
 
-    public List<WorkoutSessionSet> getSets() { return List.copyOf(sets); }
-
-    public WorkoutSessionActivity updateExecution(Integer duration, BigDecimal distance, String notes, Instant now) {
-        positive(duration, "Duração executada");
-        decimal(distance, "Distância executada");
-        timestamp(now, updatedAt != null ? updatedAt : createdAt);
-
-        return new WorkoutSessionActivity(id, workoutActivityId, exerciseId, snapshot, duration, distance,
-                notes, createdAt, now, sets);
+    public List<WorkoutSessionSet> getSets() {
+        return List.copyOf(sets);
     }
 
-    public WorkoutSessionActivity recordSet(Integer number, BigDecimal load, ActualLoadMode mode,
-                                            Integer reps, String notes, Instant now) {
-        timestamp(now, updatedAt != null ? updatedAt : createdAt);
-        WorkoutSessionSet previous = sets.stream().filter(s -> s.getSetNumber().equals(number)).findFirst().orElse(null);
-        WorkoutSessionSet next = previous == null ? WorkoutSessionSet.register(number, load, mode, reps, notes, now)
-                : previous.update(load, mode, reps, notes, now);
-        List<WorkoutSessionSet> candidate = new ArrayList<>(sets);
-        candidate.remove(previous);
-        candidate.add(next);
-        validateModes(candidate);
-        candidate.sort(Comparator.comparing(WorkoutSessionSet::getSetNumber));
+    public void updateExecution(
+            Integer duration,
+            BigDecimal distance,
+            String notes,
+            Instant updatedAt
+    ) {
+        requirePositiveIfPresent(duration, "Duração executada");
+        validateDecimal(distance, "Distância executada");
+        validateUpdateTime(updatedAt, this.updatedAt != null ? this.updatedAt : createdAt);
 
-        return withSets(candidate, now);
+        this.actualDurationMinutes = duration;
+        this.actualDistanceKm = distance;
+        this.notes = notes;
+        this.updatedAt = updatedAt;
     }
 
-    public WorkoutSessionActivity removeSet(Integer number, Instant now) {
-        timestamp(now, updatedAt != null ? updatedAt : createdAt);
-        List<WorkoutSessionSet> remaining = sets.stream()
-                .filter(s -> !s.getSetNumber().equals(number)).toList();
-
-        return withSets(remaining, now);
+    public void addSet(
+            Integer number,
+            BigDecimal load,
+            ActualLoadMode mode,
+            Integer reps,
+            String notes,
+            Instant updatedAt
+    ) {
+        validateUpdateTime(updatedAt, this.updatedAt != null ? this.updatedAt : createdAt);
+        if (sets.stream().anyMatch(set -> set.getSetNumber().equals(number))) {
+            throw new InvalidWorkoutSessionActivityException("Número de série já registrado.");
+        }
+        validateLoadMode(mode, null);
+        WorkoutSessionSet set = WorkoutSessionSet.register(number, load, mode, reps, notes, updatedAt);
+        sets.add(set);
+        sets.sort(Comparator.comparing(WorkoutSessionSet::getSetNumber));
+        this.updatedAt = updatedAt;
     }
 
-    public WorkoutSessionActivity changeLoadMode(ActualLoadMode mode, Instant now) {
-        required(mode, "Modo da carga");
-        timestamp(now, updatedAt != null ? updatedAt : createdAt);
-        List<WorkoutSessionSet> changed = sets.stream().map(s -> s.changeMode(mode, now)).toList();
-
-        return withSets(changed, now);
+    public void updateSet(
+            WorkoutSessionSetId setId,
+            BigDecimal load,
+            ActualLoadMode mode,
+            Integer reps,
+            String notes,
+            Instant updatedAt
+    ) {
+        validateUpdateTime(updatedAt, this.updatedAt != null ? this.updatedAt : createdAt);
+        WorkoutSessionSet set = findSet(setId);
+        validateLoadMode(mode, setId);
+        set.updateSet(load, mode, reps, notes, updatedAt);
+        this.updatedAt = updatedAt;
     }
 
-    private WorkoutSessionActivity withSets(List<WorkoutSessionSet> sets, Instant now) {
-        return new WorkoutSessionActivity(id, workoutActivityId, exerciseId, snapshot,
-                actualDurationMinutes, actualDistanceKm, notes, createdAt, now, sets);
+    public void removeSet(WorkoutSessionSetId setId, Instant updatedAt) {
+        validateUpdateTime(updatedAt, this.updatedAt != null ? this.updatedAt : createdAt);
+        WorkoutSessionSet set = findSet(setId);
+        sets.remove(set);
+        this.updatedAt = updatedAt;
+    }
+
+    public void changeLoadMode(ActualLoadMode mode, Instant updatedAt) {
+        requireNonNull(mode, "Modo da carga");
+        validateUpdateTime(updatedAt, this.updatedAt != null ? this.updatedAt : createdAt);
+        for (WorkoutSessionSet set : sets) {
+            validateUpdateTime(updatedAt, set.getUpdatedAt() != null ? set.getUpdatedAt() : set.getCreatedAt());
+        }
+        for (WorkoutSessionSet set : sets) {
+            set.changeLoadMode(mode, updatedAt);
+        }
+        this.updatedAt = updatedAt;
+    }
+
+    public void validateSets() {
+        validateModes(sets);
+    }
+
+    private WorkoutSessionSet findSet(WorkoutSessionSetId setId) {
+        requireNonNull(setId, "Id da série");
+        return sets.stream()
+                .filter(set -> setId.equals(set.getId()))
+                .findFirst()
+                .orElseThrow(() -> new InvalidWorkoutSessionActivityException("Série não pertence à atividade."));
+    }
+
+    private void validateLoadMode(ActualLoadMode mode, WorkoutSessionSetId excludedId) {
+        if (mode != null && sets.stream()
+                .filter(set -> excludedId == null || !excludedId.equals(set.getId()))
+                .map(WorkoutSessionSet::getActualLoadMode)
+                .filter(Objects::nonNull)
+                .anyMatch(existingMode -> existingMode != mode)) {
+            throw new InvalidWorkoutSessionActivityException("As séries da atividade devem utilizar o mesmo modo de carga.");
+        }
     }
 
     private static void validateModes(List<WorkoutSessionSet> sets) {
-        if (sets.stream().map(WorkoutSessionSet::getActualLoadMode).filter(Objects::nonNull).distinct().count() > 1)
+        if (sets.stream().map(WorkoutSessionSet::getActualLoadMode).filter(Objects::nonNull).distinct().count() > 1) {
             throw new InvalidWorkoutSessionActivityException("As séries da atividade devem utilizar o mesmo modo de carga.");
+        }
+    }
+
+    private static <T> T requireNonNull(T value, String field) {
+        if (value == null) {
+            throw new InvalidWorkoutSessionActivityException(field + " é obrigatório.");
+        }
+
+        return value;
+    }
+
+    private void requirePositiveIfPresent(Integer value, String field) {
+        if (value != null && value <= 0) {
+            throw new InvalidWorkoutSessionActivityException(field + " deve ser positivo.");
+        }
+    }
+
+    private void validateDecimal(BigDecimal value, String field) {
+        if (value != null && (value.signum() < 0 || value.stripTrailingZeros().scale() > 2
+                || value.compareTo(new BigDecimal("999999.99")) > 0)) {
+            throw new InvalidWorkoutSessionActivityException(field + " deve estar entre 0 e 999999.99, com até duas casas decimais.");
+        }
+    }
+
+    private void validateUpdateTime(Instant value, Instant createdAt) {
+        requireNonNull(value, "Data de atualização");
+
+        if (value.isBefore(createdAt)) {
+            throw new InvalidWorkoutSessionActivityException("Data de atualização anterior à criação.");
+        }
     }
 }

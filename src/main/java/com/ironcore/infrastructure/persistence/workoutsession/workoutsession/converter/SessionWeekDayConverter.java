@@ -6,6 +6,7 @@ import jakarta.persistence.Converter;
 
 @Converter
 public class SessionWeekDayConverter implements AttributeConverter<WeekDay, Short> {
+
     @Override
     public Short convertToDatabaseColumn(WeekDay day) {
         return day == null ? null : (short) day.getValue();

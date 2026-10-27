@@ -2,14 +2,23 @@ package com.ironcore.infrastructure.persistence.workoutsession.workoutsessionset
 
 import com.ironcore.domain.workoutsession.workoutsessionset.enums.ActualLoadMode;
 import com.ironcore.infrastructure.persistence.workoutsession.workoutsessionactivity.entity.WorkoutSessionActivityEntity;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.*;
-import java.util.*;
+import java.time.Instant;
 
 @Entity
 @Table(name = "workout_session_sets")
@@ -17,6 +26,7 @@ import java.util.*;
 @Setter
 @NoArgsConstructor
 public class WorkoutSessionSetEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -12,10 +12,15 @@ import com.ironcore.infrastructure.persistence.workoutsession.workoutsessionacti
 import com.ironcore.infrastructure.persistence.workoutsession.workoutsessionset.entity.WorkoutSessionSetEntity;
 import com.ironcore.infrastructure.persistence.workoutsession.workoutsessionset.mapper.WorkoutSessionSetMapper;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public final class WorkoutSessionActivityMapper {
-    private WorkoutSessionActivityMapper() {}
+
+    private WorkoutSessionActivityMapper() {
+    }
 
     public static WorkoutSessionActivityEntity toEntity(WorkoutSessionActivity source, WorkoutSessionEntity parent) {
         try {
@@ -44,8 +49,8 @@ public final class WorkoutSessionActivityMapper {
             entity.setUpdatedAt(source.getUpdatedAt());
             source.getSets().forEach(s -> entity.getSets().add(WorkoutSessionSetMapper.toEntity(s, entity)));
             return entity;
-        } catch (RuntimeException ex) {
-            throw new DataMappingException("Falha ao mapear atividade da sessão para persistência.", ex);
+        } catch (RuntimeException exception) {
+            throw new DataMappingException("Falha ao mapear atividade da sessão para persistência.", exception);
         }
     }
 
@@ -71,16 +76,30 @@ public final class WorkoutSessionActivityMapper {
                     entity.getActualDurationMinutes(), entity.getActualDistanceKm(), entity.getNotes(),
                     entity.getCreatedAt(), entity.getUpdatedAt(),
                     entity.getSets().stream().map(WorkoutSessionSetMapper::toDomain).toList());
-        } catch (RuntimeException ex) {
-            throw new DataMappingException("Falha ao restaurar atividade da sessão persistida.", ex);
+        } catch (RuntimeException exception) {
+            throw new DataMappingException("Falha ao restaurar atividade da sessão persistida.", exception);
         }
     }
 
     public static void applyExecution(WorkoutSessionActivity source, WorkoutSessionActivityEntity entity) {
-        WorkoutSessionActivity persisted = toDomain(entity);
-        if (!persisted.getSnapshot().equals(source.getSnapshot())
-                || !persisted.getCreatedAt().equals(source.getCreatedAt()))
+        WorkoutSessionActivitySnapshot persistedSnapshot = new WorkoutSessionActivitySnapshot(
+                entity.getExerciseNameSnapshot(),
+                entity.getActivityTypeSnapshot(),
+                entity.getOrderIndexSnapshot(),
+                entity.getPlannedSetsSnapshot(),
+                entity.getPlannedRepRangeMinSnapshot(),
+                entity.getPlannedRepRangeMaxSnapshot(),
+                entity.getPlannedTargetLoadKgSnapshot(),
+                entity.getPlannedTargetLoadTextSnapshot(),
+                entity.getPlannedDurationMinutesSnapshot(),
+                entity.getPlannedDistanceKmSnapshot(),
+                entity.getPlannedIntensityTextSnapshot(),
+                entity.getPlannedRestSecondsSnapshot(),
+                entity.getPlannedNotesSnapshot());
+        if (!persistedSnapshot.equals(source.getSnapshot())
+                || !entity.getCreatedAt().equals(source.getCreatedAt())) {
             throw new DataMappingException("Snapshot e criação da atividade são imutáveis.");
+        }
         entity.setActualDurationMinutes(source.getActualDurationMinutes());
         entity.setActualDistanceKm(source.getActualDistanceKm());
         entity.setNotes(source.getNotes());
@@ -92,8 +111,9 @@ public final class WorkoutSessionActivityMapper {
 
         for (WorkoutSessionSet set : source.getSets()) {
             if (set.getId() == null) {
-                if (entity.getSets().stream().anyMatch(s -> s.getSetNumber().equals(set.getSetNumber())))
+                if (entity.getSets().stream().anyMatch(s -> s.getSetNumber().equals(set.getSetNumber()))) {
                     throw new DataMappingException("Série existente deve preservar seu identificador.");
+                }
 
                 entity.getSets().add(WorkoutSessionSetMapper.toEntity(set, entity));
             } else {
@@ -101,8 +121,9 @@ public final class WorkoutSessionActivityMapper {
 
                 if (target == null || !retained.add(target.getId())
                         || !target.getSetNumber().equals(set.getSetNumber())
-                        || !target.getCreatedAt().equals(set.getCreatedAt()))
+                        || !target.getCreatedAt().equals(set.getCreatedAt())) {
                     throw new DataMappingException("Série não pertence à atividade ou possui vínculo alterado.");
+                }
 
                 WorkoutSessionSetMapper.applyExecution(set, target);
             }

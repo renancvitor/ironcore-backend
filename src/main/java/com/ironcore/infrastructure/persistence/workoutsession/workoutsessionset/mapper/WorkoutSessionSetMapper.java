@@ -7,7 +7,9 @@ import com.ironcore.infrastructure.persistence.workoutsession.workoutsessionacti
 import com.ironcore.infrastructure.persistence.workoutsession.workoutsessionset.entity.WorkoutSessionSetEntity;
 
 public final class WorkoutSessionSetMapper {
-    private WorkoutSessionSetMapper() {}
+
+    private WorkoutSessionSetMapper() {
+    }
 
     public static WorkoutSessionSetEntity toEntity(WorkoutSessionSet source, WorkoutSessionActivityEntity parent) {
         try {
@@ -18,8 +20,8 @@ public final class WorkoutSessionSetMapper {
             entity.setCreatedAt(source.getCreatedAt());
             applyExecution(source, entity);
             return entity;
-        } catch (RuntimeException ex) {
-            throw new DataMappingException("Falha ao mapear série para persistência.", ex);
+        } catch (RuntimeException exception) {
+            throw new DataMappingException("Falha ao mapear série para persistência.", exception);
         }
     }
 
@@ -36,8 +38,8 @@ public final class WorkoutSessionSetMapper {
             return WorkoutSessionSet.restore(new WorkoutSessionSetId(entity.getId()), entity.getSetNumber(),
                     entity.getActualLoadKg(), entity.getActualLoadMode(), entity.getActualReps(), entity.getNotes(),
                     entity.getCreatedAt(), entity.getUpdatedAt());
-        } catch (RuntimeException ex) {
-            throw new DataMappingException("Falha ao restaurar série persistida.", ex);
+        } catch (RuntimeException exception) {
+            throw new DataMappingException("Falha ao restaurar série persistida.", exception);
         }
     }
 }

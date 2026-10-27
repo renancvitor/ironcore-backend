@@ -14,17 +14,23 @@ import com.ironcore.infrastructure.persistence.workoutsession.workoutsession.ent
 import com.ironcore.infrastructure.persistence.workoutsession.workoutsessionactivity.entity.WorkoutSessionActivityEntity;
 import com.ironcore.infrastructure.persistence.workoutsession.workoutsessionactivity.mapper.WorkoutSessionActivityMapper;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public final class WorkoutSessionMapper {
-    private WorkoutSessionMapper() {}
+
+    private WorkoutSessionMapper() {
+    }
 
     public static WorkoutSessionEntity toEntity(WorkoutSession source, PersonEntity owner) {
         try {
-            if (!source.getPersonId().value().equals(owner.getId()))
+            if (!source.getPersonId().value().equals(owner.getId())) {
                 throw new DataMappingException("Proprietário divergente.");
+            }
             WorkoutSessionEntity entity = new WorkoutSessionEntity();
             entity.setId(source.getId() == null ? null : source.getId().value());
             entity.setPerson(owner);
@@ -40,8 +46,8 @@ public final class WorkoutSessionMapper {
             applySessionExecution(source, entity);
             source.getActivities().forEach(a -> entity.getActivities().add(WorkoutSessionActivityMapper.toEntity(a, entity)));
             return entity;
-        } catch (RuntimeException ex) {
-            throw new DataMappingException("Falha ao mapear sessão para persistência.", ex);
+        } catch (RuntimeException exception) {
+            throw new DataMappingException("Falha ao mapear sessão para persistência.", exception);
         }
     }
 
@@ -55,48 +61,56 @@ public final class WorkoutSessionMapper {
                     entity.getPerformedOn(), entity.getStartedAt(), entity.getFinishedAt(), entity.getStatus(),
                     entity.getCloseReason(), entity.getNotes(), entity.getCreatedAt(), entity.getUpdatedAt(), entity.getVersion(),
                     entity.getActivities().stream().map(WorkoutSessionActivityMapper::toDomain).toList());
-        } catch (RuntimeException ex) {
-            throw new DataMappingException("Falha ao restaurar sessão persistida.", ex);
+        } catch (RuntimeException exception) {
+            throw new DataMappingException("Falha ao restaurar sessão persistida.", exception);
         }
     }
 
     public static void applyExecution(WorkoutSession source, WorkoutSessionEntity entity) {
-        WorkoutSession persisted = toDomain(entity);
-        if (!persisted.getPersonId().equals(source.getPersonId())
-                || !persisted.getSnapshot().equals(source.getSnapshot())
-                || !persisted.getStartedAt().equals(source.getStartedAt())
-                || !persisted.getPerformedOn().equals(source.getPerformedOn())
-                || !persisted.getCreatedAt().equals(source.getCreatedAt())
-                || !Objects.equals(persisted.getWorkoutCycleId(), source.getWorkoutCycleId())
-                || !Objects.equals(persisted.getWorkoutDayId(), source.getWorkoutDayId()))
+        WorkoutSessionSnapshot persistedSnapshot = new WorkoutSessionSnapshot(
+                entity.getWorkoutCycleNameSnapshot(), entity.getWorkoutDayTitleSnapshot(), entity.getWeekDaySnapshot());
+        if (!entity.getPerson().getId().equals(source.getPersonId().value())
+                || !persistedSnapshot.equals(source.getSnapshot())
+                || !entity.getStartedAt().equals(source.getStartedAt())
+                || !entity.getPerformedOn().equals(source.getPerformedOn())
+                || !entity.getCreatedAt().equals(source.getCreatedAt())
+                || (entity.getWorkoutCycleId() != null && !Objects.equals(entity.getWorkoutCycleId(),
+                    source.getWorkoutCycleId() == null ? null : source.getWorkoutCycleId().value()))
+                || (entity.getWorkoutDayId() != null && !Objects.equals(entity.getWorkoutDayId(),
+                    source.getWorkoutDayId() == null ? null : source.getWorkoutDayId().value()))) {
             throw new DataMappingException("Proprietário, origem e snapshot da sessão são imutáveis.");
+        }
 
-        if (persisted.getStatus() == WorkoutSessionStatus.CLOSED
+        if (entity.getStatus() == WorkoutSessionStatus.CLOSED
                 && (source.getStatus() != WorkoutSessionStatus.CLOSED
-                || source.getCloseReason() != persisted.getCloseReason()
-                || !Objects.equals(source.getFinishedAt(), persisted.getFinishedAt())))
+                || source.getCloseReason() != entity.getCloseReason()
+                || !Objects.equals(source.getFinishedAt(), entity.getFinishedAt()))) {
             throw new DataMappingException("Encerramento da sessão é imutável.");
+        }
 
         Map<Long, WorkoutSessionActivityEntity> existing = entity.getActivities().stream()
                 .collect(Collectors.toMap(WorkoutSessionActivityEntity::getId, Function.identity()));
 
-        if (existing.size() != source.getActivities().size())
+        if (existing.size() != source.getActivities().size()) {
             throw new DataMappingException("Composição histórica da sessão é imutável.");
+        }
 
         Set<Long> seen = new HashSet<>();
 
         for (WorkoutSessionActivity activity : source.getActivities()) {
             if (activity.getId() == null || !seen.add(activity.getId().value())
-                    || !existing.containsKey(activity.getId().value()))
+                    || !existing.containsKey(activity.getId().value())) {
                 throw new DataMappingException("Atividade não pertence à sessão.");
+            }
 
             WorkoutSessionActivityEntity target = existing.get(activity.getId().value());
 
-            if (!Objects.equals(target.getWorkoutActivityId(),
-                    activity.getWorkoutActivityId() == null ? null : activity.getWorkoutActivityId().value())
-                    || !Objects.equals(target.getExerciseId(),
-                    activity.getExerciseId() == null ? null : activity.getExerciseId().value()))
+            if ((target.getWorkoutActivityId() != null && !Objects.equals(target.getWorkoutActivityId(),
+                    activity.getWorkoutActivityId() == null ? null : activity.getWorkoutActivityId().value()))
+                    || (target.getExerciseId() != null && !Objects.equals(target.getExerciseId(),
+                    activity.getExerciseId() == null ? null : activity.getExerciseId().value()))) {
                 throw new DataMappingException("Origem da atividade é imutável.");
+            }
 
             WorkoutSessionActivityMapper.applyExecution(activity, target);
         }

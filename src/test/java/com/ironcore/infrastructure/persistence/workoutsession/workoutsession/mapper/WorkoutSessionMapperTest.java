@@ -12,16 +12,21 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 
-import static com.ironcore.domain.workoutsession.workoutsession.WorkoutSessionTestFactory.*;
-import static org.assertj.core.api.Assertions.*;
+import static com.ironcore.domain.workoutsession.workoutsession.WorkoutSessionTestFactory.ACTIVITY_ID;
+import static com.ironcore.domain.workoutsession.workoutsession.WorkoutSessionTestFactory.OWNER;
+import static com.ironcore.domain.workoutsession.workoutsession.WorkoutSessionTestFactory.START;
+import static com.ironcore.domain.workoutsession.workoutsession.WorkoutSessionTestFactory.session;
+import static com.ironcore.domain.workoutsession.workoutsession.WorkoutSessionTestFactory.source;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class WorkoutSessionMapperTest {
     @Test
     void shouldRoundTripAllSnapshotsExecutionAndRelationships() {
         WorkoutSession source = session();
-        source.recordSet(OWNER, 2, 1, new BigDecimal("45.00"), ActualLoadMode.PER_SIDE, 10, "Série", START);
-        source.recordSet(OWNER, 2, 2, null, null, null, "Somente relato", START);
-        source.updateActivityExecution(OWNER, 2, 20, new BigDecimal("2.50"), "Atividade", START);
+        source.addSet(OWNER, ACTIVITY_ID, 1, new BigDecimal("45.00"), ActualLoadMode.PER_SIDE, 10, "Série", START);
+        source.addSet(OWNER, ACTIVITY_ID, 2, null, null, null, "Somente relato", START);
+        source.updateActivityExecution(OWNER, ACTIVITY_ID, 20, new BigDecimal("2.50"), "Atividade", START);
         source.closeManually(OWNER, START.plusSeconds(30));
         source.updateNotes(OWNER, "Relato geral", START.plusSeconds(60));
         WorkoutSessionEntity entity = persisted(source);
@@ -92,7 +97,9 @@ class WorkoutSessionMapperTest {
         long setId = 1L;
         for (var activity : entity.getActivities()) {
             activity.setId(activityId++);
-            for (var set : activity.getSets()) set.setId(setId++);
+            for (var set : activity.getSets()) {
+                set.setId(setId++);
+            }
         }
         return entity;
     }

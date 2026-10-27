@@ -22,22 +22,26 @@ public record WorkoutSessionActivitySnapshot(
 
         for (Integer value : new Integer[]{plannedSets, plannedRepRangeMin, plannedRepRangeMax,
                 plannedDurationMinutes, plannedRestSeconds}) {
-            if (value != null && value <= 0)
+            if (value != null && value <= 0) {
                 throw new InvalidWorkoutSessionActivityException("Valor planejado deve ser positivo.");
+            }
         }
 
-        if (plannedRepRangeMin != null && plannedRepRangeMax != null && plannedRepRangeMin > plannedRepRangeMax)
+        if (plannedRepRangeMin != null && plannedRepRangeMax != null && plannedRepRangeMin > plannedRepRangeMax) {
             throw new InvalidWorkoutSessionActivityException("Faixa de repetições planejadas inválida.");
+        }
 
         for (BigDecimal value : new BigDecimal[]{plannedTargetLoadKg, plannedDistanceKm}) {
-            if (value != null && (value.signum() < 0 || value.scale() > 2
-                    || value.compareTo(new BigDecimal("999999.99")) > 0))
+            if (value != null && (value.signum() < 0 || value.stripTrailingZeros().scale() > 2
+                    || value.compareTo(new BigDecimal("999999.99")) > 0)) {
                 throw new InvalidWorkoutSessionActivityException("Valor decimal planejado inválido.");
+            }
         }
 
         if ((plannedTargetLoadText != null && plannedTargetLoadText.length() > 100)
-                || (plannedIntensityText != null && plannedIntensityText.length() > 100))
+                || (plannedIntensityText != null && plannedIntensityText.length() > 100)) {
             throw new InvalidWorkoutSessionActivityException("Texto planejado excede o tamanho máximo.");
+        }
     }
 
     public static WorkoutSessionActivitySnapshot capture(WorkoutActivity activity, Exercise exercise, ActivityType type) {
