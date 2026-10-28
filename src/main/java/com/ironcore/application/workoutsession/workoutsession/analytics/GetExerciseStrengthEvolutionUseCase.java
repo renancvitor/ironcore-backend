@@ -66,8 +66,8 @@ public class GetExerciseStrengthEvolutionUseCase {
                             firstExecution.performedOn(),
                             firstExecution.startedAt(),
                             firstExecution.exerciseNameSnapshot(),
-                            ExecutionMetricsCalculator.calculateStrength(sets)
-                    );
+                            ExecutionMetricsCalculator.calculateStrength(sets),
+                            firstExecution.workoutDayTitleSnapshot());
                 })
                 .toList();
 

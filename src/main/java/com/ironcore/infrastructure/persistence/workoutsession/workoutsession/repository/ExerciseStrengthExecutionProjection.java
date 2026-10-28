@@ -14,6 +14,7 @@ public record ExerciseStrengthExecutionProjection(
         Long setId,
         BigDecimal loadKg,
         ActualLoadMode mode,
-        Integer reps
+        Integer reps,
+        String workoutDayTitleSnapshot
 ) {
 }

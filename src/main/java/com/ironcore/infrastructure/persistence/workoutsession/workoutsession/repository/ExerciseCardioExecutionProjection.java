@@ -10,6 +10,7 @@ public record ExerciseCardioExecutionProjection(
         Instant startedAt,
         String exerciseNameSnapshot,
         Integer durationMinutes,
-        BigDecimal distanceKm
+        BigDecimal distanceKm,
+        String workoutDayTitleSnapshot
 ) {
 }

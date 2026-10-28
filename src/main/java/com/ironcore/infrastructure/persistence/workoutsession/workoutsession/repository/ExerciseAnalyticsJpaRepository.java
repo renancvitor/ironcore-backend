@@ -13,7 +13,7 @@ public interface ExerciseAnalyticsJpaRepository extends Repository<WorkoutSessio
     @Query("""
             select new com.ironcore.infrastructure.persistence.workoutsession.workoutsession.repository.ExerciseStrengthExecutionProjection(
                 s.id, s.performedOn, s.startedAt, a.exerciseNameSnapshot,
-                x.id, x.actualLoadKg, x.actualLoadMode, x.actualReps)
+                x.id, x.actualLoadKg, x.actualLoadMode, x.actualReps, s.workoutDayTitleSnapshot)
             from WorkoutSessionActivityEntity a join a.session s left join a.sets x
             where s.person.id = :personId and a.exerciseId = :exerciseId
               and s.status = com.ironcore.domain.workoutsession.workoutsession.enums.WorkoutSessionStatus.CLOSED
@@ -29,7 +29,7 @@ public interface ExerciseAnalyticsJpaRepository extends Repository<WorkoutSessio
 
     @Query("""
             select new com.ironcore.infrastructure.persistence.workoutsession.workoutsession.repository.ExerciseCardioExecutionProjection(
-                s.id, s.performedOn, s.startedAt, a.exerciseNameSnapshot, a.actualDurationMinutes, a.actualDistanceKm)
+                s.id, s.performedOn, s.startedAt, a.exerciseNameSnapshot, a.actualDurationMinutes, a.actualDistanceKm, s.workoutDayTitleSnapshot)
             from WorkoutSessionActivityEntity a join a.session s
             where s.person.id = :personId and a.exerciseId = :exerciseId
               and s.status = com.ironcore.domain.workoutsession.workoutsession.enums.WorkoutSessionStatus.CLOSED

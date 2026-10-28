@@ -52,8 +52,8 @@ public final class ExerciseAnalyticsRestMapper {
                 metrics.volumeKgReps(),
                 metrics.registeredSetCount(),
                 metrics.loadedSetCount(),
-                metrics.volumeSetCount()
-        );
+                metrics.volumeSetCount(),
+                point.workoutDayTitleSnapshot());
     }
 
     public static GetExerciseCardioEvolutionCommand toCardioEvolutionCommand(
@@ -91,8 +91,8 @@ public final class ExerciseAnalyticsRestMapper {
                 metrics.distanceRecordCount(),
                 metrics.durationRecordCount(),
                 metrics.paceRecordCount(),
-                metrics.speedRecordCount()
-        );
+                metrics.speedRecordCount(),
+                point.workoutDayTitleSnapshot());
     }
 
     private static ExerciseCardioEvolutionSummaryResponse toSummaryResponse(CardioExecutionMetrics metrics) {

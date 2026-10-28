@@ -93,7 +93,7 @@ class ExerciseAnalyticsControllerTest {
     void shouldReturnStrengthCoverageAndNullsWithAuthenticatedIdentityAndNoPagination() throws Exception {
         var point = new ExerciseStrengthEvolutionPointResult(new WorkoutSessionId(501L), LocalDate.of(2026, 10, 20),
                 Instant.parse("2026-10-20T21:00:00Z"), "Historical",
-                new StrengthExecutionMetrics(null, null, 3, 2, 0));
+                new StrengthExecutionMetrics(null, null, 3, 2, 0), "Treino preservado");
         when(strengthUseCase.execute(any())).thenReturn(new GetExerciseStrengthEvolutionResult(new ExerciseId(42L), List.of(point)));
         mockMvc.perform(request("strength").param("personId", "999"))
                 .andExpect(status().isOk())
@@ -101,6 +101,7 @@ class ExerciseAnalyticsControllerTest {
                 .andExpect(jsonPath("$.points[0].sessionId").value(501))
                 .andExpect(jsonPath("$.points[0].performedOn").value("2026-10-20"))
                 .andExpect(jsonPath("$.points[0].exerciseNameSnapshot").value("Historical"))
+                .andExpect(jsonPath("$.points[0].workoutDayTitleSnapshot").value("Treino preservado"))
                 .andExpect(jsonPath("$.points[0].maxNormalizedLoadKg").value(nullValue()))
                 .andExpect(jsonPath("$.points[0].volumeKgReps").value(nullValue()))
                 .andExpect(jsonPath("$.points[0].registeredSetCount").value(3))
@@ -116,6 +117,7 @@ class ExerciseAnalyticsControllerTest {
                             "performedOn": "2026-10-20",
                             "startedAt": "2026-10-20T21:00:00Z",
                             "exerciseNameSnapshot": "Historical",
+                            "workoutDayTitleSnapshot": "Treino preservado",
                             "maxNormalizedLoadKg": null,
                             "volumeKgReps": null,
                             "registeredSetCount": 3,
@@ -134,7 +136,7 @@ class ExerciseAnalyticsControllerTest {
     void shouldReturnCardioPointAndWholePeriodSummaryWithExplicitUnitsAndNulls() throws Exception {
         var metrics = ExecutionMetricsCalculator.calculateCardio(List.of(new ActivityExecution(30, new BigDecimal("5"))));
         var point = new ExerciseCardioEvolutionPointResult(new WorkoutSessionId(510L), LocalDate.of(2026, 10, 21),
-                Instant.parse("2026-10-21T10:00:00Z"), "Historical cardio", metrics);
+                Instant.parse("2026-10-21T10:00:00Z"), "Historical cardio", metrics, "Treino preservado");
         var summary = ExecutionMetricsCalculator.calculateCardio(List.of(new ActivityExecution(30, new BigDecimal("5")),
                 new ActivityExecution(10, null)));
         when(cardioUseCase.execute(any())).thenReturn(new GetExerciseCardioEvolutionResult(new ExerciseId(42L), List.of(point), summary));
@@ -155,6 +157,7 @@ class ExerciseAnalyticsControllerTest {
                             "performedOn": "2026-10-21",
                             "startedAt": "2026-10-21T10:00:00Z",
                             "exerciseNameSnapshot": "Historical cardio",
+                            "workoutDayTitleSnapshot": "Treino preservado",
                             "distanceKm": 5.00,
                             "durationMinutes": 30,
                             "averagePaceMinPerKm": 6.00,
@@ -211,13 +214,13 @@ class ExerciseAnalyticsControllerTest {
         var zero = ExecutionMetricsCalculator.calculateStrength(List.of(new SetExecution(BigDecimal.ZERO,
                 ActualLoadMode.TOTAL, 1)));
         when(strengthUseCase.execute(any())).thenReturn(new GetExerciseStrengthEvolutionResult(new ExerciseId(42L),
-                List.of(new ExerciseStrengthEvolutionPointResult(new WorkoutSessionId(1L), date, time, "Name", zero))));
+                List.of(new ExerciseStrengthEvolutionPointResult(new WorkoutSessionId(1L), date, time, "Name", zero, "Treino preservado"))));
         mockMvc.perform(request("strength")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.points[0].maxNormalizedLoadKg").value(0))
                 .andExpect(jsonPath("$.points[0].volumeKgReps").value(0));
         var missing = ExecutionMetricsCalculator.calculateCardio(List.of(new ActivityExecution(null, null)));
         when(cardioUseCase.execute(any())).thenReturn(new GetExerciseCardioEvolutionResult(new ExerciseId(42L),
-                List.of(new ExerciseCardioEvolutionPointResult(new WorkoutSessionId(1L), date, time, "Name", missing)), missing));
+                List.of(new ExerciseCardioEvolutionPointResult(new WorkoutSessionId(1L), date, time, "Name", missing, "Treino preservado")), missing));
         mockMvc.perform(request("cardio")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.points[0].distanceKm").value(nullValue()))
                 .andExpect(jsonPath("$.points[0].durationMinutes").value(nullValue()))

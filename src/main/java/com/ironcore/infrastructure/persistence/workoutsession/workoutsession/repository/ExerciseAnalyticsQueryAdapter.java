@@ -46,8 +46,8 @@ public class ExerciseAnalyticsQueryAdapter implements ExerciseAnalyticsQueryPort
                             projection.setId() == null ? null : new WorkoutSessionSetId(projection.setId()),
                             projection.loadKg(),
                             projection.mode(),
-                            projection.reps()
-                    ))
+                            projection.reps(),
+                            projection.workoutDayTitleSnapshot()))
                     .toList();
         } catch (RuntimeException exception) {
             throw new DataMappingException("Falha ao projetar evolução de força.", exception);
@@ -77,8 +77,8 @@ public class ExerciseAnalyticsQueryAdapter implements ExerciseAnalyticsQueryPort
                             projection.startedAt(),
                             projection.exerciseNameSnapshot(),
                             projection.durationMinutes(),
-                            projection.distanceKm()
-                    ))
+                            projection.distanceKm(),
+                            projection.workoutDayTitleSnapshot()))
                     .toList();
         } catch (RuntimeException exception) {
             throw new DataMappingException("Falha ao projetar evolução de cardio.", exception);

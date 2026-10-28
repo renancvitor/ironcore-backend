@@ -109,9 +109,9 @@ class ExerciseEvolutionUseCasesTest {
         var date = command.startDate();
         var time = Instant.parse("2026-10-27T12:00:00Z");
         when(queryPort.findStrengthExecution(any(), any(), any(), any())).thenReturn(List.of(
-                new ExerciseStrengthExecutionResult(new WorkoutSessionId(1L), date, time, "Old name", new WorkoutSessionSetId(1L), new BigDecimal("20"), TOTAL, 10),
-                new ExerciseStrengthExecutionResult(new WorkoutSessionId(1L), date, time, "Other snapshot", new WorkoutSessionSetId(2L), new BigDecimal("20"), PER_SIDE, 10),
-                new ExerciseStrengthExecutionResult(new WorkoutSessionId(2L), date, time, "New name", null, null, null, null)));
+                new ExerciseStrengthExecutionResult(new WorkoutSessionId(1L), date, time, "Old name", new WorkoutSessionSetId(1L), new BigDecimal("20"), TOTAL, 10, "Treino preservado"),
+                new ExerciseStrengthExecutionResult(new WorkoutSessionId(1L), date, time, "Other snapshot", new WorkoutSessionSetId(2L), new BigDecimal("20"), PER_SIDE, 10, "Treino preservado"),
+                new ExerciseStrengthExecutionResult(new WorkoutSessionId(2L), date, time, "New name", null, null, null, null, "Treino preservado")));
         var strength = strengthUseCase.execute(command);
         assertThat(strength.points()).hasSize(2);
         assertThat(strength.points().getFirst().exerciseNameSnapshot()).isEqualTo("Old name");
@@ -119,9 +119,9 @@ class ExerciseEvolutionUseCasesTest {
         assertThat(strength.points().getLast().metrics().volumeKgReps()).isNull();
 
         when(queryPort.findCardioExecution(any(), any(), any(), any())).thenReturn(List.of(
-                new ExerciseCardioExecutionResult(new WorkoutSessionId(1L), date, time, "Old", 30, new BigDecimal("5")),
-                new ExerciseCardioExecutionResult(new WorkoutSessionId(1L), date, time, "Old", 100, null),
-                new ExerciseCardioExecutionResult(new WorkoutSessionId(2L), date, time, "New", 10, BigDecimal.ONE)));
+                new ExerciseCardioExecutionResult(new WorkoutSessionId(1L), date, time, "Old", 30, new BigDecimal("5"), "Treino preservado"),
+                new ExerciseCardioExecutionResult(new WorkoutSessionId(1L), date, time, "Old", 100, null, "Treino preservado"),
+                new ExerciseCardioExecutionResult(new WorkoutSessionId(2L), date, time, "New", 10, BigDecimal.ONE, "Treino preservado")));
         var cardio = cardioUseCase.execute(toCardioCommand(command));
         assertThat(cardio.points()).hasSize(2);
         assertThat(cardio.points().getFirst().metrics().durationMinutes()).isEqualTo(130);

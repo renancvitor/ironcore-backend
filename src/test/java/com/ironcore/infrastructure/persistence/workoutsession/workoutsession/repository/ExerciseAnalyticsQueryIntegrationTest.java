@@ -118,6 +118,8 @@ class ExerciseAnalyticsQueryIntegrationTest {
                 .containsExactly(earlySessionId, earlySessionId, firstTiedSessionId, lastTiedSessionId);
         assertThat(cardio).extracting(ExerciseCardioExecutionResult::exerciseNameSnapshot)
                 .containsOnly("Historical name");
+        assertThat(strength.getFirst().workoutDayTitleSnapshot()).isEqualTo("Deleted day");
+        assertThat(cardio.getFirst().workoutDayTitleSnapshot()).isEqualTo("Deleted day");
         assertThat(strength.getFirst().loadKg()).isEqualByComparingTo("20.10");
         assertThat(strength.getFirst().mode()).isEqualTo(ActualLoadMode.PER_SIDE);
         assertThat(strength.getLast().setId()).isNull();

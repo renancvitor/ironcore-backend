@@ -65,8 +65,8 @@ public class GetExerciseCardioEvolutionUseCase {
                             firstExecution.performedOn(),
                             firstExecution.startedAt(),
                             firstExecution.exerciseNameSnapshot(),
-                            ExecutionMetricsCalculator.calculateCardio(activities)
-                    );
+                            ExecutionMetricsCalculator.calculateCardio(activities),
+                            firstExecution.workoutDayTitleSnapshot());
                 })
                 .toList();
 

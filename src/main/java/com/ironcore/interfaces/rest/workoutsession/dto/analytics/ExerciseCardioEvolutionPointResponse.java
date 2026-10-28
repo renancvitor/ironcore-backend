@@ -25,6 +25,7 @@ public record ExerciseCardioEvolutionPointResponse(
         long distanceRecordCount,
         long durationRecordCount,
         long paceRecordCount,
-        long speedRecordCount
+        long speedRecordCount,
+        String workoutDayTitleSnapshot
 ) {
 }

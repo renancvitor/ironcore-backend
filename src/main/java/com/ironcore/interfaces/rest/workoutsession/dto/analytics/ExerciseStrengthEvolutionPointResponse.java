@@ -19,6 +19,7 @@ public record ExerciseStrengthEvolutionPointResponse(
         BigDecimal volumeKgReps,
         long registeredSetCount,
         long loadedSetCount,
-        long volumeSetCount
+        long volumeSetCount,
+        String workoutDayTitleSnapshot
 ) {
 }

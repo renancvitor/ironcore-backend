@@ -16,6 +16,7 @@ public record ExerciseStrengthExecutionResult(
         WorkoutSessionSetId setId,
         BigDecimal loadKg,
         ActualLoadMode mode,
-        Integer reps
+        Integer reps,
+        String workoutDayTitleSnapshot
 ) {
 }

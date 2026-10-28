@@ -43,10 +43,10 @@ class ExerciseAnalyticsQueryAdapterTest {
     void shouldMapStrengthProjectionPreservingNullsAndDecimals() {
         var projection = new ExerciseStrengthExecutionProjection(
                 10L, DATE, START, "Histórico", 20L, new BigDecimal("20.10"), ActualLoadMode.PER_SIDE, null
-        );
+        , "Treino preservado");
         var withoutSets = new ExerciseStrengthExecutionProjection(
                 10L, DATE, START, "Histórico", null, null, null, null
-        );
+        , "Treino preservado");
         when(repository.findStrengthExecution(1L, 42L, DATE, DATE)).thenReturn(List.of(projection, withoutSets));
 
         assertThat(adapter.findStrengthExecution(PERSON_ID, EXERCISE_ID, DATE, DATE))
@@ -54,20 +54,20 @@ class ExerciseAnalyticsQueryAdapterTest {
                         new ExerciseStrengthExecutionResult(
                                 new WorkoutSessionId(10L), DATE, START, "Histórico", new WorkoutSessionSetId(20L),
                                 new BigDecimal("20.10"), ActualLoadMode.PER_SIDE, null
-                        ),
+                        , "Treino preservado"),
                         new ExerciseStrengthExecutionResult(
                                 new WorkoutSessionId(10L), DATE, START, "Histórico", null, null, null, null
-                        )
+                        , "Treino preservado")
                 );
     }
 
     @Test
     void shouldMapCardioProjectionWithoutPairingOrFillingMissingMeasurements() {
-        var projection = new ExerciseCardioExecutionProjection(10L, DATE, START, "Histórico", null, BigDecimal.ZERO);
+        var projection = new ExerciseCardioExecutionProjection(10L, DATE, START, "Histórico", null, BigDecimal.ZERO, "Treino preservado");
         when(repository.findCardioExecution(1L, 42L, DATE, DATE)).thenReturn(List.of(projection));
 
         assertThat(adapter.findCardioExecution(PERSON_ID, EXERCISE_ID, DATE, DATE))
-                .containsExactly(new ExerciseCardioExecutionResult(new WorkoutSessionId(10L), DATE, START, "Histórico", null, BigDecimal.ZERO));
+                .containsExactly(new ExerciseCardioExecutionResult(new WorkoutSessionId(10L), DATE, START, "Histórico", null, BigDecimal.ZERO, "Treino preservado"));
     }
 
     @Test

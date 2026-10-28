@@ -11,6 +11,7 @@ public record ExerciseStrengthEvolutionPointResult(
         LocalDate performedOn,
         Instant startedAt,
         String exerciseNameSnapshot,
-        StrengthExecutionMetrics metrics
+        StrengthExecutionMetrics metrics,
+        String workoutDayTitleSnapshot
 ) {
 }

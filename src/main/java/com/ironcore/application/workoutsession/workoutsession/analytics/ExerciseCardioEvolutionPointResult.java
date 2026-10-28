@@ -11,6 +11,7 @@ public record ExerciseCardioEvolutionPointResult(
         LocalDate performedOn,
         Instant startedAt,
         String exerciseNameSnapshot,
-        CardioExecutionMetrics metrics
+        CardioExecutionMetrics metrics,
+        String workoutDayTitleSnapshot
 ) {
 }
