@@ -1,58 +1,99 @@
 package com.ironcore.interfaces.rest.workoutsession.workoutsession;
 
-import com.ironcore.application.logging.error.port.ErrorLogPublisher;
 import com.ironcore.application.exception.OperationNotAllowedException;
-import com.ironcore.application.workoutsession.workoutsession.analytics.*;
-import com.ironcore.domain.user.valueobject.*;
-import com.ironcore.domain.workoutsession.analytics.ExecutionMetrics;
+import com.ironcore.application.exception.ResourceNotFoundException;
+import com.ironcore.application.exception.UserInactiveException;
+import com.ironcore.application.logging.error.port.ErrorLogPublisher;
+import com.ironcore.application.workoutsession.workoutsession.analytics.ExerciseCardioEvolutionPointResult;
+import com.ironcore.application.workoutsession.workoutsession.analytics.ExerciseStrengthEvolutionPointResult;
+import com.ironcore.application.workoutsession.workoutsession.analytics.GetExerciseCardioEvolutionResult;
+import com.ironcore.application.workoutsession.workoutsession.analytics.GetExerciseCardioEvolutionUseCase;
+import com.ironcore.application.workoutsession.workoutsession.analytics.GetExerciseStrengthEvolutionResult;
+import com.ironcore.application.workoutsession.workoutsession.analytics.GetExerciseStrengthEvolutionUseCase;
+import com.ironcore.domain.user.repository.UserRepository;
+import com.ironcore.domain.user.valueobject.Email;
+import com.ironcore.domain.user.valueobject.UserId;
+import com.ironcore.domain.workoutsession.analytics.service.ExecutionMetricsCalculator;
+import com.ironcore.domain.workoutsession.analytics.valueobject.ActivityExecution;
+import com.ironcore.domain.workoutsession.analytics.valueobject.SetExecution;
+import com.ironcore.domain.workoutsession.analytics.valueobject.StrengthExecutionMetrics;
+import com.ironcore.domain.workoutsession.workoutsessionset.enums.ActualLoadMode;
+import com.ironcore.infrastructure.exception.PersistenceException;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
 import com.ironcore.infrastructure.security.config.SecurityConfig;
 import com.ironcore.infrastructure.security.jwt.JwtAccessTokenValidator;
 import com.ironcore.interfaces.rest.workoutsession.ExerciseAnalyticsController;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.*;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import java.time.*;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.json.JsonCompareMode;
+
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
+
+import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.times;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.hamcrest.Matchers.nullValue;
-import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ExerciseAnalyticsController.class)
 @Import(SecurityConfig.class)
 class ExerciseAnalyticsControllerTest {
-    @Autowired MockMvc mvc;
-    @MockitoBean GetExerciseAnalyticsUseCase useCase;
-    @MockitoBean ErrorLogPublisher errors;
-    @MockitoBean JwtAccessTokenValidator jwt;
-    @MockitoBean com.ironcore.domain.user.repository.UserRepository users;
+
     private static final String BASE = "/api/users/me/workout-sessions/analytics/exercises/";
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockitoBean
+    private GetExerciseStrengthEvolutionUseCase strengthUseCase;
+
+    @MockitoBean
+    private GetExerciseCardioEvolutionUseCase cardioUseCase;
+
+    @MockitoBean
+    private ErrorLogPublisher errorLogPublisher;
+
+    @MockitoBean
+    private JwtAccessTokenValidator jwtAccessTokenValidator;
+
+    @MockitoBean
+    private UserRepository userRepository;
     private final AuthenticatedUser principal = new AuthenticatedUser(new UserId(77L), new Email("actor@example.com"), false);
 
     @ParameterizedTest
     @ValueSource(strings = {"strength", "cardio"})
-    void shouldRequireAuthentication(String kind) throws Exception {
-        mvc.perform(get(BASE + "42/" + kind).param("startDate", "2026-10-01").param("endDate", "2026-10-27"))
+    void shouldRequireAuthentication(String metricType) throws Exception {
+        mockMvc.perform(get(BASE + "42/" + metricType).param("startDate", "2026-10-01").param("endDate", "2026-10-27"))
                 .andExpect(status().isUnauthorized());
-        verifyNoInteractions(useCase);
+        verifyNoInteractions(strengthUseCase, cardioUseCase);
     }
 
     @Test
     void shouldReturnStrengthCoverageAndNullsWithAuthenticatedIdentityAndNoPagination() throws Exception {
-        var point = new ExerciseAnalyticsResult.StrengthPoint(501L, LocalDate.of(2026, 10, 20),
+        var point = new ExerciseStrengthEvolutionPointResult(501L, LocalDate.of(2026, 10, 20),
                 Instant.parse("2026-10-20T21:00:00Z"), "Historical",
-                new ExecutionMetrics.Strength(null, null, 3, 2, 0));
-        when(useCase.strength(any())).thenReturn(new ExerciseAnalyticsResult.Strength(42L, List.of(point)));
-        mvc.perform(request("strength").param("personId", "999"))
+                new StrengthExecutionMetrics(null, null, 3, 2, 0));
+        when(strengthUseCase.execute(any())).thenReturn(new GetExerciseStrengthEvolutionResult(42L, List.of(point)));
+        mockMvc.perform(request("strength").param("personId", "999"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exerciseId").value(42))
                 .andExpect(jsonPath("$.points[0].sessionId").value(501))
@@ -64,20 +105,38 @@ class ExerciseAnalyticsControllerTest {
                 .andExpect(jsonPath("$.points[0].loadedSetCount").value(2))
                 .andExpect(jsonPath("$.points[0].volumeSetCount").value(0))
                 .andExpect(jsonPath("$.page").doesNotExist());
-        verify(useCase).strength(argThat(c -> c.actorUserId().equals(principal.userId())
-                && c.exerciseId().value() == 42L && c.startDate().equals(LocalDate.of(2026, 10, 1))
-                && c.endDate().equals(LocalDate.of(2026, 10, 27))));
+        mockMvc.perform(request("strength"))
+                .andExpect(content().json("""
+                        {
+                          "exerciseId": 42,
+                          "points": [{
+                            "sessionId": 501,
+                            "performedOn": "2026-10-20",
+                            "startedAt": "2026-10-20T21:00:00Z",
+                            "exerciseNameSnapshot": "Historical",
+                            "maxNormalizedLoadKg": null,
+                            "volumeKgReps": null,
+                            "registeredSetCount": 3,
+                            "loadedSetCount": 2,
+                            "volumeSetCount": 0
+                          }]
+                        }
+                        """, JsonCompareMode.STRICT));
+        verify(strengthUseCase, times(2)).execute(argThat(command -> command.actorUserId().equals(principal.userId())
+                && command.exerciseId().value() == 42L
+                && command.startDate().equals(LocalDate.of(2026, 10, 1))
+                && command.endDate().equals(LocalDate.of(2026, 10, 27))));
     }
 
     @Test
     void shouldReturnCardioPointAndWholePeriodSummaryWithExplicitUnitsAndNulls() throws Exception {
-        var metrics = ExecutionMetrics.cardio(List.of(new ExecutionMetrics.ActivityExecution(30, new BigDecimal("5"))));
-        var point = new ExerciseAnalyticsResult.CardioPoint(510L, LocalDate.of(2026, 10, 21),
+        var metrics = ExecutionMetricsCalculator.calculateCardio(List.of(new ActivityExecution(30, new BigDecimal("5"))));
+        var point = new ExerciseCardioEvolutionPointResult(510L, LocalDate.of(2026, 10, 21),
                 Instant.parse("2026-10-21T10:00:00Z"), "Historical cardio", metrics);
-        var summary = ExecutionMetrics.cardio(List.of(new ExecutionMetrics.ActivityExecution(30, new BigDecimal("5")),
-                new ExecutionMetrics.ActivityExecution(10, null)));
-        when(useCase.cardio(any())).thenReturn(new ExerciseAnalyticsResult.Cardio(42L, List.of(point), summary));
-        mvc.perform(request("cardio")).andExpect(status().isOk())
+        var summary = ExecutionMetricsCalculator.calculateCardio(List.of(new ActivityExecution(30, new BigDecimal("5")),
+                new ActivityExecution(10, null)));
+        when(cardioUseCase.execute(any())).thenReturn(new GetExerciseCardioEvolutionResult(42L, List.of(point), summary));
+        mockMvc.perform(request("cardio")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.points[0].distanceKm").value(5))
                 .andExpect(jsonPath("$.points[0].durationMinutes").value(30))
                 .andExpect(jsonPath("$.points[0].averagePaceMinPerKm").value(6))
@@ -85,9 +144,40 @@ class ExerciseAnalyticsControllerTest {
                 .andExpect(jsonPath("$.summary.totalDurationMinutes").value(40))
                 .andExpect(jsonPath("$.summary.averagePaceMinPerKm").value(6))
                 .andExpect(jsonPath("$.summary.durationRecordCount").value(2));
-        verify(useCase).cardio(argThat(c -> c.actorUserId().equals(principal.userId())));
-        when(useCase.cardio(any())).thenReturn(new ExerciseAnalyticsResult.Cardio(42L, List.of(), ExecutionMetrics.cardio(List.of())));
-        mvc.perform(request("cardio")).andExpect(status().isOk())
+        mockMvc.perform(request("cardio"))
+                .andExpect(content().json("""
+                        {
+                          "exerciseId": 42,
+                          "points": [{
+                            "sessionId": 510,
+                            "performedOn": "2026-10-21",
+                            "startedAt": "2026-10-21T10:00:00Z",
+                            "exerciseNameSnapshot": "Historical cardio",
+                            "distanceKm": 5.00,
+                            "durationMinutes": 30,
+                            "averagePaceMinPerKm": 6.00,
+                            "averageSpeedKmPerHour": 10.00,
+                            "activityCount": 1,
+                            "distanceRecordCount": 1,
+                            "durationRecordCount": 1,
+                            "paceRecordCount": 1,
+                            "speedRecordCount": 1
+                          }],
+                          "summary": {
+                            "totalDistanceKm": 5.00,
+                            "totalDurationMinutes": 40,
+                            "averagePaceMinPerKm": 6.00,
+                            "averageSpeedKmPerHour": 10.00,
+                            "distanceRecordCount": 1,
+                            "durationRecordCount": 2,
+                            "paceRecordCount": 1,
+                            "speedRecordCount": 1
+                          }
+                        }
+                        """, JsonCompareMode.STRICT));
+        verify(cardioUseCase, times(2)).execute(argThat(command -> command.actorUserId().equals(principal.userId())));
+        when(cardioUseCase.execute(any())).thenReturn(new GetExerciseCardioEvolutionResult(42L, List.of(), ExecutionMetricsCalculator.calculateCardio(List.of())));
+        mockMvc.perform(request("cardio")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.points").isEmpty())
                 .andExpect(jsonPath("$.summary.totalDistanceKm").value(nullValue()))
                 .andExpect(jsonPath("$.summary.totalDurationMinutes").value(nullValue()))
@@ -98,32 +188,35 @@ class ExerciseAnalyticsControllerTest {
 
     @ParameterizedTest
     @CsvSource({"strength,403", "strength,404", "strength,500", "cardio,403", "cardio,404", "cardio,500"})
-    void shouldReuseExistingErrorResponses(String kind, int code) throws Exception {
-        RuntimeException failure = switch (code) {
-            case 403 -> new com.ironcore.application.exception.UserInactiveException("Inativo.");
-            case 404 -> new com.ironcore.application.exception.ResourceNotFoundException("Não encontrado.");
-            default -> new com.ironcore.infrastructure.exception.PersistenceException("Falha.", new RuntimeException());
+    void shouldReuseExistingErrorResponses(String metricType, int statusCode) throws Exception {
+        RuntimeException failure = switch (statusCode) {
+            case 403 -> new UserInactiveException("Inativo.");
+            case 404 -> new ResourceNotFoundException("Não encontrado.");
+            default -> new PersistenceException("Falha.", new RuntimeException());
         };
-        if (kind.equals("strength")) when(useCase.strength(any())).thenThrow(failure);
-        else when(useCase.cardio(any())).thenThrow(failure);
-        mvc.perform(request(kind)).andExpect(status().is(code));
+        if (metricType.equals("strength")) {
+            when(strengthUseCase.execute(any())).thenThrow(failure);
+        } else {
+            when(cardioUseCase.execute(any())).thenThrow(failure);
+        }
+        mockMvc.perform(request(metricType)).andExpect(status().is(statusCode));
     }
 
     @Test
     void shouldSerializeRecordedZerosAndMissingCardioPointMeasurements() throws Exception {
         var date = LocalDate.of(2026, 10, 20);
         var time = Instant.parse("2026-10-20T12:00:00Z");
-        var zero = ExecutionMetrics.strength(List.of(new ExecutionMetrics.SetExecution(BigDecimal.ZERO,
-                com.ironcore.domain.workoutsession.workoutsessionset.enums.ActualLoadMode.TOTAL, 1)));
-        when(useCase.strength(any())).thenReturn(new ExerciseAnalyticsResult.Strength(42L,
-                List.of(new ExerciseAnalyticsResult.StrengthPoint(1L, date, time, "Name", zero))));
-        mvc.perform(request("strength")).andExpect(status().isOk())
+        var zero = ExecutionMetricsCalculator.calculateStrength(List.of(new SetExecution(BigDecimal.ZERO,
+                ActualLoadMode.TOTAL, 1)));
+        when(strengthUseCase.execute(any())).thenReturn(new GetExerciseStrengthEvolutionResult(42L,
+                List.of(new ExerciseStrengthEvolutionPointResult(1L, date, time, "Name", zero))));
+        mockMvc.perform(request("strength")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.points[0].maxNormalizedLoadKg").value(0))
                 .andExpect(jsonPath("$.points[0].volumeKgReps").value(0));
-        var missing = ExecutionMetrics.cardio(List.of(new ExecutionMetrics.ActivityExecution(null, null)));
-        when(useCase.cardio(any())).thenReturn(new ExerciseAnalyticsResult.Cardio(42L,
-                List.of(new ExerciseAnalyticsResult.CardioPoint(1L, date, time, "Name", missing)), missing));
-        mvc.perform(request("cardio")).andExpect(status().isOk())
+        var missing = ExecutionMetricsCalculator.calculateCardio(List.of(new ActivityExecution(null, null)));
+        when(cardioUseCase.execute(any())).thenReturn(new GetExerciseCardioEvolutionResult(42L,
+                List.of(new ExerciseCardioEvolutionPointResult(1L, date, time, "Name", missing)), missing));
+        mockMvc.perform(request("cardio")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.points[0].distanceKm").value(nullValue()))
                 .andExpect(jsonPath("$.points[0].durationMinutes").value(nullValue()))
                 .andExpect(jsonPath("$.points[0].averagePaceMinPerKm").value(nullValue()))
@@ -132,36 +225,40 @@ class ExerciseAnalyticsControllerTest {
 
     @ParameterizedTest
     @CsvSource({"strength,startDate", "strength,endDate", "cardio,startDate", "cardio,endDate"})
-    void shouldRequireBothDates(String kind, String missing) throws Exception {
-        var request = get(BASE + "42/" + kind).with(authentication(auth()));
+    void shouldRequireBothDates(String metricType, String missing) throws Exception {
+        var request = get(BASE + "42/" + metricType).with(authentication(authenticationToken()));
         request.param(missing.equals("startDate") ? "endDate" : "startDate", "2026-10-27");
-        mvc.perform(request).andExpect(status().isBadRequest());
-        verifyNoInteractions(useCase);
+        mockMvc.perform(request).andExpect(status().isBadRequest());
+        verifyNoInteractions(strengthUseCase, cardioUseCase);
     }
 
     @ParameterizedTest
     @CsvSource({"strength,0", "strength,-1", "strength,abc", "cardio,0", "cardio,-1", "cardio,abc"})
-    void shouldRejectInvalidExerciseIds(String kind, String id) throws Exception {
-        mvc.perform(get(BASE + id + "/" + kind).param("startDate", "2026-10-01").param("endDate", "2026-10-27")
-                .with(authentication(auth()))).andExpect(status().isBadRequest());
-        verifyNoInteractions(useCase);
+    void shouldRejectInvalidExerciseIds(String metricType, String id) throws Exception {
+        mockMvc.perform(get(BASE + id + "/" + metricType).param("startDate", "2026-10-01").param("endDate", "2026-10-27")
+                .with(authentication(authenticationToken()))).andExpect(status().isBadRequest());
+        verifyNoInteractions(strengthUseCase, cardioUseCase);
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"strength", "cardio"})
-    void shouldRejectMalformedDatesAndPreserveBusinessErrorContract(String kind) throws Exception {
-        mvc.perform(get(BASE + "42/" + kind).param("startDate", "invalid").param("endDate", "2026-10-27")
-                .with(authentication(auth()))).andExpect(status().isBadRequest());
-        if (kind.equals("strength")) when(useCase.strength(any())).thenThrow(new OperationNotAllowedException("Período inválido."));
-        else when(useCase.cardio(any())).thenThrow(new OperationNotAllowedException("Período inválido."));
-        mvc.perform(request(kind)).andExpect(status().isUnprocessableEntity());
+    void shouldRejectMalformedDatesAndPreserveBusinessErrorContract(String metricType) throws Exception {
+        mockMvc.perform(get(BASE + "42/" + metricType).param("startDate", "invalid").param("endDate", "2026-10-27")
+                .with(authentication(authenticationToken()))).andExpect(status().isBadRequest());
+        if (metricType.equals("strength")) {
+            when(strengthUseCase.execute(any())).thenThrow(new OperationNotAllowedException("Período inválido."));
+        } else {
+            when(cardioUseCase.execute(any())).thenThrow(new OperationNotAllowedException("Período inválido."));
+        }
+        mockMvc.perform(request(metricType)).andExpect(status().isUnprocessableEntity());
     }
 
-    private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder request(String kind) {
-        return get(BASE + "42/" + kind).param("startDate", "2026-10-01").param("endDate", "2026-10-27")
-                .with(authentication(auth()));
+    private MockHttpServletRequestBuilder request(String metricType) {
+        return get(BASE + "42/" + metricType).param("startDate", "2026-10-01").param("endDate", "2026-10-27")
+                .with(authentication(authenticationToken()));
     }
-    private UsernamePasswordAuthenticationToken auth() {
+
+    private UsernamePasswordAuthenticationToken authenticationToken() {
         return new UsernamePasswordAuthenticationToken(principal, null, List.of());
     }
 }

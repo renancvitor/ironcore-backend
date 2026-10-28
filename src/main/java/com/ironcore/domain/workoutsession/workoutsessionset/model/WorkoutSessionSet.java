@@ -3,6 +3,7 @@ package com.ironcore.domain.workoutsession.workoutsessionset.model;
 import com.ironcore.domain.workoutsession.workoutsessionset.enums.ActualLoadMode;
 import com.ironcore.domain.workoutsession.workoutsessionset.exception.InvalidWorkoutSessionSetException;
 import com.ironcore.domain.workoutsession.workoutsessionset.valueobject.WorkoutSessionSetId;
+import com.ironcore.domain.workoutsession.workoutsessionset.service.ExecutedLoadNormalizer;
 import lombok.Getter;
 
 import java.math.BigDecimal;
@@ -92,7 +93,7 @@ public class WorkoutSessionSet {
     }
 
     public BigDecimal getNormalizedLoadKg() {
-        return ExecutedLoad.normalize(actualLoadKg, actualLoadMode);
+        return ExecutedLoadNormalizer.normalize(actualLoadKg, actualLoadMode);
     }
 
     private void validateExecution(
