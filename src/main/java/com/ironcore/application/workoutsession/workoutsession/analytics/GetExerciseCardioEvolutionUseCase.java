@@ -9,6 +9,7 @@ import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.workoutsession.analytics.service.ExecutionMetricsCalculator;
 import com.ironcore.domain.workoutsession.analytics.valueobject.ActivityExecution;
+import com.ironcore.domain.workoutsession.workoutsession.valueobject.WorkoutSessionId;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,7 +46,7 @@ public class GetExerciseCardioEvolutionUseCase {
         List<ExerciseCardioExecutionResult> executions = queryPort.findCardioExecution(
                 person.getId(), command.exerciseId(), command.startDate(), command.endDate()
         );
-        Map<Long, List<ExerciseCardioExecutionResult>> executionsBySession = executions.stream()
+        Map<WorkoutSessionId, List<ExerciseCardioExecutionResult>> executionsBySession = executions.stream()
                 .collect(Collectors.groupingBy(
                         ExerciseCardioExecutionResult::sessionId,
                         LinkedHashMap::new,
@@ -74,7 +75,7 @@ public class GetExerciseCardioEvolutionUseCase {
                 .toList();
 
         return new GetExerciseCardioEvolutionResult(
-                command.exerciseId().value(), points, ExecutionMetricsCalculator.calculateCardio(activities)
+                command.exerciseId(), points, ExecutionMetricsCalculator.calculateCardio(activities)
         );
     }
 }

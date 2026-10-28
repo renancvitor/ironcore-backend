@@ -1,7 +1,6 @@
 package com.ironcore.infrastructure.persistence.workoutsession.workoutsession.repository;
 
 import com.ironcore.application.workoutsession.workoutsession.analytics.ExerciseCardioExecutionResult;
-import com.ironcore.application.workoutsession.workoutsession.analytics.ExerciseStrengthEvolutionPointResult;
 import com.ironcore.application.workoutsession.workoutsession.analytics.ExerciseStrengthExecutionResult;
 import com.ironcore.application.workoutsession.workoutsession.analytics.GetExerciseCardioEvolutionCommand;
 import com.ironcore.application.workoutsession.workoutsession.analytics.GetExerciseCardioEvolutionUseCase;
@@ -113,9 +112,9 @@ class ExerciseAnalyticsQueryIntegrationTest {
         statistics.clear();
         var strength = strength();
         var cardio = cardio();
-        assertThat(strength).extracting(ExerciseStrengthExecutionResult::sessionId)
+        assertThat(strength).extracting(execution -> execution.sessionId().value())
                 .containsExactly(earlySessionId, earlySessionId, earlySessionId, earlySessionId, earlySessionId, firstTiedSessionId, lastTiedSessionId);
-        assertThat(cardio).extracting(ExerciseCardioExecutionResult::sessionId)
+        assertThat(cardio).extracting(execution -> execution.sessionId().value())
                 .containsExactly(earlySessionId, earlySessionId, firstTiedSessionId, lastTiedSessionId);
         assertThat(cardio).extracting(ExerciseCardioExecutionResult::exerciseNameSnapshot)
                 .containsOnly("Historical name");
@@ -155,7 +154,7 @@ class ExerciseAnalyticsQueryIntegrationTest {
                 Clock.fixed(Instant.parse("2026-10-27T12:00:00Z"), ZoneOffset.UTC));
         var command = new GetExerciseStrengthEvolutionCommand(new UserId(77L), new ExerciseId(exercise.getId()), DATE, DATE);
         var strength = strengthUseCase.execute(command);
-        assertThat(strength.points()).extracting(ExerciseStrengthEvolutionPointResult::sessionId)
+        assertThat(strength.points()).extracting(point -> point.sessionId().value())
                 .containsExactly(earlySessionId, firstTiedSessionId, lastTiedSessionId);
         var first = strength.points().getFirst().metrics();
         assertThat(first.maxNormalizedLoadKg()).isEqualByComparingTo("40.20");

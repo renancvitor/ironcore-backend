@@ -9,6 +9,7 @@ import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.workoutsession.analytics.service.ExecutionMetricsCalculator;
 import com.ironcore.domain.workoutsession.analytics.valueobject.SetExecution;
+import com.ironcore.domain.workoutsession.workoutsession.valueobject.WorkoutSessionId;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,7 +46,7 @@ public class GetExerciseStrengthEvolutionUseCase {
         List<ExerciseStrengthExecutionResult> executions = queryPort.findStrengthExecution(
                 person.getId(), command.exerciseId(), command.startDate(), command.endDate()
         );
-        Map<Long, List<ExerciseStrengthExecutionResult>> executionsBySession = executions.stream()
+        Map<WorkoutSessionId, List<ExerciseStrengthExecutionResult>> executionsBySession = executions.stream()
                 .collect(Collectors.groupingBy(
                         ExerciseStrengthExecutionResult::sessionId,
                         LinkedHashMap::new,
@@ -70,6 +71,6 @@ public class GetExerciseStrengthEvolutionUseCase {
                 })
                 .toList();
 
-        return new GetExerciseStrengthEvolutionResult(command.exerciseId().value(), points);
+        return new GetExerciseStrengthEvolutionResult(command.exerciseId(), points);
     }
 }

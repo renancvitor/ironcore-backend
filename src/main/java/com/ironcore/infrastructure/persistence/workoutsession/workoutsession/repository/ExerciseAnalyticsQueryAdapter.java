@@ -5,6 +5,8 @@ import com.ironcore.application.workoutsession.workoutsession.analytics.Exercise
 import com.ironcore.application.workoutsession.workoutsession.port.ExerciseAnalyticsQueryPort;
 import com.ironcore.domain.exercise.valueobject.ExerciseId;
 import com.ironcore.domain.person.valueobject.PersonId;
+import com.ironcore.domain.workoutsession.workoutsession.valueobject.WorkoutSessionId;
+import com.ironcore.domain.workoutsession.workoutsessionset.valueobject.WorkoutSessionSetId;
 import com.ironcore.infrastructure.exception.DataMappingException;
 import com.ironcore.infrastructure.exception.PersistenceException;
 import lombok.RequiredArgsConstructor;
@@ -37,11 +39,11 @@ public class ExerciseAnalyticsQueryAdapter implements ExerciseAnalyticsQueryPort
         try {
             return projections.stream()
                     .map(projection -> new ExerciseStrengthExecutionResult(
-                            projection.sessionId(),
+                            new WorkoutSessionId(projection.sessionId()),
                             projection.performedOn(),
                             projection.startedAt(),
                             projection.exerciseNameSnapshot(),
-                            projection.setId(),
+                            projection.setId() == null ? null : new WorkoutSessionSetId(projection.setId()),
                             projection.loadKg(),
                             projection.mode(),
                             projection.reps()
@@ -70,7 +72,7 @@ public class ExerciseAnalyticsQueryAdapter implements ExerciseAnalyticsQueryPort
         try {
             return projections.stream()
                     .map(projection -> new ExerciseCardioExecutionResult(
-                            projection.sessionId(),
+                            new WorkoutSessionId(projection.sessionId()),
                             projection.performedOn(),
                             projection.startedAt(),
                             projection.exerciseNameSnapshot(),

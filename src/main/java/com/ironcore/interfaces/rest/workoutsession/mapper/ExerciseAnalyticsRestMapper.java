@@ -35,7 +35,7 @@ public final class ExerciseAnalyticsRestMapper {
 
     public static ExerciseStrengthEvolutionResponse toResponse(GetExerciseStrengthEvolutionResult result) {
         return new ExerciseStrengthEvolutionResponse(
-                result.exerciseId(),
+                result.exerciseId().value(),
                 result.points().stream().map(ExerciseAnalyticsRestMapper::toPointResponse).toList()
         );
     }
@@ -44,7 +44,7 @@ public final class ExerciseAnalyticsRestMapper {
         var metrics = point.metrics();
 
         return new ExerciseStrengthEvolutionPointResponse(
-                point.sessionId(),
+                point.sessionId().value(),
                 point.performedOn(),
                 point.startedAt(),
                 point.exerciseNameSnapshot(),
@@ -69,7 +69,7 @@ public final class ExerciseAnalyticsRestMapper {
 
     public static ExerciseCardioEvolutionResponse toResponse(GetExerciseCardioEvolutionResult result) {
         return new ExerciseCardioEvolutionResponse(
-                result.exerciseId(),
+                result.exerciseId().value(),
                 result.points().stream().map(ExerciseAnalyticsRestMapper::toPointResponse).toList(),
                 toSummaryResponse(result.summary())
         );
@@ -79,7 +79,7 @@ public final class ExerciseAnalyticsRestMapper {
         var metrics = point.metrics();
 
         return new ExerciseCardioEvolutionPointResponse(
-                point.sessionId(),
+                point.sessionId().value(),
                 point.performedOn(),
                 point.startedAt(),
                 point.exerciseNameSnapshot(),

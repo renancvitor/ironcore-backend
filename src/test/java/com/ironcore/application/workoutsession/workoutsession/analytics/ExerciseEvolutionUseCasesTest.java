@@ -8,6 +8,8 @@ import com.ironcore.application.workoutsession.workoutsession.port.ExerciseAnaly
 import com.ironcore.domain.exercise.valueobject.ExerciseId;
 import com.ironcore.domain.person.repository.PersonRepository;
 import com.ironcore.domain.user.repository.UserRepository;
+import com.ironcore.domain.workoutsession.workoutsession.valueobject.WorkoutSessionId;
+import com.ironcore.domain.workoutsession.workoutsessionset.valueobject.WorkoutSessionSetId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -68,8 +70,11 @@ class ExerciseEvolutionUseCasesTest {
                 .thenReturn(List.of());
         when(queryPort.findCardioExecution(restoredPerson().getId(), command.exerciseId(), command.startDate(), command.endDate()))
                 .thenReturn(List.of());
-        assertThat(strengthUseCase.execute(command).points()).isEmpty();
+        var strength = strengthUseCase.execute(command);
+        assertThat(strength.exerciseId()).isEqualTo(command.exerciseId());
+        assertThat(strength.points()).isEmpty();
         var cardio = cardioUseCase.execute(toCardioCommand(command));
+        assertThat(cardio.exerciseId()).isEqualTo(command.exerciseId());
         assertThat(cardio.points()).isEmpty();
         assertThat(cardio.summary().distanceKm()).isNull();
         assertThat(cardio.summary().durationMinutes()).isNull();
@@ -104,9 +109,9 @@ class ExerciseEvolutionUseCasesTest {
         var date = command.startDate();
         var time = Instant.parse("2026-10-27T12:00:00Z");
         when(queryPort.findStrengthExecution(any(), any(), any(), any())).thenReturn(List.of(
-                new ExerciseStrengthExecutionResult(1L, date, time, "Old name", 1L, new BigDecimal("20"), TOTAL, 10),
-                new ExerciseStrengthExecutionResult(1L, date, time, "Other snapshot", 2L, new BigDecimal("20"), PER_SIDE, 10),
-                new ExerciseStrengthExecutionResult(2L, date, time, "New name", null, null, null, null)));
+                new ExerciseStrengthExecutionResult(new WorkoutSessionId(1L), date, time, "Old name", new WorkoutSessionSetId(1L), new BigDecimal("20"), TOTAL, 10),
+                new ExerciseStrengthExecutionResult(new WorkoutSessionId(1L), date, time, "Other snapshot", new WorkoutSessionSetId(2L), new BigDecimal("20"), PER_SIDE, 10),
+                new ExerciseStrengthExecutionResult(new WorkoutSessionId(2L), date, time, "New name", null, null, null, null)));
         var strength = strengthUseCase.execute(command);
         assertThat(strength.points()).hasSize(2);
         assertThat(strength.points().getFirst().exerciseNameSnapshot()).isEqualTo("Old name");
@@ -114,9 +119,9 @@ class ExerciseEvolutionUseCasesTest {
         assertThat(strength.points().getLast().metrics().volumeKgReps()).isNull();
 
         when(queryPort.findCardioExecution(any(), any(), any(), any())).thenReturn(List.of(
-                new ExerciseCardioExecutionResult(1L, date, time, "Old", 30, new BigDecimal("5")),
-                new ExerciseCardioExecutionResult(1L, date, time, "Old", 100, null),
-                new ExerciseCardioExecutionResult(2L, date, time, "New", 10, BigDecimal.ONE)));
+                new ExerciseCardioExecutionResult(new WorkoutSessionId(1L), date, time, "Old", 30, new BigDecimal("5")),
+                new ExerciseCardioExecutionResult(new WorkoutSessionId(1L), date, time, "Old", 100, null),
+                new ExerciseCardioExecutionResult(new WorkoutSessionId(2L), date, time, "New", 10, BigDecimal.ONE)));
         var cardio = cardioUseCase.execute(toCardioCommand(command));
         assertThat(cardio.points()).hasSize(2);
         assertThat(cardio.points().getFirst().metrics().durationMinutes()).isEqualTo(130);

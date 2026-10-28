@@ -4,7 +4,9 @@ import com.ironcore.application.workoutsession.workoutsession.analytics.Exercise
 import com.ironcore.application.workoutsession.workoutsession.analytics.ExerciseStrengthExecutionResult;
 import com.ironcore.domain.exercise.valueobject.ExerciseId;
 import com.ironcore.domain.person.valueobject.PersonId;
+import com.ironcore.domain.workoutsession.workoutsession.valueobject.WorkoutSessionId;
 import com.ironcore.domain.workoutsession.workoutsessionset.enums.ActualLoadMode;
+import com.ironcore.domain.workoutsession.workoutsessionset.valueobject.WorkoutSessionSetId;
 import com.ironcore.infrastructure.exception.DataMappingException;
 import com.ironcore.infrastructure.exception.PersistenceException;
 import org.junit.jupiter.api.Test;
@@ -42,12 +44,21 @@ class ExerciseAnalyticsQueryAdapterTest {
         var projection = new ExerciseStrengthExecutionProjection(
                 10L, DATE, START, "Histórico", 20L, new BigDecimal("20.10"), ActualLoadMode.PER_SIDE, null
         );
-        when(repository.findStrengthExecution(1L, 42L, DATE, DATE)).thenReturn(List.of(projection));
+        var withoutSets = new ExerciseStrengthExecutionProjection(
+                10L, DATE, START, "Histórico", null, null, null, null
+        );
+        when(repository.findStrengthExecution(1L, 42L, DATE, DATE)).thenReturn(List.of(projection, withoutSets));
 
         assertThat(adapter.findStrengthExecution(PERSON_ID, EXERCISE_ID, DATE, DATE))
-                .containsExactly(new ExerciseStrengthExecutionResult(
-                        10L, DATE, START, "Histórico", 20L, new BigDecimal("20.10"), ActualLoadMode.PER_SIDE, null
-                ));
+                .containsExactly(
+                        new ExerciseStrengthExecutionResult(
+                                new WorkoutSessionId(10L), DATE, START, "Histórico", new WorkoutSessionSetId(20L),
+                                new BigDecimal("20.10"), ActualLoadMode.PER_SIDE, null
+                        ),
+                        new ExerciseStrengthExecutionResult(
+                                new WorkoutSessionId(10L), DATE, START, "Histórico", null, null, null, null
+                        )
+                );
     }
 
     @Test
@@ -56,7 +67,7 @@ class ExerciseAnalyticsQueryAdapterTest {
         when(repository.findCardioExecution(1L, 42L, DATE, DATE)).thenReturn(List.of(projection));
 
         assertThat(adapter.findCardioExecution(PERSON_ID, EXERCISE_ID, DATE, DATE))
-                .containsExactly(new ExerciseCardioExecutionResult(10L, DATE, START, "Histórico", null, BigDecimal.ZERO));
+                .containsExactly(new ExerciseCardioExecutionResult(new WorkoutSessionId(10L), DATE, START, "Histórico", null, BigDecimal.ZERO));
     }
 
     @Test
