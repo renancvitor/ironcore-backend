@@ -12,6 +12,7 @@ public record ListWorkoutSessionsCommand(
         LocalDate startDate,
         LocalDate endDate,
         int page,
-        int size
+        int size,
+        String name
 ) {
 }

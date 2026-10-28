@@ -101,7 +101,7 @@ class WorkoutSessionControllerTest {
                     .andExpect(jsonPath("$.sessions.totalPages").value(0))
                     .andExpect(jsonPath("$.sessions.last").value(true));
             verify(listWorkoutSessionsUseCase).execute(new ListWorkoutSessionsCommand(
-                    new UserId(1L), null, null, null, null, 0, 20));
+                    new UserId(1L), null, null, null, null, 0, 20, null));
         }
 
         @Test
@@ -113,7 +113,7 @@ class WorkoutSessionControllerTest {
             when(listWorkoutSessionsUseCase.execute(any())).thenReturn(
                     new ListWorkoutSessionsResult(new PageResult<>(List.of(item), 1, 2, 3, 2, true)));
             mockMvc.perform(get(ENDPOINT).with(authenticatedUser())
-                            .param("workoutCycleId", "10").param("workoutDayId", "20")
+                            .param("workoutCycleId", "10").param("workoutDayId", "20").param("name", "Treino")
                             .param("startDate", "2026-10-26").param("endDate", "2026-10-26")
                             .param("page", "1").param("size", "2"))
                     .andExpect(status().isOk())
@@ -135,7 +135,7 @@ class WorkoutSessionControllerTest {
                     .andExpect(jsonPath("$.sessions.content[0].finishedAt").value(START.plusSeconds(60).toString()))
                     .andExpect(jsonPath("$.sessions.content[0].activities").doesNotExist());
             verify(listWorkoutSessionsUseCase).execute(new ListWorkoutSessionsCommand(new UserId(1L),
-                    new WorkoutCycleId(10L), new WorkoutDayId(20L), date, date, 1, 2));
+                    new WorkoutCycleId(10L), new WorkoutDayId(20L), date, date, 1, 2, "Treino"));
         }
 
         @ParameterizedTest

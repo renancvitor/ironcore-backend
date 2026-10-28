@@ -32,13 +32,13 @@ class ListWorkoutSessionsUseCaseTest {
         givenPerson();
         var date = LocalDate.of(2026, 10, 26);
         var command = new ListWorkoutSessionsCommand(activeUser().getId(), new WorkoutCycleId(10L),
-                new WorkoutDayId(20L), date, date, 1, 2);
+                new WorkoutDayId(20L), date, date, 1, 2, "Treino");
         var page = new PageResult<ListWorkoutSessionsItemResult>(List.of(), 1, 2, 2, 1, true);
         when(queryPort.findClosedSessions(restoredPerson().getId(), command.workoutCycleId(),
-                command.workoutDayId(), date, date, new PageQuery(1, 2))).thenReturn(page);
+                command.workoutDayId(), date, date, new PageQuery(1, 2), "Treino")).thenReturn(page);
         assertThat(useCase.execute(command).sessions()).isSameAs(page);
         verify(queryPort).findClosedSessions(restoredPerson().getId(), command.workoutCycleId(),
-                command.workoutDayId(), date, date, new PageQuery(1, 2));
+                command.workoutDayId(), date, date, new PageQuery(1, 2), "Treino");
     }
 
     @Test
@@ -65,7 +65,7 @@ class ListWorkoutSessionsUseCaseTest {
     void shouldRejectReversedInterval() {
         givenPerson();
         assertThatThrownBy(() -> useCase.execute(new ListWorkoutSessionsCommand(activeUser().getId(),
-                null, null, LocalDate.of(2026, 10, 27), LocalDate.of(2026, 10, 26), 0, 20)))
+                null, null, LocalDate.of(2026, 10, 27), LocalDate.of(2026, 10, 26), 0, 20, null)))
                 .isInstanceOf(OperationNotAllowedException.class);
         verifyNoInteractions(queryPort);
     }
@@ -84,6 +84,6 @@ class ListWorkoutSessionsUseCaseTest {
     }
 
     private ListWorkoutSessionsCommand command(int page, int size) {
-        return new ListWorkoutSessionsCommand(activeUser().getId(), null, null, null, null, page, size);
+        return new ListWorkoutSessionsCommand(activeUser().getId(), null, null, null, null, page, size, null);
     }
 }

@@ -82,10 +82,11 @@ public class WorkoutSessionController implements WorkoutSessionApi {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(name = "page", defaultValue = "0") @Min(0) int page,
-            @RequestParam(name = "size", defaultValue = "20") @Min(1) @Max(100) int size
+            @RequestParam(name = "size", defaultValue = "20") @Min(1) @Max(100) int size,
+            @RequestParam(required = false) String name
     ) {
         var command = WorkoutSessionRestMapper.toListCommand(
-                authenticatedUser, workoutCycleId, workoutDayId, startDate, endDate, page, size);
+                authenticatedUser, workoutCycleId, workoutDayId, startDate, endDate, page, size, name);
         return ResponseEntity.ok(WorkoutSessionRestMapper.toResponse(listWorkoutSessionsUseCase.execute(command)));
     }
 

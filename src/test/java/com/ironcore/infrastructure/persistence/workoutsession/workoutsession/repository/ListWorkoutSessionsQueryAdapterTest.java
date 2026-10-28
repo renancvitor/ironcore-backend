@@ -31,10 +31,10 @@ class ListWorkoutSessionsQueryAdapterTest {
                 WeekDay.MONDAY, date, start, start.plusSeconds(60),
                 WorkoutSessionStatus.CLOSED, WorkoutSessionCloseReason.MANUAL);
         var pageable = PageRequest.of(1, 2, Sort.by(Sort.Direction.DESC, "performedOn", "startedAt", "id"));
-        when(repository.findClosedSessions(1L, 10L, 20L, date, date, pageable))
+        when(repository.findClosedSessions(1L, 10L, 20L, date, date, pageable, null))
                 .thenReturn(new PageImpl<>(List.of(item), pageable, 3));
         var result = adapter.findClosedSessions(new PersonId(1L), new WorkoutCycleId(10L),
-                new WorkoutDayId(20L), date, date, new PageQuery(1, 2));
+                new WorkoutDayId(20L), date, date, new PageQuery(1, 2), null);
         assertThat(result.page()).isEqualTo(1);
         assertThat(result.size()).isEqualTo(2);
         assertThat(result.totalElements()).isEqualTo(3);
@@ -51,10 +51,10 @@ class ListWorkoutSessionsQueryAdapterTest {
 
     @Test
     void shouldTranslateRepositoryFailure() {
-        when(repository.findClosedSessions(any(), any(), any(), any(), any(), any()))
+        when(repository.findClosedSessions(any(), any(), any(), any(), any(), any(), any()))
                 .thenThrow(new IllegalStateException("offline"));
         assertThatThrownBy(() -> adapter.findClosedSessions(new PersonId(1L), null, null, null, null,
-                new PageQuery(0, 20))).isInstanceOf(PersistenceException.class).hasRootCauseMessage("offline");
+                new PageQuery(0, 20), null)).isInstanceOf(PersistenceException.class).hasRootCauseMessage("offline");
     }
 
     @Test
@@ -62,9 +62,9 @@ class ListWorkoutSessionsQueryAdapterTest {
         var invalid = new WorkoutSessionHistoryProjection(0L, null, null, "Original", "A",
                 WeekDay.MONDAY, LocalDate.now(), Instant.now(), Instant.now(),
                 WorkoutSessionStatus.CLOSED, WorkoutSessionCloseReason.MANUAL);
-        when(repository.findClosedSessions(any(), any(), any(), any(), any(), any()))
+        when(repository.findClosedSessions(any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(new PageImpl<>(List.of(invalid)));
         assertThatThrownBy(() -> adapter.findClosedSessions(new PersonId(1L), null, null, null, null,
-                new PageQuery(0, 20))).isInstanceOf(DataMappingException.class);
+                new PageQuery(0, 20), null)).isInstanceOf(DataMappingException.class);
     }
 }

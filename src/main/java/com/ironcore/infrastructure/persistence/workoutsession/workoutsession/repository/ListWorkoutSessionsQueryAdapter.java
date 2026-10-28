@@ -17,6 +17,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
+import java.util.Locale;
 
 @Repository
 @RequiredArgsConstructor
@@ -24,17 +25,23 @@ public class ListWorkoutSessionsQueryAdapter implements ListWorkoutSessionsQuery
 
     private final WorkoutSessionHistoryJpaRepository repository;
 
+    private static String namePattern(String name) {
+        if (name == null || name.isBlank()) return null;
+        return "%" + name.strip().toLowerCase(Locale.ROOT)
+                .replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
+    }
+
     @Override
     public PageResult<ListWorkoutSessionsItemResult> findClosedSessions(
             PersonId personId, WorkoutCycleId workoutCycleId, WorkoutDayId workoutDayId,
-            LocalDate startDate, LocalDate endDate, PageQuery pageQuery) {
+            LocalDate startDate, LocalDate endDate, PageQuery pageQuery, String name) {
         Page<WorkoutSessionHistoryProjection> page;
         try {
             var pageable = PageRequest.of(pageQuery.page(), pageQuery.size(),
                     Sort.by(Sort.Direction.DESC, "performedOn", "startedAt", "id"));
             page = repository.findClosedSessions(personId.value(),
                     workoutCycleId == null ? null : workoutCycleId.value(),
-                    workoutDayId == null ? null : workoutDayId.value(), startDate, endDate, pageable);
+                    workoutDayId == null ? null : workoutDayId.value(), startDate, endDate, pageable, namePattern(name));
         } catch (RuntimeException exception) {
             throw new PersistenceException("Falha ao buscar histórico de sessões de treino.", exception);
         }

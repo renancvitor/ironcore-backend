@@ -160,7 +160,27 @@ class WorkoutSessionHistoryQueryIntegrationTest {
                                                    int page, int size) {
         return adapter.findClosedSessions(new PersonId(owner.getId()),
                 cycleId == null ? null : new WorkoutCycleId(cycleId),
-                dayId == null ? null : new WorkoutDayId(dayId), start, end, new PageQuery(page, size));
+                dayId == null ? null : new WorkoutDayId(dayId), start, end, new PageQuery(page, size), null);
+    }
+
+    @Test
+    void shouldSearchBothSnapshotsWithPaginationAndDates() {
+        session(person("Another person"), day, DATE, 15, WorkoutSessionCloseReason.MANUAL);
+        em.flush();
+        var byCycle = adapter.findClosedSessions(new PersonId(owner.getId()), null, null,
+                null, null, new PageQuery(0, 1), "  ORIGINAL CYCLE  ");
+        assertThat(byCycle.totalElements()).isEqualTo(4);
+        assertThat(byCycle.content()).hasSize(1);
+        var removed = adapter.findClosedSessions(new PersonId(owner.getId()), null, null,
+                null, null, new PageQuery(0, 20), "removed day");
+        assertIds(removed, withoutOrigin);
+        var dated = adapter.findClosedSessions(new PersonId(owner.getId()), null, null,
+                DATE.plusDays(1), null, new PageQuery(0, 20), "original");
+        assertThat(dated.content()).isEmpty();
+        for (String name : new String[] {"%", "_", "!", "private", "nonexistent"}) {
+            assertThat(adapter.findClosedSessions(new PersonId(owner.getId()), null, null,
+                    null, null, new PageQuery(0, 20), name).totalElements()).isZero();
+        }
     }
 
     private void assertIds(PageResult<ListWorkoutSessionsItemResult> page, Long... ids) {

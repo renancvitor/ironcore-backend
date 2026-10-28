@@ -11,5 +11,5 @@ import java.time.LocalDate;
 public interface ListWorkoutSessionsQueryPort {
     PageResult<ListWorkoutSessionsItemResult> findClosedSessions(
             PersonId personId, WorkoutCycleId workoutCycleId, WorkoutDayId workoutDayId,
-            LocalDate startDate, LocalDate endDate, PageQuery pageQuery);
+            LocalDate startDate, LocalDate endDate, PageQuery pageQuery, String name);
 }

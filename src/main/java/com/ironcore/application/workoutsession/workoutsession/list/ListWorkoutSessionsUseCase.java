@@ -35,6 +35,6 @@ public class ListWorkoutSessionsUseCase {
         var pageQuery = new PageQuery(command.page(), command.size());
         return new ListWorkoutSessionsResult(queryPort.findClosedSessions(
                 person.getId(), command.workoutCycleId(), command.workoutDayId(),
-                command.startDate(), command.endDate(), pageQuery));
+                command.startDate(), command.endDate(), pageQuery, command.name()));
     }
 }

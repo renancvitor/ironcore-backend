@@ -49,7 +49,7 @@ public interface WorkoutSessionApi {
     @InternalServerErrorResponse
     ResponseEntity<ListWorkoutSessionsResponse> list(
             AuthenticatedUser authenticatedUser, Long workoutCycleId, Long workoutDayId,
-            LocalDate startDate, LocalDate endDate, @Min(0) int page, @Min(1) @Max(100) int size);
+            LocalDate startDate, LocalDate endDate, @Min(0) int page, @Min(1) @Max(100) int size, String name);
 
     @Operation(summary = "Atualizar relato da sessão",
             description = "Atualiza ou limpa o relato geral. Omitir notes é inválido. Correções em sessões encerradas são permitidas sem reabertura.")

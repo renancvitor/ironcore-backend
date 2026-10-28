@@ -18,6 +18,9 @@ public interface WorkoutSessionHistoryJpaRepository extends Repository<WorkoutSe
             from WorkoutSessionEntity s
             where s.person.id = :personId
               and s.status = com.ironcore.domain.workoutsession.workoutsession.enums.WorkoutSessionStatus.CLOSED
+              and (:name is null
+                   or lower(s.workoutCycleNameSnapshot) like :name escape '!'
+                   or lower(s.workoutDayTitleSnapshot) like :name escape '!')
               and (:cycleId is null or s.workoutCycleId = :cycleId)
               and (:dayId is null or s.workoutDayId = :dayId)
               and (cast(:startDate as date) is null or s.performedOn >= :startDate)
@@ -27,6 +30,9 @@ public interface WorkoutSessionHistoryJpaRepository extends Repository<WorkoutSe
             from WorkoutSessionEntity s
             where s.person.id = :personId
               and s.status = com.ironcore.domain.workoutsession.workoutsession.enums.WorkoutSessionStatus.CLOSED
+              and (:name is null
+                   or lower(s.workoutCycleNameSnapshot) like :name escape '!'
+                   or lower(s.workoutDayTitleSnapshot) like :name escape '!')
               and (:cycleId is null or s.workoutCycleId = :cycleId)
               and (:dayId is null or s.workoutDayId = :dayId)
               and (cast(:startDate as date) is null or s.performedOn >= :startDate)
@@ -38,5 +44,6 @@ public interface WorkoutSessionHistoryJpaRepository extends Repository<WorkoutSe
             @Param("dayId") Long dayId,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate,
-            Pageable pageable);
+            Pageable pageable,
+            @Param("name") String name);
 }

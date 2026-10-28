@@ -46,10 +46,10 @@ public final class WorkoutSessionRestMapper {
 
     public static ListWorkoutSessionsCommand toListCommand(
             AuthenticatedUser authenticatedUser, Long cycleId, Long dayId,
-            LocalDate startDate, LocalDate endDate, int page, int size) {
+            LocalDate startDate, LocalDate endDate, int page, int size, String name) {
         return new ListWorkoutSessionsCommand(authenticatedUser.userId(),
                 cycleId == null ? null : new WorkoutCycleId(cycleId),
-                dayId == null ? null : new WorkoutDayId(dayId), startDate, endDate, page, size);
+                dayId == null ? null : new WorkoutDayId(dayId), startDate, endDate, page, size, name);
     }
 
     public static ListWorkoutSessionsResponse toResponse(ListWorkoutSessionsResult result) {
