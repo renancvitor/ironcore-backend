@@ -43,6 +43,7 @@ public class JwtAccessTokenGenerator implements AccessTokenGenerator {
                 .withSubject(String.valueOf(subject.userId().value()))
                 .withClaim("email", subject.email().value())
                 .withClaim("mustChangePassword", subject.mustChangePassword())
+                .withClaim("sid", subject.sessionId().value().toString())
                 .withExpiresAt(expiresAtInstant)
                 .sign(Algorithm.HMAC256(properties.getSecret()));
 

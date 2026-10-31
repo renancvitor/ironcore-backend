@@ -1,5 +1,6 @@
 package com.ironcore.interfaces.rest.auth.api;
 
+import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
 import com.ironcore.interfaces.rest.auth.dto.LoginRequest;
 import com.ironcore.interfaces.rest.auth.dto.LoginResponse;
 import com.ironcore.interfaces.rest.openapi.BadRequestResponse;
@@ -16,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @Tag(name = "Autenticação")
 public interface AuthApi {
@@ -47,8 +49,12 @@ public interface AuthApi {
     @SecurityRequirements
     @ApiResponse(
             responseCode = "204",
-            description = "Sessão encerrada com sucesso."
+            description = "Revoga a sessão autenticada, quando identificável, e expira o cookie de acesso."
     )
     @InternalServerErrorResponse
-    ResponseEntity<Void> logout(HttpServletRequest servletRequest, HttpServletResponse servletResponse);
+    ResponseEntity<Void> logout(
+            @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
+            HttpServletRequest servletRequest,
+            HttpServletResponse servletResponse
+    );
 }

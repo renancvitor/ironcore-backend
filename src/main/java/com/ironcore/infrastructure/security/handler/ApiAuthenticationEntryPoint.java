@@ -36,7 +36,9 @@ public class ApiAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
         publisher.publish(
                 ErrorCodeType.AUTHENTICATION_ERROR,
-                exceptionMessage(authenticationFailure),
+                authenticationFailure instanceof JwtTokenValidationException
+                        ? INVALID_TOKEN_MESSAGE
+                        : AUTHENTICATION_REQUIRED_MESSAGE,
                 authenticationFailure.getClass().getName(),
                 request.getRequestURI(),
                 request.getMethod(),
@@ -61,12 +63,6 @@ public class ApiAuthenticationEntryPoint implements AuthenticationEntryPoint {
         return exception.getCause() instanceof JwtTokenValidationException
                 ? exception.getCause()
                 : exception;
-    }
-
-    private String exceptionMessage(Throwable exception) {
-        String message = exception.getMessage();
-
-        return message == null || message.isBlank() ? exception.getClass().getSimpleName() : message;
     }
 
     private String correlationId(HttpServletRequest request) {

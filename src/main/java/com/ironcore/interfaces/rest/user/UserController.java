@@ -1,5 +1,6 @@
 package com.ironcore.interfaces.rest.user;
 
+import com.ironcore.application.auth.port.GeneratedAccessToken;
 import com.ironcore.application.user.usecase.changepassword.ChangePasswordCommand;
 import com.ironcore.application.user.usecase.changepassword.ChangePasswordUseCase;
 import com.ironcore.application.user.usecase.getauthenticateduser.GetAuthenticatedUserUseCase;
@@ -10,12 +11,14 @@ import com.ironcore.application.user.usecase.update.ChangeNicknameCommand;
 import com.ironcore.application.user.usecase.update.ChangeNicknameResult;
 import com.ironcore.application.user.usecase.update.ChangeNicknameUseCase;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
+import com.ironcore.infrastructure.security.cookie.AccessTokenCookieFactory;
 import com.ironcore.interfaces.rest.user.api.UserApi;
 import com.ironcore.interfaces.rest.user.dto.*;
 import com.ironcore.interfaces.rest.user.mapper.UserChangePasswordMapper;
 import com.ironcore.interfaces.rest.user.mapper.UserRestMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -29,6 +32,7 @@ public class UserController implements UserApi {
     private final InitialChangePasswordUseCase initialChangePasswordUseCase;
     private final GetAuthenticatedUserUseCase getAuthenticatedUserUseCase;
     private final ChangeNicknameUseCase changeNicknameUseCase;
+    private final AccessTokenCookieFactory accessTokenCookieFactory;
 
     @Override
     @PostMapping("/me/change-password")
@@ -37,9 +41,11 @@ public class UserController implements UserApi {
             @RequestBody @Valid ChangePasswordRequest request
     ) {
         ChangePasswordCommand command = UserChangePasswordMapper.toChangePasswordCommand(authenticatedUser, request);
-        changePasswordUseCase.execute(command);
+        GeneratedAccessToken token = changePasswordUseCase.execute(command);
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.noContent()
+                .header(HttpHeaders.SET_COOKIE, accessTokenCookieFactory.create(token))
+                .build();
     }
 
     @Override

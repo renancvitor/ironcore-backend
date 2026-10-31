@@ -644,14 +644,30 @@ public class GlobalExceptionHandler {
     private String getOrCreateCorrelationId(HttpServletRequest request) {
         String correlationId = request.getHeader("X-Correlation-Id");
 
-        if (correlationId == null || correlationId.isBlank()) {
-            return UUID.randomUUID().toString();
+        if (correlationId != null) {
+            try {
+                return UUID.fromString(correlationId).toString();
+            } catch (IllegalArgumentException ignored) {
+                /* Identificador inválido, um novo UUID será gerado abaixo. */
+            }
         }
 
-        return correlationId;
+        return UUID.randomUUID().toString();
     }
 
     private String getExceptionMessage(Exception exception) {
+        if (exception instanceof MethodArgumentNotValidException) {
+            return "Erro de validação nos campos da requisição.";
+        }
+
+        if (exception instanceof HttpMessageNotReadableException) {
+            return "Corpo da requisição inválido ou mal formatado.";
+        }
+
+        if (exception instanceof MethodArgumentTypeMismatchException) {
+            return "Parâmetro da requisição possui tipo inválido.";
+        }
+
         String message = exception.getMessage();
 
         if (message == null || message.isBlank()) {

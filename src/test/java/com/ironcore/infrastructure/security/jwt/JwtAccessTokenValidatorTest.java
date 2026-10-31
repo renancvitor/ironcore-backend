@@ -50,6 +50,20 @@ class JwtAccessTokenValidatorTest {
     class TokenValidation {
 
         @Test
+        void shouldFailWhenExpirationIsMissing() {
+            String token = JWT.create()
+                    .withIssuer(ISSUER)
+                    .withSubject("1")
+                    .withClaim("email", "renan@example.com")
+                    .withClaim("mustChangePassword", true)
+                    .sign(Algorithm.HMAC256(SECRET));
+
+            assertThatExceptionOfType(JwtTokenValidationException.class)
+                    .isThrownBy(() -> validator.validate(token))
+                    .withMessage("JWT sem expiração.");
+        }
+
+        @Test
         void shouldFailWhenTokenIsNull() {
             String token = null;
 

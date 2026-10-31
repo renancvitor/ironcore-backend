@@ -6,6 +6,7 @@ import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
 import com.ironcore.application.user.usecase.changepassword.ChangePasswordCommand;
+import com.ironcore.domain.auth.repository.AuthSessionRepository;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.PasswordHash;
@@ -23,6 +24,7 @@ public class UserPasswordChangeService {
 
     private final UserRepository userRepository;
     private final PasswordHashingService passwordHashingService;
+    private final AuthSessionRepository authSessionRepository;
     private final Clock clock;
 
     public User changePassword(ChangePasswordCommand command) {
@@ -59,7 +61,7 @@ public class UserPasswordChangeService {
 
         user.changePasswordHash(newPasswordHash, updatedAt);
 
-        return userRepository.save(user);
+        return saveAndRevokeSessions(user);
     }
 
     public User changePassword(ChangePasswordCommand command, Consumer<User> beforePasswordChange) {
@@ -89,6 +91,17 @@ public class UserPasswordChangeService {
 
         user.changePasswordHash(newPasswordHash, updatedAt);
 
-        return userRepository.save(user);
+        return saveAndRevokeSessions(user);
+    }
+
+    private User saveAndRevokeSessions(User user) {
+        User savedUser = userRepository.save(user);
+
+        authSessionRepository.revokeAllByUserId(
+                savedUser.getId(),
+                clock.instant()
+        );
+
+        return savedUser;
     }
 }
