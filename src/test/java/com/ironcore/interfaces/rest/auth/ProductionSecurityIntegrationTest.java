@@ -36,6 +36,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles({"prod", "test"})
 class ProductionSecurityIntegrationTest {
+    @Autowired
+    private com.ironcore.infrastructure.persistence.auth.repository.AuthSessionJpaRepository authSessions;
+    @Autowired
+    private com.ironcore.infrastructure.persistence.auth.repository.AuthenticationAttemptJpaRepository authAttempts;
+
     private static final String ORIGIN = "https://app.ironcore.test";
     private static final String EMAIL = "security@ironcore.test";
     private static final String PASSWORD = "StrongPass123@";
@@ -47,6 +52,8 @@ class ProductionSecurityIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        authSessions.deleteAll();
+        authAttempts.deleteAll();
         users.deleteAll();
         persons.deleteAll();
         var now = LocalDateTime.now();
@@ -76,7 +83,7 @@ class ProductionSecurityIntegrationTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"/api/auth/login", "/api/auth/logout", "/api/users/change-initial-password"})
+    @ValueSource(strings = {"/api/auth/login", "/api/auth/logout", "/api/auth/refresh", "/api/users/change-initial-password"})
     void rejectsMissingAndInvalidCsrfOnPublicWrites(String path) throws Exception {
         mvc.perform(post(path).header("Origin", ORIGIN).contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isForbidden());
@@ -137,6 +144,30 @@ class ProductionSecurityIntegrationTest {
                                 "newPassword", newPassword, "confirmNewPassword", newPassword))))
                 .andExpect(status().isNoContent());
         login(newPassword, csrf()).getResponse();
+    }
+
+    @Test
+    void refreshPreservesRealCsrfAndProductionCookieAttributes() throws Exception {
+        var login = login(PASSWORD, csrf());
+        var csrf = csrf();
+        var renewed = mvc.perform(post("/api/auth/refresh").secure(true)
+                        .cookie(login.getResponse().getCookie("refresh_token"), csrf.cookie())
+                        .header(csrf.header(), csrf.token()).header("Origin", ORIGIN))
+                .andExpect(status().isNoContent())
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+                .andExpect(header().string("X-Frame-Options", "DENY"))
+                .andExpect(header().string("Strict-Transport-Security", containsString("max-age=")))
+                .andExpect(header().string("Cache-Control", containsString("no-store")))
+                .andReturn();
+        Cookie refresh = renewed.getResponse().getCookie("refresh_token");
+        assertThat(refresh.isHttpOnly()).isTrue();
+        assertThat(refresh.getSecure()).isTrue();
+        assertThat(refresh.getPath()).isEqualTo("/api/auth");
+        assertThat(refresh.getAttribute("SameSite")).isEqualTo("Lax");
+        assertThat(refresh.getDomain()).isNull();
+        assertThat(renewed.getResponse().getCookie("XSRF-TOKEN")).isNull();
+        mvc.perform(post("/api/auth/logout").cookie(refresh, csrf.cookie()).header(csrf.header(), csrf.token()))
+                .andExpect(status().isNoContent());
     }
 
     @ParameterizedTest

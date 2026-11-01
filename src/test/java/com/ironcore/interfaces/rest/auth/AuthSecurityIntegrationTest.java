@@ -49,6 +49,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class AuthSecurityIntegrationTest {
+    @Autowired
+    private com.ironcore.infrastructure.persistence.auth.repository.AuthSessionJpaRepository authSessions;
+    @Autowired
+    private com.ironcore.infrastructure.persistence.auth.repository.AuthenticationAttemptJpaRepository authAttempts;
+
 
     private static final String LOGIN_ENDPOINT = "/api/auth/login";
     private static final String LOGOUT_ENDPOINT = "/api/auth/logout";
@@ -80,6 +85,8 @@ class AuthSecurityIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        authSessions.deleteAll();
+        authAttempts.deleteAll();
         userJpaRepository.deleteAll();
         personJpaRepository.deleteAll();
         userJpaRepository.save(activeUser());
@@ -87,6 +94,8 @@ class AuthSecurityIntegrationTest {
 
     @AfterEach
     void tearDown() {
+        authSessions.deleteAll();
+        authAttempts.deleteAll();
         userJpaRepository.deleteAll();
         personJpaRepository.deleteAll();
     }

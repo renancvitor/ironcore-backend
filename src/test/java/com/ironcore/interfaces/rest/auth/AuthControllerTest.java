@@ -44,9 +44,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@org.springframework.context.annotation.Import(com.ironcore.infrastructure.security.cookie.AccessTokenCookieFactory.class)
 @WebMvcTest(AuthController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class AuthControllerTest {
+    @org.springframework.test.context.bean.override.mockito.MockitoBean
+    private com.ironcore.domain.auth.repository.AuthSessionRepository authSessionRepository;
+
 
     private static final String LOGIN_ENDPOINT = "/api/auth/login";
 
@@ -66,10 +70,16 @@ class AuthControllerTest {
     private LoginUseCase loginUseCase;
 
     @MockitoBean
+    private com.ironcore.application.auth.usecase.RefreshTokenUseCase refreshTokenUseCase;
+
+    @MockitoBean
     private LogoutUseCase logoutUseCase;
 
     @MockitoBean
     private ErrorLogPublisher errorLogPublisher;
+
+    @MockitoBean
+    private com.ironcore.application.auth.port.AuthenticationAttemptGuard attemptGuard;
 
     @MockitoBean
     private JwtAccessTokenValidator jwtAccessTokenValidator;
@@ -102,7 +112,7 @@ class AuthControllerTest {
                     new UserId(1L),
                     new Email("renan@example.com"),
                     "Renan",
-                    true
+                    true, "refresh-secret", clock.instant().plusSeconds(604800)
             );
 
             when(loginUseCase.execute(new LoginCommand(new Email("renan@example.com"), "StrongPass123@")))
@@ -224,7 +234,7 @@ class AuthControllerTest {
                     .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("HttpOnly")))
                     .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("SameSite=None")));
 
-            verify(logoutUseCase).execute();
+            verify(logoutUseCase).executeWithRefreshToken(null);
         }
     }
 }

@@ -21,8 +21,35 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserRepositoryAdapter implements UserRepository {
 
+    @jakarta.persistence.PersistenceContext
+    private jakarta.persistence.EntityManager entityManager;
+
     private final UserJpaRepository userJpaRepository;
     private final PersonJpaRepository personJpaRepository;
+
+    private User toLockedDomain(UserEntity entity) {
+        // An earlier read may already be cached in this persistence context before the lock.
+        entityManager.refresh(entity);
+        return UserMapper.toDomain(entity);
+    }
+
+    @Override
+    public Optional<User> findByIdForUpdate(UserId id) {
+        try {
+            return userJpaRepository.findLockedById(id.value()).map(this::toLockedDomain);
+        } catch (RuntimeException exception) {
+            throw new PersistenceException("Falha ao bloquear usu\u00e1rio.", exception);
+        }
+    }
+
+    @Override
+    public Optional<User> findByEmailForUpdate(Email email) {
+        try {
+            return userJpaRepository.findLockedByEmail(email.value()).map(this::toLockedDomain);
+        } catch (RuntimeException exception) {
+            throw new PersistenceException("Falha ao bloquear usu\u00e1rio.", exception);
+        }
+    }
 
     @Override
     public User save(User user) {

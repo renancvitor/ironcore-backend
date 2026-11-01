@@ -38,19 +38,19 @@ public class UserPasswordChangeService {
             RawPassword confirmPassword,
             Consumer<User> beforeChangePassword
     ) {
-        if (!user.isActive()) {
-            throw new UserInactiveException("Usuário inativo.");
+        if (!passwordHashingService.matches(currentPassword, user.getPasswordHash())) {
+            throw new InvalidCredentialsException("Senha atual inválida.");
         }
-
-        beforeChangePassword.accept(user);
 
         if (!newPassword.equals(confirmPassword)) {
             throw new BusinessRuleViolationException("A confirmação de senha não confere.");
         }
 
-        if (!passwordHashingService.matches(currentPassword, user.getPasswordHash())) {
-            throw new InvalidCredentialsException("Senha atual inválida.");
+        if (!user.isActive()) {
+            throw new UserInactiveException("Usuário inativo.");
         }
+
+        beforeChangePassword.accept(user);
 
         if (passwordHashingService.matches(newPassword, user.getPasswordHash())) {
             throw new BusinessRuleViolationException("A nova senha deve ser diferente da senha atual.");
@@ -65,7 +65,7 @@ public class UserPasswordChangeService {
     }
 
     public User changePassword(ChangePasswordCommand command, Consumer<User> beforePasswordChange) {
-        User user = userRepository.findById(command.userId())
+        User user = userRepository.findByIdForUpdate(command.userId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
 
         if (!user.isActive()) {

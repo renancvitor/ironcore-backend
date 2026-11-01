@@ -1,5 +1,7 @@
 package com.ironcore.infrastructure.security.cookie;
 
+import java.time.Instant;
+
 import com.ironcore.application.auth.port.GeneratedAccessToken;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
@@ -37,6 +39,20 @@ public class AccessTokenCookieFactory {
                 .sameSite(sameSite)
                 .build()
                 .toString();
+    }
+
+    public String createRefresh(String token, Instant expiresAt) {
+        Duration maxAge = Duration.between(clock.instant(), expiresAt);
+        return refreshCookie(token).maxAge(maxAge.isNegative() ? Duration.ZERO : maxAge).build().toString();
+    }
+
+    public String clearRefresh() {
+        return refreshCookie("").maxAge(0).build().toString();
+    }
+
+    private ResponseCookie.ResponseCookieBuilder refreshCookie(String token) {
+        return ResponseCookie.from("refresh_token", token).httpOnly(true).secure(true)
+                .path("/api/auth").sameSite(sameSite);
     }
 
     public String clear() {

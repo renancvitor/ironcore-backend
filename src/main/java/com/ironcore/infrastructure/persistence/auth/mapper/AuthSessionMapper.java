@@ -25,6 +25,9 @@ public final class AuthSessionMapper {
             entity.setExpiresAt(session.getExpiresAt());
             entity.setRevokedAt(session.getRevokedAt());
             entity.setVersion(session.getVersion());
+            entity.setRefreshTokenHash(session.getRefreshTokenHash());
+            entity.setPreviousRefreshTokenHash(session.getPreviousRefreshTokenHash());
+            entity.setRefreshRotatedAt(session.getRefreshRotatedAt());
 
             return entity;
         } catch (RuntimeException exception) {
@@ -34,7 +37,7 @@ public final class AuthSessionMapper {
 
     public static AuthSession toDomain(AuthSessionEntity entity) {
         try {
-            return AuthSession.restore(
+            AuthSession session = AuthSession.restore(
                     new AuthSessionId(entity.getId()),
                     new UserId(entity.getUser().getId()),
                     entity.getCreatedAt(),
@@ -42,6 +45,9 @@ public final class AuthSessionMapper {
                     entity.getRevokedAt(),
                     entity.getVersion()
             );
+            session.restoreRefreshCredential(entity.getRefreshTokenHash(),
+                    entity.getPreviousRefreshTokenHash(), entity.getRefreshRotatedAt());
+            return session;
         } catch (RuntimeException exception) {
             throw new DataMappingException("Falha ao converter sessão de entidade para domínio.", exception);
         }

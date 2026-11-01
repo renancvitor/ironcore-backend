@@ -42,7 +42,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String method = request.getMethod();
-        String path = request.getServletPath();
+        String path = requestPath(request);
 
         return method.equals(HttpMethod.OPTIONS.name())
                 || path.equals("/actuator/health")
@@ -60,7 +60,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
         boolean logoutRequest = request.getMethod().equals(HttpMethod.POST.name())
-                && request.getServletPath().equals("/api/auth/logout");
+                && requestPath(request).equals("/api/auth/logout");
 
         String token = recoveryToken(request);
 
@@ -121,9 +121,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return null;
     }
 
+    private String requestPath(HttpServletRequest request) {
+        return request.getServletPath().isEmpty()
+                ? request.getRequestURI().substring(request.getContextPath().length())
+                : request.getServletPath();
+    }
+
     private boolean isPublicEndpoint(String method, String path) {
         return method.equals(HttpMethod.POST.name())
                 && (path.equals("/api/auth/login")
+                || path.equals("/api/auth/refresh")
                 || path.equals("/api/users/change-initial-password"));
     }
 }

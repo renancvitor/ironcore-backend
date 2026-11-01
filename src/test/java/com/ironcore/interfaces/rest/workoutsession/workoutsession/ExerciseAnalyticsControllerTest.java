@@ -59,6 +59,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(ExerciseAnalyticsController.class)
 @Import(SecurityConfig.class)
 class ExerciseAnalyticsControllerTest {
+    @org.springframework.test.context.bean.override.mockito.MockitoBean
+    private com.ironcore.domain.auth.repository.AuthSessionRepository authSessionRepository;
+    @org.springframework.test.context.bean.override.mockito.MockitoBean
+    private java.time.Clock clock;
+
 
     private static final String BASE = "/api/users/me/workout-sessions/analytics/exercises/";
 
@@ -79,7 +84,8 @@ class ExerciseAnalyticsControllerTest {
 
     @MockitoBean
     private UserRepository userRepository;
-    private final AuthenticatedUser principal = new AuthenticatedUser(new UserId(77L), new Email("actor@example.com"), false);
+    private final AuthenticatedUser principal = new AuthenticatedUser(new UserId(77L), new Email("actor@example.com"), false, new com.ironcore.domain.auth.valueobject.AuthSessionId(java.util.UUID.fromString("38bd6914-32e4-4bc8-afd2-deba635aa64c"))
+        );
 
     @ParameterizedTest
     @ValueSource(strings = {"strength", "cardio"})

@@ -26,7 +26,7 @@ public class ChangeNicknameUseCase {
 
     @Transactional
     public ChangeNicknameResult execute(ChangeNicknameCommand command) {
-        User user = userRepository.findById(command.actorUserId())
+        User user = userRepository.findByIdForUpdate(command.actorUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
 
         if (!user.isActive()) {

@@ -19,7 +19,7 @@ class PersonRestMapperTest {
         AuthenticatedUser authenticatedUser = new AuthenticatedUser(
                 new UserId(1L),
                 new Email("renan@example.com"),
-                false
+                false, new com.ironcore.domain.auth.valueobject.AuthSessionId(java.util.UUID.fromString("38bd6914-32e4-4bc8-afd2-deba635aa64c"))
         );
 
         GetPersonCommand command = PersonRestMapper.toGetCommand(authenticatedUser);

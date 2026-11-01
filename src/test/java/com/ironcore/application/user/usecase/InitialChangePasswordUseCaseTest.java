@@ -34,10 +34,23 @@ class InitialChangePasswordUseCaseTest {
     private UserPasswordChangeService userPasswordChangeService;
 
     @Mock
+    private com.ironcore.application.user.service.PasswordHashingService passwordHashingService;
+
+    @Mock
     private UserRepository userRepository;
 
     @InjectMocks
     private InitialChangePasswordUseCase initialChangePasswordUseCase;
+
+    @Test
+    void missingAccountStillPerformsPasswordVerificationWork() {
+        var command = command();
+        when(userRepository.findByEmailForUpdate(command.email())).thenReturn(Optional.empty());
+        assertThatExceptionOfType(com.ironcore.application.exception.InvalidCredentialsException.class)
+                .isThrownBy(() -> initialChangePasswordUseCase.execute(command));
+        verify(passwordHashingService).verifyAgainstDummyHash(command.currentPassword());
+        org.mockito.Mockito.verifyNoInteractions(userPasswordChangeService);
+    }
 
     @Nested
     class InitialPasswordChange {
@@ -47,7 +60,7 @@ class InitialChangePasswordUseCaseTest {
             InitialChangePasswordCommand command = command();
             User user = activeUserWithMustChangePasswordTrue();
 
-            when(userRepository.findByEmail(command.email()))
+            when(userRepository.findByEmailForUpdate(command.email()))
                     .thenReturn(Optional.of(user));
             when(userPasswordChangeService.changePassword(
                     eq(user),
@@ -59,7 +72,7 @@ class InitialChangePasswordUseCaseTest {
 
             initialChangePasswordUseCase.execute(command);
 
-            verify(userRepository).findByEmail(command.email());
+            verify(userRepository).findByEmailForUpdate(command.email());
             verify(userPasswordChangeService).changePassword(
                     eq(user),
                     eq(command.currentPassword()),
@@ -78,7 +91,7 @@ class InitialChangePasswordUseCaseTest {
             InitialChangePasswordCommand command = command();
             User user = activeUserWithMustChangePasswordTrue();
 
-            when(userRepository.findByEmail(command.email()))
+            when(userRepository.findByEmailForUpdate(command.email()))
                     .thenReturn(Optional.of(user));
             when(userPasswordChangeService.changePassword(
                     eq(user),

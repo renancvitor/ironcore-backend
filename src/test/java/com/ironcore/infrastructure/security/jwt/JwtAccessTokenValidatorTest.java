@@ -9,6 +9,8 @@ import com.ironcore.infrastructure.security.jwt.exception.JwtTokenValidationExce
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -48,6 +50,19 @@ class JwtAccessTokenValidatorTest {
 
     @Nested
     class TokenValidation {
+
+        @ParameterizedTest
+        @ValueSource(strings = {"9223372036854775807", "\"invalid-date\""})
+        void shouldRejectMalformedNumericDatesWithResolvedJacksonVersion(String expiration) {
+            var base64 = java.util.Base64.getUrlEncoder().withoutPadding();
+            String header = base64.encodeToString("{\"alg\":\"HS256\",\"typ\":\"JWT\"}".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            String payload = base64.encodeToString(("{\"iss\":\"" + ISSUER + "\",\"sub\":\"1\",\"exp\":" + expiration + "}")
+                    .getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            String unsigned = header + "." + payload;
+            String token = unsigned + "." + base64.encodeToString(Algorithm.HMAC256(SECRET)
+                    .sign(unsigned.getBytes(java.nio.charset.StandardCharsets.US_ASCII)));
+            assertThatExceptionOfType(JwtTokenValidationException.class).isThrownBy(() -> validator.validate(token));
+        }
 
         @Test
         void shouldFailWhenExpirationIsMissing() {
@@ -197,6 +212,7 @@ class JwtAccessTokenValidatorTest {
                 .withSubject(subject)
                 .withClaim("email", email)
                 .withClaim("mustChangePassword", mustChangePassword)
+                .withClaim("sid", "38bd6914-32e4-4bc8-afd2-deba635aa64c")
                 .withExpiresAt(Date.from(Instant.now().plus(1, ChronoUnit.HOURS)))
                 .sign(Algorithm.HMAC256(secret));
     }

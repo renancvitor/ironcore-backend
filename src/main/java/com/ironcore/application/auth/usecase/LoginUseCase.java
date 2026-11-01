@@ -1,5 +1,6 @@
 package com.ironcore.application.auth.usecase;
 
+
 import com.ironcore.application.auth.port.GeneratedAccessToken;
 import com.ironcore.application.auth.service.AuthSessionIssuer;
 import com.ironcore.application.exception.InitialPasswordChangeRequiredException;
@@ -27,15 +28,18 @@ public class LoginUseCase {
         Email email = command.email();
         RawPassword rawPassword = new RawPassword(command.rawPassword());
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new InvalidCredentialsException("Credenciais inválidas."));
-
-        if (!user.isActive()) {
-            throw new UserInactiveException("Usuário inativo.");
-        }
+        User user = userRepository.findByEmailForUpdate(email)
+                .orElseThrow(() -> {
+                    passwordHashingService.verifyAgainstDummyHash(rawPassword);
+                    return new InvalidCredentialsException("Credenciais inválidas.");
+                });
 
         if (!passwordHashingService.matches(rawPassword, user.getPasswordHash())) {
             throw new InvalidCredentialsException("Credenciais inválidas.");
+        }
+
+        if (!user.isActive()) {
+            throw new UserInactiveException("Usuário inativo.");
         }
 
         if (user.mustChangePassword()) {
@@ -51,7 +55,9 @@ public class LoginUseCase {
                 user.getId(),
                 user.getEmail(),
                 user.getNickname(),
-                user.mustChangePassword()
+                user.mustChangePassword(),
+                accessToken.refreshToken(),
+                accessToken.refreshExpiresAt()
         );
     }
 }

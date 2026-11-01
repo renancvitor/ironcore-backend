@@ -38,6 +38,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles({"dev", "test"})
 class SwaggerCsrfIntegrationTest {
+    @Autowired
+    private com.ironcore.infrastructure.persistence.auth.repository.AuthSessionJpaRepository authSessions;
+    @Autowired
+    private com.ironcore.infrastructure.persistence.auth.repository.AuthenticationAttemptJpaRepository authAttempts;
+
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper mapper;
     @Autowired UserJpaRepository users;
@@ -74,6 +79,8 @@ class SwaggerCsrfIntegrationTest {
 
     @Test
     void maskedTokenIsRenewedAcrossSwaggerLoginWriteLogoutAndRelogin() throws Exception {
+        authSessions.deleteAll();
+        authAttempts.deleteAll();
         users.deleteAll();
         persons.deleteAll();
         var now = LocalDateTime.now();
@@ -95,7 +102,9 @@ class SwaggerCsrfIntegrationTest {
             String afterLogout = swaggerWrite(cookies, HttpMethod.POST, "/api/auth/login", loginBody, 200);
             assertThat(afterLogout).isNotEqualTo(beforeLogout);
         } finally {
-            users.deleteAll();
+            authSessions.deleteAll();
+        authAttempts.deleteAll();
+        users.deleteAll();
             persons.deleteAll();
         }
     }

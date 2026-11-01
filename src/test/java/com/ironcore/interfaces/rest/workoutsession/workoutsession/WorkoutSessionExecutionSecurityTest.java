@@ -47,6 +47,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(WorkoutSessionController.class)
 @Import(SecurityConfig.class)
 class WorkoutSessionExecutionSecurityTest {
+    @org.springframework.test.context.bean.override.mockito.MockitoBean
+    private com.ironcore.domain.auth.repository.AuthSessionRepository authSessionRepository;
+    @org.springframework.test.context.bean.override.mockito.MockitoBean
+    private java.time.Clock clock;
+
     @MockitoBean private ListWorkoutSessionsUseCase listWorkoutSessionsUseCase;
 
     @Test
@@ -57,7 +62,8 @@ class WorkoutSessionExecutionSecurityTest {
 
     @Test
     void shouldAllowAuthenticatedHistoryWithoutCsrf() throws Exception {
-        var principal = new AuthenticatedUser(new UserId(77L), new Email("actor@example.com"), false);
+        var principal = new AuthenticatedUser(new UserId(77L), new Email("actor@example.com"), false, new com.ironcore.domain.auth.valueobject.AuthSessionId(java.util.UUID.fromString("38bd6914-32e4-4bc8-afd2-deba635aa64c"))
+        );
         when(listWorkoutSessionsUseCase.execute(any())).thenReturn(
                 new ListWorkoutSessionsResult(new PageResult<>(List.of(), 0, 20, 0, 0, true)));
         mvc.perform(get("/api/users/me/workout-sessions").with(authentication(
@@ -90,7 +96,8 @@ class WorkoutSessionExecutionSecurityTest {
     @ParameterizedTest
     @ValueSource(strings = {"NOTES", "ACTIVITY", "CREATE", "UPDATE", "DELETE", "MODE"})
     void shouldRequireCsrfForEveryAuthenticatedExecutionWrite(String operation) throws Exception {
-        var principal = new AuthenticatedUser(new UserId(77L), new Email("actor@example.com"), false);
+        var principal = new AuthenticatedUser(new UserId(77L), new Email("actor@example.com"), false, new com.ironcore.domain.auth.valueobject.AuthSessionId(java.util.UUID.fromString("38bd6914-32e4-4bc8-afd2-deba635aa64c"))
+        );
         mvc.perform(request(operation).with(authentication(
                 new UsernamePasswordAuthenticationToken(principal, null, List.of()))))
                 .andExpect(status().isForbidden());
@@ -109,7 +116,8 @@ class WorkoutSessionExecutionSecurityTest {
         when(createWorkoutSessionSetUseCase.execute(any())).thenReturn(WorkoutSessionSetDetailResult.from(activity.getSets().getFirst()));
         when(updateWorkoutSessionSetUseCase.execute(any())).thenReturn(WorkoutSessionSetDetailResult.from(activity.getSets().getFirst()));
         when(changeWorkoutSessionActivityLoadModeUseCase.execute(any())).thenReturn(WorkoutSessionActivityDetailResult.from(activity));
-        var principal = new AuthenticatedUser(new UserId(77L), new Email("actor@example.com"), false);
+        var principal = new AuthenticatedUser(new UserId(77L), new Email("actor@example.com"), false, new com.ironcore.domain.auth.valueobject.AuthSessionId(java.util.UUID.fromString("38bd6914-32e4-4bc8-afd2-deba635aa64c"))
+        );
         mvc.perform(request(operation).with(csrf()).with(authentication(
                 new UsernamePasswordAuthenticationToken(principal, null, List.of()))))
                 .andExpect(status().is(operation.equals("CREATE") ? 201 : operation.equals("DELETE") ? 204 : 200));

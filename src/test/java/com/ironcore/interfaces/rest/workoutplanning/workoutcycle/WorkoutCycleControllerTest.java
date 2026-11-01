@@ -53,6 +53,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(WorkoutCycleController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class WorkoutCycleControllerTest {
+    @org.springframework.test.context.bean.override.mockito.MockitoBean
+    private com.ironcore.domain.auth.repository.AuthSessionRepository authSessionRepository;
+    @org.springframework.test.context.bean.override.mockito.MockitoBean
+    private java.time.Clock clock;
+
 
     private static final String ENDPOINT = "/api/users/me/workout-cycles";
 

@@ -55,6 +55,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Testcontainers
 class WorkoutSessionIntegrationTest {
+    @Autowired
+    private com.ironcore.infrastructure.persistence.auth.repository.AuthSessionJpaRepository authSessions;
+    @Autowired
+    private com.ironcore.infrastructure.persistence.auth.repository.AuthenticationAttemptJpaRepository authAttempts;
+
 
     private static final String SESSIONS = "/api/users/me/workout-sessions";
     private static final String CYCLES = "/api/users/me/workout-cycles";
@@ -114,6 +119,8 @@ class WorkoutSessionIntegrationTest {
     void clearData() {
         jdbc.update("delete from error_logs");
         jdbc.update("delete from audit_logs");
+        authSessions.deleteAll();
+        authAttempts.deleteAll();
         users.deleteAll();
         persons.deleteAll();
     }

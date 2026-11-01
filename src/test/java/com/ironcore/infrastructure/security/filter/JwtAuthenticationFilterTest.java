@@ -50,12 +50,16 @@ class JwtAuthenticationFilterTest {
     @Mock
     private ObjectProvider<ApiAuthenticationEntryPoint> authenticationEntryPointProvider;
 
+    @Mock
+    private com.ironcore.domain.auth.repository.AuthSessionRepository sessions;
+    private final java.time.Clock clock = java.time.Clock.systemUTC();
+    private final com.ironcore.domain.auth.valueobject.AuthSessionId sid = new com.ironcore.domain.auth.valueobject.AuthSessionId(java.util.UUID.fromString("38bd6914-32e4-4bc8-afd2-deba635aa64c"));
     private JwtAuthenticationFilter filter;
 
     @BeforeEach
     void setUp() {
         SecurityContextHolder.clearContext();
-        filter = new JwtAuthenticationFilter(validator, userRepository, authenticationEntryPointProvider);
+        filter = new JwtAuthenticationFilter(validator, userRepository, authenticationEntryPointProvider, sessions, clock);
     }
 
     @AfterEach
@@ -68,11 +72,13 @@ class JwtAuthenticationFilterTest {
         JwtAccessTokenClaims claims = new JwtAccessTokenClaims(
                 new UserId(1L),
                 new Email("renan@example.com"),
-                false
+                false, sid
         );
 
         User user = user(true);
 
+        when(sessions.findByIdAndUserId(sid, new UserId(1L))).thenReturn(Optional.of(
+                com.ironcore.domain.auth.model.AuthSession.open(sid, new UserId(1L), clock.instant().minusSeconds(10), clock.instant().plusSeconds(300))));
         when(validator.validate("valid-token")).thenReturn(claims);
         when(userRepository.findById(new UserId(1L))).thenReturn(Optional.of(user));
 
@@ -114,9 +120,11 @@ class JwtAuthenticationFilterTest {
         JwtAccessTokenClaims claims = new JwtAccessTokenClaims(
                 new UserId(1L),
                 new Email("renan@example.com"),
-                false
+                false, sid
         );
 
+        when(sessions.findByIdAndUserId(sid, new UserId(1L))).thenReturn(Optional.of(
+                com.ironcore.domain.auth.model.AuthSession.open(sid, new UserId(1L), clock.instant().minusSeconds(10), clock.instant().plusSeconds(300))));
         when(validator.validate("valid-token")).thenReturn(claims);
         when(userRepository.findById(new UserId(1L))).thenReturn(Optional.empty());
 
@@ -136,9 +144,11 @@ class JwtAuthenticationFilterTest {
         JwtAccessTokenClaims claims = new JwtAccessTokenClaims(
                 new UserId(1L),
                 new Email("renan@example.com"),
-                false
+                false, sid
         );
 
+        when(sessions.findByIdAndUserId(sid, new UserId(1L))).thenReturn(Optional.of(
+                com.ironcore.domain.auth.model.AuthSession.open(sid, new UserId(1L), clock.instant().minusSeconds(10), clock.instant().plusSeconds(300))));
         when(validator.validate("valid-token")).thenReturn(claims);
         when(userRepository.findById(new UserId(1L))).thenReturn(Optional.of(user(false)));
 
@@ -181,7 +191,7 @@ class JwtAuthenticationFilterTest {
         assertThat(filter.shouldNotFilter(request("GET", "/swagger-ui.html"))).isTrue();
         assertThat(filter.shouldNotFilter(request("GET", "/swagger-ui/index.html"))).isTrue();
         assertThat(filter.shouldNotFilter(request("POST", "/api/auth/login"))).isTrue();
-        assertThat(filter.shouldNotFilter(request("POST", "/api/auth/logout"))).isTrue();
+        assertThat(filter.shouldNotFilter(request("POST", "/api/auth/logout"))).isFalse();
     }
 
     @Test
