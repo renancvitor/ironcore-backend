@@ -20,26 +20,6 @@ public class SpringDocConfiguration {
     private static final String ACCESS_TOKEN_COOKIE_SECURITY_SCHEME = "access-token-cookie";
 
     @Bean
-    public org.springdoc.core.customizers.OpenApiCustomizer mutableOperationSecurity() {
-        return api -> api.getPaths().forEach((path, item) -> item.readOperationsMap().forEach((method, operation) -> {
-            if (method == io.swagger.v3.oas.models.PathItem.HttpMethod.GET
-                    || method == io.swagger.v3.oas.models.PathItem.HttpMethod.OPTIONS
-                    || method == io.swagger.v3.oas.models.PathItem.HttpMethod.HEAD) return;
-            var requirements = operation.getSecurity();
-            if (requirements == null) {
-                requirements = new java.util.ArrayList<>();
-                requirements.add(new SecurityRequirement().addList(ACCESS_TOKEN_COOKIE_SECURITY_SCHEME));
-            }
-            if (requirements.isEmpty()) requirements = new java.util.ArrayList<>(List.of(new SecurityRequirement()));
-            for (var requirement : requirements) {
-                requirement.addList("csrf-header");
-                if (path.equals("/api/auth/refresh")) requirement.addList("refresh-token-cookie");
-            }
-            operation.setSecurity(requirements);
-        }));
-    }
-
-    @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .components(new Components()
@@ -50,12 +30,7 @@ public class SpringDocConfiguration {
                                         .in(SecurityScheme.In.COOKIE)
                                         .name("access_token")
                                         .description("JWT de autenticação armazenado e enviado via cookie HTTP-only.")
-                        ).addSecuritySchemes("refresh-token-cookie", new SecurityScheme()
-                                .type(SecurityScheme.Type.APIKEY).in(SecurityScheme.In.COOKIE).name("refresh_token")
-                                .description("Credencial aleatória HttpOnly/Secure, Path=/api/auth, host-only. Hash SHA-256 persistido; rotação a cada uso. Prazo absoluto configurável, máximo 7 dias desde login."))
-                        .addSecuritySchemes("csrf-header", new SecurityScheme()
-                                .type(SecurityScheme.Type.APIKEY).in(SecurityScheme.In.HEADER).name("X-XSRF-TOKEN")
-                                .description("Obtenha token mascarado em GET /api/auth/csrf e mantenha o cookie XSRF-TOKEN. Obrigatório em todas as operações mutáveis, inclusive login, refresh e logout. Reobtenha após login/logout.")))
+                        ))
                 .addSecurityItem(new SecurityRequirement().addList(ACCESS_TOKEN_COOKIE_SECURITY_SCHEME))
                 .addServersItem(new Server()
                         .url("http://localhost:8080")

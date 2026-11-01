@@ -27,7 +27,7 @@ public final class AuthenticatedUserRequestPostProcessorFactory {
         AuthenticatedUser authenticatedUser = new AuthenticatedUser(
                 new UserId(userId),
                 new Email(email),
-                initialPassword, new com.ironcore.domain.auth.valueobject.AuthSessionId(java.util.UUID.fromString("38bd6914-32e4-4bc8-afd2-deba635aa64c"))
+                initialPassword
         );
 
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(

@@ -26,9 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/auth")
 public class AuthController implements AuthApi {
 
-    private final RefreshTokenUseCase refreshTokenUseCase;
     private final LoginUseCase loginUseCase;
-    private final com.ironcore.application.auth.port.AuthenticationAttemptGuard attemptGuard;
     private final LogoutUseCase logoutUseCase;
     private final CsrfTokenRepository csrfTokenRepository;
     private final AccessTokenCookieFactory accessTokenCookieFactory;
@@ -41,7 +39,6 @@ public class AuthController implements AuthApi {
             HttpServletResponse servletResponse
     ) {
         LoginCommand command = AuthRestMapper.toCommand(request);
-        attemptGuard.check(command.email().value());
         LoginResult result = loginUseCase.execute(command);
         LoginResponse response = AuthRestMapper.toResponse(result);
 
@@ -55,27 +52,7 @@ public class AuthController implements AuthApi {
                                 result.expiresAt()
                         )
                 ))
-                .header(HttpHeaders.SET_COOKIE, accessTokenCookieFactory.createRefresh(result.refreshToken(), result.refreshExpiresAt()))
                 .body(response);
-    }
-
-    @Override
-    @PostMapping("/refresh")
-    public ResponseEntity<Void> refresh(HttpServletRequest request) {
-        GeneratedAccessToken token = refreshTokenUseCase.execute(refreshCookie(request));
-        return ResponseEntity.noContent()
-                .header(HttpHeaders.SET_COOKIE, accessTokenCookieFactory.create(token),
-                        accessTokenCookieFactory.createRefresh(token.refreshToken(), token.refreshExpiresAt()))
-                .build();
-    }
-
-    private String refreshCookie(HttpServletRequest request) {
-        if (request.getCookies() != null) {
-            for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
-                if ("refresh_token".equals(cookie.getName())) return cookie.getValue();
-            }
-        }
-        return null;
     }
 
     @Override
@@ -92,13 +69,10 @@ public class AuthController implements AuthApi {
             ));
         }
 
-        if (authenticatedUser == null) {
-            logoutUseCase.executeWithRefreshToken(refreshCookie(servletRequest));
-        }
         csrfTokenRepository.saveToken(null, servletRequest, servletResponse);
 
         return ResponseEntity.noContent()
-                .header(HttpHeaders.SET_COOKIE, accessTokenCookieFactory.clear(), accessTokenCookieFactory.clearRefresh())
+                .header(HttpHeaders.SET_COOKIE, accessTokenCookieFactory.clear())
                 .build();
     }
 }

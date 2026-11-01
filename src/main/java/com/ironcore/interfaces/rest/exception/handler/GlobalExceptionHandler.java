@@ -40,18 +40,6 @@ public class GlobalExceptionHandler {
 
     private final ErrorLogPublisher publisher;
 
-    @ExceptionHandler(AuthenticationRateLimitException.class)
-    public ResponseEntity<ApiErrorResponse> handleAuthenticationRateLimit(AuthenticationRateLimitException exception, HttpServletRequest request) {
-        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).header("Retry-After", "300")
-                .body(ApiErrorResponseFactory.create(HttpStatus.TOO_MANY_REQUESTS, exception.getMessage(), request));
-    }
-
-    @ExceptionHandler(RefreshConflictException.class)
-    public ResponseEntity<ApiErrorResponse> handleRefreshConflict(RefreshConflictException exception, HttpServletRequest request) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(
-                ApiErrorResponseFactory.create(HttpStatus.CONFLICT, exception.getMessage(), request));
-    }
-
     @ExceptionHandler(WorkoutSessionConflictException.class)
     public ResponseEntity<ApiErrorResponse> handleWorkoutSessionConflictException(
             WorkoutSessionConflictException exception,

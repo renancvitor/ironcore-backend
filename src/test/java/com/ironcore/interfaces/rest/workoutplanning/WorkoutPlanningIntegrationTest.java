@@ -57,11 +57,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers
 @ActiveProfiles("test")
 class WorkoutPlanningIntegrationTest {
-    @Autowired
-    private com.ironcore.infrastructure.persistence.auth.repository.AuthSessionJpaRepository authSessions;
-    @Autowired
-    private com.ironcore.infrastructure.persistence.auth.repository.AuthenticationAttemptJpaRepository authAttempts;
-
 
     private static final String LOGIN_ENDPOINT = "/api/auth/login";
     private static final String TRAINING_GOALS_ENDPOINT = "/api/training-goals";
@@ -496,8 +491,6 @@ class WorkoutPlanningIntegrationTest {
     private void clearTestData() {
         errorLogJpaRepository.deleteAll();
         auditLogJpaRepository.deleteAll();
-        authSessions.deleteAll();
-        authAttempts.deleteAll();
         userJpaRepository.deleteAll();
         personJpaRepository.deleteAll();
     }

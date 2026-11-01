@@ -1,7 +1,5 @@
 package com.ironcore.application.auth.usecase;
 
-import java.time.Instant;
-
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.UserId;
 
@@ -14,10 +12,6 @@ public record LoginResult(
         UserId userId,
         Email email,
         String nickname,
-        Boolean mustChangePassword,
-        String refreshToken,
-        Instant refreshExpiresAt
+        Boolean mustChangePassword
 ) {
-    @Override
-    public String toString() { return "LoginResult[redacted]"; }
 }

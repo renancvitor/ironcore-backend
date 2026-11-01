@@ -27,19 +27,10 @@ public class AuthSessionRepositoryAdapter implements AuthSessionRepository {
     private final UserJpaRepository userJpaRepository;
 
     @Override
-    public Optional<UserId> findUserIdById(AuthSessionId id) {
-        try {
-            return authSessionJpaRepository.findUserIdById(id.value()).map(UserId::new);
-        } catch (RuntimeException exception) {
-            throw new PersistenceException("Falha ao consultar proprietário da sessão.", exception);
-        }
-    }
-
-    @Override
     public AuthSession save(AuthSession session) {
         AuthSessionEntity entity;
         try {
-            UserEntity userReference = userJpaRepository.getReferenceById(session.getUserId().value());
+        UserEntity userReference = userJpaRepository.getReferenceById(session.getUserId().value());
             entity = Objects.requireNonNull(
                     AuthSessionMapper.toEntity(session, userReference),
                     "Não foi possível encontrar entidade."

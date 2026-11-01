@@ -31,11 +31,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(TrainingGoalController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class TrainingGoalControllerTest {
-    @org.springframework.test.context.bean.override.mockito.MockitoBean
-    private com.ironcore.domain.auth.repository.AuthSessionRepository authSessionRepository;
-    @org.springframework.test.context.bean.override.mockito.MockitoBean
-    private java.time.Clock clock;
-
 
     private static final String TRAINING_GOALS_ENDPOINT = "/api/training-goals";
 

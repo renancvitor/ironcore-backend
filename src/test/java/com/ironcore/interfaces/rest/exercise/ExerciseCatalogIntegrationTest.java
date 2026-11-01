@@ -47,11 +47,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers
 @ActiveProfiles("test")
 class ExerciseCatalogIntegrationTest {
-    @Autowired
-    private com.ironcore.infrastructure.persistence.auth.repository.AuthSessionJpaRepository authSessions;
-    @Autowired
-    private com.ironcore.infrastructure.persistence.auth.repository.AuthenticationAttemptJpaRepository authAttempts;
-
 
     private static final String LOGIN_ENDPOINT = "/api/auth/login";
     private static final String CATALOG_ENDPOINT = "/api/exercise-catalog";
@@ -98,8 +93,6 @@ class ExerciseCatalogIntegrationTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        authSessions.deleteAll();
-        authAttempts.deleteAll();
         userJpaRepository.deleteAll();
         personJpaRepository.deleteAll();
         userJpaRepository.save(activeUser());
@@ -108,8 +101,6 @@ class ExerciseCatalogIntegrationTest {
 
     @AfterEach
     void tearDown() {
-        authSessions.deleteAll();
-        authAttempts.deleteAll();
         userJpaRepository.deleteAll();
         personJpaRepository.deleteAll();
     }

@@ -1,9 +1,5 @@
 package com.ironcore.domain.auth.model;
 
-import java.nio.charset.StandardCharsets;
-
-import java.security.MessageDigest;
-
 import com.ironcore.domain.auth.exception.InvalidAuthSessionException;
 import com.ironcore.domain.auth.valueobject.AuthSessionId;
 import com.ironcore.domain.user.valueobject.UserId;
@@ -20,46 +16,6 @@ public class AuthSession {
     private final Instant expiresAt;
     private Instant revokedAt;
     private final Long version;
-    private String refreshTokenHash;
-    private String previousRefreshTokenHash;
-    private Instant refreshRotatedAt;
-
-    public void restoreRefreshCredential(String hash, String previousHash, Instant rotatedAt) {
-        if ((hash != null && !hash.matches("[0-9a-f]{64}"))
-                || (previousHash != null && (!previousHash.matches("[0-9a-f]{64}") || hash == null))
-                || ((previousHash == null) != (rotatedAt == null))
-                || (rotatedAt != null && (rotatedAt.isBefore(createdAt) || !rotatedAt.isBefore(expiresAt)))) {
-            throw new InvalidAuthSessionException("Credencial de renovação inválida.");
-        }
-        this.refreshTokenHash = hash;
-        this.previousRefreshTokenHash = previousHash;
-        this.refreshRotatedAt = rotatedAt;
-    }
-
-    public void rotateRefreshCredential(String hash, Instant now) {
-        if (!isActiveAt(now) || hash == null || !hash.matches("[0-9a-f]{64}")) {
-            throw new InvalidAuthSessionException("Credencial de renovação inválida.");
-        }
-        this.previousRefreshTokenHash = this.refreshTokenHash;
-        this.refreshRotatedAt = this.refreshTokenHash == null ? null : now;
-        this.refreshTokenHash = hash;
-    }
-
-    public boolean matchesRefreshCredential(String hash) {
-        return matchesHash(refreshTokenHash, hash);
-    }
-
-    public boolean isRecentlyConsumedRefreshCredential(String hash, Instant now) {
-        return refreshRotatedAt != null && !now.isBefore(refreshRotatedAt)
-                && now.isBefore(refreshRotatedAt.plusSeconds(10))
-                && matchesHash(previousRefreshTokenHash, hash);
-    }
-
-    private boolean matchesHash(String expected, String actual) {
-        return expected != null && actual != null && MessageDigest.isEqual(
-                expected.getBytes(StandardCharsets.US_ASCII),
-                actual.getBytes(StandardCharsets.US_ASCII));
-    }
 
     private AuthSession(AuthSessionId id, UserId userId, Instant createdAt, Instant expiresAt, Instant revokedAt,
                         Long version) {

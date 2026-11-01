@@ -11,8 +11,6 @@ public interface AuthSessionRepository {
 
     AuthSession save(AuthSession session);
 
-    Optional<UserId> findUserIdById(AuthSessionId id);
-
     Optional<AuthSession> findByIdAndUserId(AuthSessionId id, UserId userId);
 
     int revokeAllByUserId(UserId userId, Instant revokedAt);

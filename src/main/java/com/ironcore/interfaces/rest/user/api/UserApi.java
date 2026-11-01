@@ -17,14 +17,13 @@ public interface UserApi {
 
     @Operation(
             summary = "Alterar senha",
-            description = "Requer autenticação e CSRF. Em uma transação altera a senha, revoga todas as sessões anteriores e cria nova sessão com cookies access_token e refresh_token no navegador atual, preservando sua autenticação. Os demais dispositivos precisam realizar login. Credenciais anteriores deixam de funcionar; não há tokens no JSON."
+            description = "Permite alterar a senha do usuário após autenticação completa."
     )
     @ApiResponse(
             responseCode = "204",
             description = "Senha alterada com sucesso."
     )
     @BadRequestResponse
-    @ApiResponse(responseCode = "429", description = "Limite de 10 tentativas por usuário em 5 minutos. Retry-After: 300.")
     @UnauthorizedResponse
     @UnprocessableEntityResponse
     @ForbiddenResponse
@@ -37,10 +36,9 @@ public interface UserApi {
 
     @Operation(
             summary = "Alterar senha inicial",
-            description = "Requer CSRF e credenciais da senha inicial. Revoga todas as sessões antigas sem criar sessão nem emitir credenciais. Após a troca é necessário realizar login."
+            description = "Permite alterar a senha inicial do usuário antes da autenticação completa."
     )
     @SecurityRequirements
-    @ApiResponse(responseCode = "429", description = "Limite de 10 tentativas por conta em 5 minutos compartilhado com login. Retry-After: 300.")
     @ApiResponse(
             responseCode = "204",
             description = "Senha alterada com sucesso."

@@ -1,10 +1,8 @@
 package com.ironcore.application.user.usecase.initialchangepassword;
 
-
 import com.ironcore.application.exception.InvalidCredentialsException;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.user.service.UserPasswordChangeService;
-import com.ironcore.application.user.service.PasswordHashingService;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,15 +15,11 @@ public class InitialChangePasswordUseCase {
 
     private final UserPasswordChangeService userPasswordChangeService;
     private final UserRepository userRepository;
-    private final PasswordHashingService passwordHashingService;
 
     @Transactional
     public void execute(InitialChangePasswordCommand command) {
-        User user = userRepository.findByEmailForUpdate(command.email())
-                .orElseThrow(() -> {
-                    passwordHashingService.verifyAgainstDummyHash(command.currentPassword());
-                    return new InvalidCredentialsException("Credenciais inválidas.");
-                });
+        User user = userRepository.findByEmail(command.email())
+                .orElseThrow(() -> new InvalidCredentialsException("Credenciais inválidas."));
 
         userPasswordChangeService.changePassword(
                 user,

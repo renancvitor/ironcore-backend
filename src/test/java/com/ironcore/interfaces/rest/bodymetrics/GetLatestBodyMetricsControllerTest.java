@@ -37,11 +37,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(BodyMetricsController.class)
 @AutoConfigureMockMvc(addFilters = false)
 public class GetLatestBodyMetricsControllerTest {
-    @org.springframework.test.context.bean.override.mockito.MockitoBean
-    private com.ironcore.domain.auth.repository.AuthSessionRepository authSessionRepository;
-    @org.springframework.test.context.bean.override.mockito.MockitoBean
-    private java.time.Clock clock;
-
 
     private static final String BODY_METRICS_ENDPOINT = "/api/users/me/body-metrics/latest";
 

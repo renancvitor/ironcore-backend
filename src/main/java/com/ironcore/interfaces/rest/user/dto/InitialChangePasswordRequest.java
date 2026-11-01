@@ -10,15 +10,15 @@ public record InitialChangePasswordRequest(
         String email,
 
         @NotBlank(message = "A senha atual não pode estar em branco.")
-        @Schema(format = "password", description = "Mínimo 8 caracteres; credenciais antigas acima de 72 bytes continuam aceitas para verificação.", accessMode = Schema.AccessMode.WRITE_ONLY)
+        @Schema(format = "password")
         String currentPassword,
 
         @NotBlank(message = "A nova senha não pode estar em branco.")
-        @Schema(format = "password", description = "Mínimo 8 caracteres; máximo 72 bytes em UTF-8.", accessMode = Schema.AccessMode.WRITE_ONLY)
+        @Schema(format = "password")
         String newPassword,
 
         @NotBlank(message = "A confirmação da nova senha não pode estar em branco.")
-        @Schema(format = "password", description = "Deve coincidir com a nova senha; máximo 72 bytes em UTF-8.", accessMode = Schema.AccessMode.WRITE_ONLY)
+        @Schema(format = "password")
         String confirmNewPassword
 ) {
 }

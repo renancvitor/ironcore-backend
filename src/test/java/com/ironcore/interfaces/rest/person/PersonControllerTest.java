@@ -46,9 +46,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(PersonController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class PersonControllerTest {
-    @org.springframework.test.context.bean.override.mockito.MockitoBean
-    private com.ironcore.domain.auth.repository.AuthSessionRepository authSessionRepository;
-
 
     private static final String PERSON_ENDPOINT = "/api/users/me/person";
 

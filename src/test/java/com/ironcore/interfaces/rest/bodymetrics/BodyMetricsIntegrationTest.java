@@ -47,11 +47,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class BodyMetricsIntegrationTest {
-    @Autowired
-    private com.ironcore.infrastructure.persistence.auth.repository.AuthSessionJpaRepository authSessions;
-    @Autowired
-    private com.ironcore.infrastructure.persistence.auth.repository.AuthenticationAttemptJpaRepository authAttempts;
-
 
     private static final String LOGIN_ENDPOINT = "/api/auth/login";
     private static final String BODY_METRICS_ENDPOINT = "/api/users/me/body-metrics";
@@ -79,8 +74,6 @@ class BodyMetricsIntegrationTest {
     @BeforeEach
     void setUp() {
         bodyMetricsJpaRepository.deleteAll();
-        authSessions.deleteAll();
-        authAttempts.deleteAll();
         userJpaRepository.deleteAll();
         personJpaRepository.deleteAll();
         userJpaRepository.save(activeUser());
@@ -89,8 +82,6 @@ class BodyMetricsIntegrationTest {
     @AfterEach
     void tearDown() {
         bodyMetricsJpaRepository.deleteAll();
-        authSessions.deleteAll();
-        authAttempts.deleteAll();
         userJpaRepository.deleteAll();
         personJpaRepository.deleteAll();
     }

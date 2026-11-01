@@ -43,11 +43,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(ExerciseCatalogController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class ExerciseCatalogControllerTest {
-    @org.springframework.test.context.bean.override.mockito.MockitoBean
-    private com.ironcore.domain.auth.repository.AuthSessionRepository authSessionRepository;
-    @org.springframework.test.context.bean.override.mockito.MockitoBean
-    private java.time.Clock clock;
-
 
     private static final String EXERCISE_CATALOG_BASE_ENDPOINT = "/api/exercise-catalog";
     private static final String ACTIVITY_TYPES_ENDPOINT = EXERCISE_CATALOG_BASE_ENDPOINT + "/activity-types";

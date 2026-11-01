@@ -25,9 +25,6 @@ logging:
 security:
   token:
     secret: ${JWT_SECRET}
-    expiration-minutes: ${ACCESS_TOKEN_EXPIRATION_MINUTES:120}
-  session:
-    duration-days: ${AUTH_SESSION_DURATION_DAYS:7}
 
 app:
   name: IronCore

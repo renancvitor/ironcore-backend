@@ -43,14 +43,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(UserController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class UserControllerTest {
-    @MockitoBean
-    private com.ironcore.infrastructure.security.cookie.AccessTokenCookieFactory accessTokenCookieFactory;
-
-    @org.springframework.test.context.bean.override.mockito.MockitoBean
-    private com.ironcore.domain.auth.repository.AuthSessionRepository authSessionRepository;
-    @org.springframework.test.context.bean.override.mockito.MockitoBean
-    private java.time.Clock clock;
-
 
     private static final String USER_ENDPOINT = "/api/users/me/change-password";
     private static final String INITIAL_CHANGE_PASSWORD_ENDPOINT = "/api/users/change-initial-password";
@@ -79,9 +71,6 @@ class UserControllerTest {
     private ErrorLogPublisher errorLogPublisher;
 
     @MockitoBean
-    private com.ironcore.application.auth.port.AuthenticationAttemptGuard attemptGuard;
-
-    @MockitoBean
     private UserRepository userRepository;
 
     @MockitoBean
@@ -98,7 +87,6 @@ class UserControllerTest {
                     "NewPassword"
             );
 
-            when(changePasswordUseCase.execute(any())).thenReturn(new com.ironcore.application.auth.port.GeneratedAccessToken("token", "Bearer", java.time.LocalDateTime.now(), "refresh", java.time.Instant.now().plusSeconds(604800)));
             mockMvc.perform(post(USER_ENDPOINT)
                             .with(authenticatedUser())
                             .contentType(MediaType.APPLICATION_JSON)

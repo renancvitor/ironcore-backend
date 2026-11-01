@@ -29,7 +29,6 @@ import org.springframework.web.bind.annotation.*;
 public class UserController implements UserApi {
 
     private final ChangePasswordUseCase changePasswordUseCase;
-    private final com.ironcore.application.auth.port.AuthenticationAttemptGuard attemptGuard;
     private final InitialChangePasswordUseCase initialChangePasswordUseCase;
     private final GetAuthenticatedUserUseCase getAuthenticatedUserUseCase;
     private final ChangeNicknameUseCase changeNicknameUseCase;
@@ -42,12 +41,10 @@ public class UserController implements UserApi {
             @RequestBody @Valid ChangePasswordRequest request
     ) {
         ChangePasswordCommand command = UserChangePasswordMapper.toChangePasswordCommand(authenticatedUser, request);
-        attemptGuard.check("user:" + command.userId().value());
         GeneratedAccessToken token = changePasswordUseCase.execute(command);
 
         return ResponseEntity.noContent()
-                .header(HttpHeaders.SET_COOKIE, accessTokenCookieFactory.create(token),
-                        accessTokenCookieFactory.createRefresh(token.refreshToken(), token.refreshExpiresAt()))
+                .header(HttpHeaders.SET_COOKIE, accessTokenCookieFactory.create(token))
                 .build();
     }
 
@@ -57,7 +54,6 @@ public class UserController implements UserApi {
             @RequestBody @Valid InitialChangePasswordRequest request
     ) {
         InitialChangePasswordCommand command = UserChangePasswordMapper.toInitialChangePasswordCommand(request);
-        attemptGuard.check(command.email().value());
         initialChangePasswordUseCase.execute(command);
 
         return ResponseEntity.noContent().build();

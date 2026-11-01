@@ -35,9 +35,6 @@ public class JwtAccessTokenGenerator implements AccessTokenGenerator {
         }
 
         Instant expiresAtInstant = clock.instant().plus(properties.getExpirationMinutes(), ChronoUnit.MINUTES);
-        if (subject.sessionExpiresAt() != null && subject.sessionExpiresAt().isBefore(expiresAtInstant)) {
-            expiresAtInstant = subject.sessionExpiresAt();
-        }
         LocalDateTime expiresAt = LocalDateTime.ofInstant(expiresAtInstant, clock.getZone());
 
         try {

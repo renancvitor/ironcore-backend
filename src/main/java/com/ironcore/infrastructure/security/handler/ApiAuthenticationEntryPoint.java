@@ -68,10 +68,6 @@ public class ApiAuthenticationEntryPoint implements AuthenticationEntryPoint {
     private String correlationId(HttpServletRequest request) {
         String correlationId = request.getHeader("X-Correlation-Id");
 
-        try {
-            return UUID.fromString(correlationId).toString();
-        } catch (IllegalArgumentException | NullPointerException exception) {
-            return UUID.randomUUID().toString();
-        }
+        return correlationId == null || correlationId.isBlank() ? UUID.randomUUID().toString() : correlationId;
     }
 }
