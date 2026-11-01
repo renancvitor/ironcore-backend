@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ironcore.IroncoreBackendApplication;
 import com.ironcore.application.workoutsession.workoutsession.expire.ExpireWorkoutSessionsUseCase;
 import com.ironcore.domain.person.enums.SexType;
+import com.ironcore.infrastructure.persistence.auth.repository.AuthSessionJpaRepository;
 import com.ironcore.infrastructure.persistence.person.entity.PersonEntity;
 import com.ironcore.infrastructure.persistence.person.repository.PersonJpaRepository;
 import com.ironcore.infrastructure.persistence.user.entity.UserEntity;
@@ -55,6 +56,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Testcontainers
 class WorkoutSessionIntegrationTest {
+    @Autowired
+    private AuthSessionJpaRepository authSessions;
+
 
     private static final String SESSIONS = "/api/users/me/workout-sessions";
     private static final String CYCLES = "/api/users/me/workout-cycles";
@@ -114,6 +118,7 @@ class WorkoutSessionIntegrationTest {
     void clearData() {
         jdbc.update("delete from error_logs");
         jdbc.update("delete from audit_logs");
+        authSessions.deleteAll();
         users.deleteAll();
         persons.deleteAll();
     }

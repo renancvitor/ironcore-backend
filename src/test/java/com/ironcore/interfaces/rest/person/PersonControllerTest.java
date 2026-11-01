@@ -10,6 +10,7 @@ import com.ironcore.application.person.usecase.get.GetPersonUseCase;
 import com.ironcore.application.person.usecase.update.UpdatePersonCommand;
 import com.ironcore.application.person.usecase.update.UpdatePersonResult;
 import com.ironcore.application.person.usecase.update.UpdatePersonUseCase;
+import com.ironcore.domain.auth.repository.AuthSessionRepository;
 import com.ironcore.domain.person.enums.SexType;
 import com.ironcore.domain.person.valueobject.BirthDate;
 import com.ironcore.domain.person.valueobject.PersonId;
@@ -46,6 +47,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(PersonController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class PersonControllerTest {
+    @MockitoBean
+    private AuthSessionRepository authSessionRepository;
+
 
     private static final String PERSON_ENDPOINT = "/api/users/me/person";
 

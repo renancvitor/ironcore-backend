@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ironcore.IroncoreBackendApplication;
 import com.ironcore.domain.person.enums.SexType;
+import com.ironcore.infrastructure.persistence.auth.repository.AuthSessionJpaRepository;
 import com.ironcore.infrastructure.persistence.person.entity.PersonEntity;
 import com.ironcore.infrastructure.persistence.person.repository.PersonJpaRepository;
 import com.ironcore.infrastructure.persistence.user.entity.UserEntity;
@@ -16,8 +17,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -47,6 +48,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers
 @ActiveProfiles("test")
 class ExerciseCatalogIntegrationTest {
+    @Autowired
+    private AuthSessionJpaRepository authSessions;
+
 
     private static final String LOGIN_ENDPOINT = "/api/auth/login";
     private static final String CATALOG_ENDPOINT = "/api/exercise-catalog";
@@ -93,6 +97,7 @@ class ExerciseCatalogIntegrationTest {
 
     @BeforeEach
     void setUp() throws Exception {
+        authSessions.deleteAll();
         userJpaRepository.deleteAll();
         personJpaRepository.deleteAll();
         userJpaRepository.save(activeUser());
@@ -101,6 +106,7 @@ class ExerciseCatalogIntegrationTest {
 
     @AfterEach
     void tearDown() {
+        authSessions.deleteAll();
         userJpaRepository.deleteAll();
         personJpaRepository.deleteAll();
     }

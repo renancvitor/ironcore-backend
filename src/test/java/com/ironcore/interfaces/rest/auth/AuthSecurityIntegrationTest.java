@@ -1,16 +1,17 @@
 package com.ironcore.interfaces.rest.auth;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ironcore.IroncoreBackendApplication;
 import com.ironcore.domain.person.enums.SexType;
+import com.ironcore.infrastructure.persistence.auth.repository.AuthSessionJpaRepository;
 import com.ironcore.infrastructure.persistence.person.entity.PersonEntity;
 import com.ironcore.infrastructure.persistence.person.repository.PersonJpaRepository;
 import com.ironcore.infrastructure.persistence.user.entity.UserEntity;
 import com.ironcore.infrastructure.persistence.user.repository.UserJpaRepository;
-import com.ironcore.interfaces.rest.auth.dto.LoginRequest;
 import com.ironcore.infrastructure.security.jwt.JwtTokenProperties;
+import com.ironcore.interfaces.rest.auth.dto.LoginRequest;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,8 +27,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.time.LocalDate;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 
@@ -49,6 +50,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class AuthSecurityIntegrationTest {
+    @Autowired
+    private AuthSessionJpaRepository authSessions;
+
 
     private static final String LOGIN_ENDPOINT = "/api/auth/login";
     private static final String LOGOUT_ENDPOINT = "/api/auth/logout";
@@ -80,6 +84,7 @@ class AuthSecurityIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        authSessions.deleteAll();
         userJpaRepository.deleteAll();
         personJpaRepository.deleteAll();
         userJpaRepository.save(activeUser());
@@ -87,6 +92,7 @@ class AuthSecurityIntegrationTest {
 
     @AfterEach
     void tearDown() {
+        authSessions.deleteAll();
         userJpaRepository.deleteAll();
         personJpaRepository.deleteAll();
     }

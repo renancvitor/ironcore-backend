@@ -2,16 +2,14 @@ package com.ironcore.interfaces.rest.workoutsession.workoutsession;
 
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
 import com.ironcore.application.shared.pagination.PageResult;
-import com.ironcore.application.workoutsession.workoutsession.list.ListWorkoutSessionsUseCase;
-import com.ironcore.application.workoutsession.workoutsession.list.ListWorkoutSessionsResult;
-import com.ironcore.interfaces.rest.workoutsession.WorkoutSessionController;
-import org.junit.jupiter.api.Test;
 import com.ironcore.application.workoutsession.workoutsession.close.CloseWorkoutSessionUseCase;
 import com.ironcore.application.workoutsession.workoutsession.detail.GetWorkoutSessionDetailUseCase;
 import com.ironcore.application.workoutsession.workoutsession.detail.WorkoutSessionActivityDetailResult;
 import com.ironcore.application.workoutsession.workoutsession.detail.WorkoutSessionDetailResult;
 import com.ironcore.application.workoutsession.workoutsession.detail.WorkoutSessionSetDetailResult;
 import com.ironcore.application.workoutsession.workoutsession.inprogress.GetInProgressWorkoutSessionUseCase;
+import com.ironcore.application.workoutsession.workoutsession.list.ListWorkoutSessionsResult;
+import com.ironcore.application.workoutsession.workoutsession.list.ListWorkoutSessionsUseCase;
 import com.ironcore.application.workoutsession.workoutsession.notes.UpdateWorkoutSessionNotesUseCase;
 import com.ironcore.application.workoutsession.workoutsession.start.StartWorkoutSessionUseCase;
 import com.ironcore.application.workoutsession.workoutsessionactivity.execution.UpdateWorkoutSessionActivityExecutionUseCase;
@@ -19,12 +17,15 @@ import com.ironcore.application.workoutsession.workoutsessionactivity.loadmode.C
 import com.ironcore.application.workoutsession.workoutsessionset.create.CreateWorkoutSessionSetUseCase;
 import com.ironcore.application.workoutsession.workoutsessionset.delete.DeleteWorkoutSessionSetUseCase;
 import com.ironcore.application.workoutsession.workoutsessionset.update.UpdateWorkoutSessionSetUseCase;
+import com.ironcore.domain.auth.repository.AuthSessionRepository;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.UserId;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
 import com.ironcore.infrastructure.security.config.SecurityConfig;
 import com.ironcore.infrastructure.security.jwt.JwtAccessTokenValidator;
+import com.ironcore.interfaces.rest.workoutsession.WorkoutSessionController;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,8 +37,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import java.time.Clock;
 import java.util.List;
 
+import static com.ironcore.domain.auth.AuthSessionTestFactory.sessionId;
 import static com.ironcore.domain.workoutsession.workoutsession.WorkoutSessionTestFactory.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
@@ -47,6 +50,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(WorkoutSessionController.class)
 @Import(SecurityConfig.class)
 class WorkoutSessionExecutionSecurityTest {
+    @MockitoBean
+    private AuthSessionRepository authSessionRepository;
+
+    @MockitoBean
+    private Clock clock;
+
     @MockitoBean private ListWorkoutSessionsUseCase listWorkoutSessionsUseCase;
 
     @Test
@@ -57,7 +66,8 @@ class WorkoutSessionExecutionSecurityTest {
 
     @Test
     void shouldAllowAuthenticatedHistoryWithoutCsrf() throws Exception {
-        var principal = new AuthenticatedUser(new UserId(77L), new Email("actor@example.com"), false);
+        var principal = new AuthenticatedUser(new UserId(77L), new Email("actor@example.com"), false, sessionId()
+        );
         when(listWorkoutSessionsUseCase.execute(any())).thenReturn(
                 new ListWorkoutSessionsResult(new PageResult<>(List.of(), 0, 20, 0, 0, true)));
         mvc.perform(get("/api/users/me/workout-sessions").with(authentication(
@@ -90,7 +100,8 @@ class WorkoutSessionExecutionSecurityTest {
     @ParameterizedTest
     @ValueSource(strings = {"NOTES", "ACTIVITY", "CREATE", "UPDATE", "DELETE", "MODE"})
     void shouldRequireCsrfForEveryAuthenticatedExecutionWrite(String operation) throws Exception {
-        var principal = new AuthenticatedUser(new UserId(77L), new Email("actor@example.com"), false);
+        var principal = new AuthenticatedUser(new UserId(77L), new Email("actor@example.com"), false, sessionId()
+        );
         mvc.perform(request(operation).with(authentication(
                 new UsernamePasswordAuthenticationToken(principal, null, List.of()))))
                 .andExpect(status().isForbidden());
@@ -109,7 +120,8 @@ class WorkoutSessionExecutionSecurityTest {
         when(createWorkoutSessionSetUseCase.execute(any())).thenReturn(WorkoutSessionSetDetailResult.from(activity.getSets().getFirst()));
         when(updateWorkoutSessionSetUseCase.execute(any())).thenReturn(WorkoutSessionSetDetailResult.from(activity.getSets().getFirst()));
         when(changeWorkoutSessionActivityLoadModeUseCase.execute(any())).thenReturn(WorkoutSessionActivityDetailResult.from(activity));
-        var principal = new AuthenticatedUser(new UserId(77L), new Email("actor@example.com"), false);
+        var principal = new AuthenticatedUser(new UserId(77L), new Email("actor@example.com"), false, sessionId()
+        );
         mvc.perform(request(operation).with(csrf()).with(authentication(
                 new UsernamePasswordAuthenticationToken(principal, null, List.of()))))
                 .andExpect(status().is(operation.equals("CREATE") ? 201 : operation.equals("DELETE") ? 204 : 200));

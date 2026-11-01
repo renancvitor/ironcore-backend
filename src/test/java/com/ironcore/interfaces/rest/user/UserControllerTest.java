@@ -12,10 +12,12 @@ import com.ironcore.application.user.usecase.initialchangepassword.InitialChange
 import com.ironcore.application.user.usecase.update.ChangeNicknameCommand;
 import com.ironcore.application.user.usecase.update.ChangeNicknameResult;
 import com.ironcore.application.user.usecase.update.ChangeNicknameUseCase;
+import com.ironcore.domain.auth.repository.AuthSessionRepository;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.RawPassword;
 import com.ironcore.domain.user.valueobject.UserId;
+import com.ironcore.infrastructure.security.cookie.AccessTokenCookieFactory;
 import com.ironcore.infrastructure.security.jwt.JwtAccessTokenValidator;
 import com.ironcore.interfaces.rest.user.dto.ChangeNicknameRequest;
 import com.ironcore.interfaces.rest.user.dto.ChangePasswordRequest;
@@ -29,8 +31,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.hamcrest.Matchers.containsInAnyOrder;
+import java.time.Clock;
+
 import static com.ironcore.interfaces.rest.support.security.AuthenticatedUserRequestPostProcessorFactory.authenticatedUser;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -43,6 +47,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(UserController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class UserControllerTest {
+    @MockitoBean
+    private AccessTokenCookieFactory accessTokenCookieFactory;
+
+    @MockitoBean
+    private AuthSessionRepository authSessionRepository;
+
+    @MockitoBean
+    private Clock clock;
+
 
     private static final String USER_ENDPOINT = "/api/users/me/change-password";
     private static final String INITIAL_CHANGE_PASSWORD_ENDPOINT = "/api/users/change-initial-password";
@@ -81,6 +94,9 @@ class UserControllerTest {
 
         @Test
         void shouldReturnNoContentWhenPasswordIsChanged() throws Exception {
+            var token = com.ironcore.application.auth.LoginTestFactory.generatedAccessToken();
+            when(changePasswordUseCase.execute(any())).thenReturn(token);
+            when(accessTokenCookieFactory.create(token)).thenReturn("access_token=new-token; HttpOnly; Secure; Path=/");
             ChangePasswordRequest request = new ChangePasswordRequest(
                     "OldPassword",
                     "NewPassword",
@@ -93,6 +109,8 @@ class UserControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNoContent())
                     .andExpect(content().string(""));
+
+            verify(accessTokenCookieFactory).create(token);
 
             verify(changePasswordUseCase).execute(new ChangePasswordCommand(
                     new UserId(1L),

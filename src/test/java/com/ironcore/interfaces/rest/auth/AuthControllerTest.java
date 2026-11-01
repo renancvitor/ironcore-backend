@@ -7,9 +7,11 @@ import com.ironcore.application.auth.usecase.LoginUseCase;
 import com.ironcore.application.auth.usecase.LogoutUseCase;
 import com.ironcore.application.exception.UserInactiveException;
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
+import com.ironcore.domain.auth.repository.AuthSessionRepository;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.UserId;
+import com.ironcore.infrastructure.security.cookie.AccessTokenCookieFactory;
 import com.ironcore.infrastructure.security.jwt.JwtAccessTokenValidator;
 import com.ironcore.infrastructure.security.jwt.exception.JwtTokenConfigurationException;
 import com.ironcore.infrastructure.security.jwt.exception.JwtTokenValidationException;
@@ -22,6 +24,7 @@ import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -32,9 +35,9 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -44,9 +47,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Import(AccessTokenCookieFactory.class)
 @WebMvcTest(AuthController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class AuthControllerTest {
+    @MockitoBean
+    private AuthSessionRepository authSessionRepository;
+
 
     private static final String LOGIN_ENDPOINT = "/api/auth/login";
 
@@ -224,7 +231,7 @@ class AuthControllerTest {
                     .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("HttpOnly")))
                     .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("SameSite=None")));
 
-            verify(logoutUseCase).execute();
+            verify(logoutUseCase, never()).execute(any());
         }
     }
 }

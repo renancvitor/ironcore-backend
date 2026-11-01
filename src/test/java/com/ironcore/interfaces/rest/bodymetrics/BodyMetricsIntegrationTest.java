@@ -4,12 +4,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ironcore.IroncoreBackendApplication;
 import com.ironcore.domain.person.enums.SexType;
+import com.ironcore.infrastructure.persistence.auth.repository.AuthSessionJpaRepository;
+import com.ironcore.infrastructure.persistence.bodymetrics.entity.BodyMetricsEntity;
+import com.ironcore.infrastructure.persistence.bodymetrics.repository.BodyMetricsJpaRepository;
 import com.ironcore.infrastructure.persistence.person.entity.PersonEntity;
 import com.ironcore.infrastructure.persistence.person.repository.PersonJpaRepository;
 import com.ironcore.infrastructure.persistence.user.entity.UserEntity;
 import com.ironcore.infrastructure.persistence.user.repository.UserJpaRepository;
-import com.ironcore.infrastructure.persistence.bodymetrics.entity.BodyMetricsEntity;
-import com.ironcore.infrastructure.persistence.bodymetrics.repository.BodyMetricsJpaRepository;
 import com.ironcore.interfaces.rest.bodymetrics.dto.BodyCircumferencesRequest;
 import com.ironcore.interfaces.rest.bodymetrics.dto.create.CreateBodyMetricsRequest;
 import com.ironcore.interfaces.rest.bodymetrics.dto.update.UpdateBodyMetricsRequest;
@@ -31,8 +32,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -47,6 +48,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class BodyMetricsIntegrationTest {
+    @Autowired
+    private AuthSessionJpaRepository authSessions;
+
 
     private static final String LOGIN_ENDPOINT = "/api/auth/login";
     private static final String BODY_METRICS_ENDPOINT = "/api/users/me/body-metrics";
@@ -74,6 +78,7 @@ class BodyMetricsIntegrationTest {
     @BeforeEach
     void setUp() {
         bodyMetricsJpaRepository.deleteAll();
+        authSessions.deleteAll();
         userJpaRepository.deleteAll();
         personJpaRepository.deleteAll();
         userJpaRepository.save(activeUser());
@@ -82,6 +87,7 @@ class BodyMetricsIntegrationTest {
     @AfterEach
     void tearDown() {
         bodyMetricsJpaRepository.deleteAll();
+        authSessions.deleteAll();
         userJpaRepository.deleteAll();
         personJpaRepository.deleteAll();
     }

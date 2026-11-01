@@ -2,6 +2,7 @@ package com.ironcore.interfaces.rest.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ironcore.domain.person.enums.SexType;
+import com.ironcore.infrastructure.persistence.auth.repository.AuthSessionJpaRepository;
 import com.ironcore.infrastructure.persistence.person.entity.PersonEntity;
 import com.ironcore.infrastructure.persistence.person.repository.PersonJpaRepository;
 import com.ironcore.infrastructure.persistence.user.entity.UserEntity;
@@ -11,18 +12,19 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import org.springframework.mock.web.MockHttpServletResponse;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -38,6 +40,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles({"dev", "test"})
 class SwaggerCsrfIntegrationTest {
+    @Autowired
+    private AuthSessionJpaRepository authSessions;
+
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper mapper;
     @Autowired UserJpaRepository users;
@@ -74,6 +79,7 @@ class SwaggerCsrfIntegrationTest {
 
     @Test
     void maskedTokenIsRenewedAcrossSwaggerLoginWriteLogoutAndRelogin() throws Exception {
+        authSessions.deleteAll();
         users.deleteAll();
         persons.deleteAll();
         var now = LocalDateTime.now();
@@ -95,6 +101,7 @@ class SwaggerCsrfIntegrationTest {
             String afterLogout = swaggerWrite(cookies, HttpMethod.POST, "/api/auth/login", loginBody, 200);
             assertThat(afterLogout).isNotEqualTo(beforeLogout);
         } finally {
+            authSessions.deleteAll();
             users.deleteAll();
             persons.deleteAll();
         }

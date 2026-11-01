@@ -10,6 +10,7 @@ import com.ironcore.application.workoutsession.workoutsession.analytics.GetExerc
 import com.ironcore.application.workoutsession.workoutsession.analytics.GetExerciseCardioEvolutionUseCase;
 import com.ironcore.application.workoutsession.workoutsession.analytics.GetExerciseStrengthEvolutionResult;
 import com.ironcore.application.workoutsession.workoutsession.analytics.GetExerciseStrengthEvolutionUseCase;
+import com.ironcore.domain.auth.repository.AuthSessionRepository;
 import com.ironcore.domain.exercise.valueobject.ExerciseId;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.Email;
@@ -34,31 +35,39 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.json.JsonCompareMode;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.test.json.JsonCompareMode;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
+import static com.ironcore.domain.auth.AuthSessionTestFactory.sessionId;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.times;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ExerciseAnalyticsController.class)
 @Import(SecurityConfig.class)
 class ExerciseAnalyticsControllerTest {
+    @MockitoBean
+    private AuthSessionRepository authSessionRepository;
+
+    @MockitoBean
+    private Clock clock;
+
 
     private static final String BASE = "/api/users/me/workout-sessions/analytics/exercises/";
 
@@ -79,7 +88,8 @@ class ExerciseAnalyticsControllerTest {
 
     @MockitoBean
     private UserRepository userRepository;
-    private final AuthenticatedUser principal = new AuthenticatedUser(new UserId(77L), new Email("actor@example.com"), false);
+    private final AuthenticatedUser principal = new AuthenticatedUser(new UserId(77L), new Email("actor@example.com"), false, sessionId()
+        );
 
     @ParameterizedTest
     @ValueSource(strings = {"strength", "cardio"})

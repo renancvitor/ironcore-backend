@@ -50,6 +50,20 @@ class JwtAccessTokenValidatorTest {
     class TokenValidation {
 
         @Test
+        void shouldRejectTokenWithoutSessionId() {
+            String token = JWT.create()
+                    .withIssuer(ISSUER)
+                    .withSubject("1")
+                    .withClaim("email", "renan@example.com")
+                    .withClaim("mustChangePassword", false)
+                    .withExpiresAt(Instant.now().plusSeconds(3600))
+                    .sign(Algorithm.HMAC256(SECRET));
+
+            assertThatExceptionOfType(JwtTokenValidationException.class)
+                    .isThrownBy(() -> validator.validate(token));
+        }
+
+        @Test
         void shouldFailWhenExpirationIsMissing() {
             String token = JWT.create()
                     .withIssuer(ISSUER)
@@ -197,6 +211,7 @@ class JwtAccessTokenValidatorTest {
                 .withSubject(subject)
                 .withClaim("email", email)
                 .withClaim("mustChangePassword", mustChangePassword)
+                .withClaim("sid", "38bd6914-32e4-4bc8-afd2-deba635aa64c")
                 .withExpiresAt(Date.from(Instant.now().plus(1, ChronoUnit.HOURS)))
                 .sign(Algorithm.HMAC256(secret));
     }

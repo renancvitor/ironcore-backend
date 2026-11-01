@@ -1,7 +1,5 @@
 package com.ironcore.interfaces.rest.bodymetrics;
 
-import com.ironcore.application.logging.error.port.ErrorLogPublisher;
-import com.ironcore.application.shared.pagination.PageResult;
 import com.ironcore.application.bodymetrics.create.CreateBodyMetricsUseCase;
 import com.ironcore.application.bodymetrics.delete.DeleteBodyMetricsUseCase;
 import com.ironcore.application.bodymetrics.get.GetBodyMetricsUseCase;
@@ -13,12 +11,15 @@ import com.ironcore.application.bodymetrics.list.ListBodyMetricsUseCase;
 import com.ironcore.application.bodymetrics.progress.GetBodyMetricsProgressChangesUseCase;
 import com.ironcore.application.bodymetrics.progress.GetBodyMetricsProgressChartUseCase;
 import com.ironcore.application.bodymetrics.update.UpdateBodyMetricsUseCase;
-import com.ironcore.domain.user.repository.UserRepository;
-import com.ironcore.domain.user.valueobject.UserId;
+import com.ironcore.application.logging.error.port.ErrorLogPublisher;
+import com.ironcore.application.shared.pagination.PageResult;
+import com.ironcore.domain.auth.repository.AuthSessionRepository;
 import com.ironcore.domain.bodymetrics.repository.BodyMetricsRepository;
 import com.ironcore.domain.bodymetrics.valueobject.BodyHeightCm;
-import com.ironcore.domain.bodymetrics.valueobject.BodyWeightKg;
 import com.ironcore.domain.bodymetrics.valueobject.BodyMetricsId;
+import com.ironcore.domain.bodymetrics.valueobject.BodyWeightKg;
+import com.ironcore.domain.user.repository.UserRepository;
+import com.ironcore.domain.user.valueobject.UserId;
 import com.ironcore.infrastructure.security.jwt.JwtAccessTokenValidator;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -30,6 +31,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -42,6 +44,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(BodyMetricsController.class)
 @AutoConfigureMockMvc(addFilters = false)
 public class ListBodyMetricsControllerTest {
+    @MockitoBean
+    private AuthSessionRepository authSessionRepository;
+
+    @MockitoBean
+    private Clock clock;
+
 
     private static final String BODY_METRICS_BASE_ENDPOINT = "/api/users/me/body-metrics";
 

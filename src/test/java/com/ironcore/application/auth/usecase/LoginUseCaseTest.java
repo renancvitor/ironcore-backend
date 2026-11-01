@@ -1,8 +1,7 @@
 package com.ironcore.application.auth.usecase;
 
-import com.ironcore.application.auth.port.AccessTokenGenerator;
-import com.ironcore.application.auth.port.AccessTokenSubject;
 import com.ironcore.application.auth.port.GeneratedAccessToken;
+import com.ironcore.application.auth.service.AuthSessionIssuer;
 import com.ironcore.application.exception.InitialPasswordChangeRequiredException;
 import com.ironcore.application.exception.InvalidCredentialsException;
 import com.ironcore.application.exception.OperationNotAllowedException;
@@ -13,7 +12,6 @@ import com.ironcore.domain.user.valueobject.RawPassword;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -39,7 +37,7 @@ class LoginUseCaseTest {
     private PasswordHashingService passwordHashingService;
 
     @Mock
-    private AccessTokenGenerator accessTokenGenerator;
+    private AuthSessionIssuer authSessionIssuer;
 
     @InjectMocks
     private LoginUseCase useCase;
@@ -57,12 +55,7 @@ class LoginUseCaseTest {
                     .thenReturn(Optional.of(user));
             when(passwordHashingService.matches(new RawPassword(command.rawPassword()), user.getPasswordHash()))
                     .thenReturn(true);
-            when(accessTokenGenerator.generate(new AccessTokenSubject(
-                    user.getId(),
-                    user.getEmail(),
-                    user.mustChangePassword()))
-            )
-                    .thenReturn(accessToken);
+            when(authSessionIssuer.issue(user)).thenReturn(accessToken);
 
             LoginResult result = useCase.execute(command);
 
@@ -74,17 +67,7 @@ class LoginUseCaseTest {
             assertThat(result.nickname()).isEqualTo(user.getNickname());
             assertThat(result.mustChangePassword()).isEqualTo(user.mustChangePassword());
 
-            ArgumentCaptor<AccessTokenSubject> subjectCaptor = ArgumentCaptor.forClass(AccessTokenSubject.class);
-
-            verify(userRepository).findByEmail(command.email());
-            verify(passwordHashingService).matches(new RawPassword(command.rawPassword()), user.getPasswordHash());
-            verify(accessTokenGenerator).generate(subjectCaptor.capture());
-
-            AccessTokenSubject subject = subjectCaptor.getValue();
-
-            assertThat(subject.userId()).isEqualTo(user.getId());
-            assertThat(subject.email()).isEqualTo(user.getEmail());
-            assertThat(subject.mustChangePassword()).isEqualTo(user.mustChangePassword());
+            verify(authSessionIssuer).issue(user);
         }
     }
 
@@ -104,7 +87,7 @@ class LoginUseCaseTest {
 
             verify(userRepository).findByEmail(command.email());
             verify(passwordHashingService, never()).matches(any(), any());
-            verify(accessTokenGenerator, never()).generate(any());
+            verify(authSessionIssuer, never()).issue(any());
         }
 
         @Test
@@ -123,7 +106,7 @@ class LoginUseCaseTest {
 
             verify(userRepository).findByEmail(command.email());
             verify(passwordHashingService).matches(new RawPassword(command.rawPassword()), user.getPasswordHash());
-            verify(accessTokenGenerator, never()).generate(any());
+            verify(authSessionIssuer, never()).issue(any());
         }
     }
 
@@ -144,7 +127,7 @@ class LoginUseCaseTest {
 
             verify(userRepository).findByEmail(command.email());
             verify(passwordHashingService, never()).matches(any(), any());
-            verify(accessTokenGenerator, never()).generate(any());
+            verify(authSessionIssuer, never()).issue(any());
         }
 
         @Test
@@ -163,7 +146,7 @@ class LoginUseCaseTest {
 
             verify(userRepository).findByEmail(command.email());
             verify(passwordHashingService).matches(new RawPassword(command.rawPassword()), user.getPasswordHash());
-            verify(accessTokenGenerator, never()).generate(any());
+            verify(authSessionIssuer, never()).issue(any());
         }
     }
 }

@@ -5,6 +5,7 @@ import com.ironcore.application.exception.InvalidCredentialsException;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.user.usecase.changepassword.ChangePasswordCommand;
+import com.ironcore.domain.auth.repository.AuthSessionRepository;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.PasswordHash;
@@ -40,6 +41,9 @@ class UserPasswordChangeServiceTest {
 
     @Mock
     private Clock clock;
+
+    @Mock
+    private AuthSessionRepository authSessionRepository;
 
     @InjectMocks
     private UserPasswordChangeService userPasswordChangeService;
@@ -80,6 +84,7 @@ class UserPasswordChangeServiceTest {
             verify(passwordHashingService).matches(command.newPassword(), passwordHash("hashed-password"));
             verify(passwordHashingService).hash(command.newPassword());
             verify(userRepository).save(userCaptor.capture());
+            verify(authSessionRepository).revokeAllByUserId(user.getId(), fixedClock.instant());
 
             User savedUser = userCaptor.getValue();
 

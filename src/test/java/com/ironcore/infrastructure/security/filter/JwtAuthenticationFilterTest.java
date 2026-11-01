@@ -1,5 +1,7 @@
 package com.ironcore.infrastructure.security.filter;
 
+import com.ironcore.domain.auth.model.AuthSession;
+import com.ironcore.domain.auth.repository.AuthSessionRepository;
 import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
@@ -25,12 +27,14 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import static com.ironcore.domain.auth.AuthSessionTestFactory.sessionId;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -50,12 +54,15 @@ class JwtAuthenticationFilterTest {
     @Mock
     private ObjectProvider<ApiAuthenticationEntryPoint> authenticationEntryPointProvider;
 
+    @Mock
+    private AuthSessionRepository sessions;
+    private final Clock clock = Clock.systemUTC();
     private JwtAuthenticationFilter filter;
 
     @BeforeEach
     void setUp() {
         SecurityContextHolder.clearContext();
-        filter = new JwtAuthenticationFilter(validator, userRepository, authenticationEntryPointProvider);
+        filter = new JwtAuthenticationFilter(validator, userRepository, authenticationEntryPointProvider, sessions, clock);
     }
 
     @AfterEach
@@ -68,12 +75,16 @@ class JwtAuthenticationFilterTest {
         JwtAccessTokenClaims claims = new JwtAccessTokenClaims(
                 new UserId(1L),
                 new Email("renan@example.com"),
-                false
+                false,
+                sessionId()
         );
 
         User user = user(true);
 
         when(validator.validate("valid-token")).thenReturn(claims);
+        when(sessions.findByIdAndUserId(claims.sessionId(), claims.userId())).thenReturn(Optional.of(
+                AuthSession.open(claims.sessionId(), claims.userId(),
+                        clock.instant().minusSeconds(60), clock.instant().plusSeconds(3600))));
         when(userRepository.findById(new UserId(1L))).thenReturn(Optional.of(user));
 
         MockHttpServletRequest request = request("GET", "/api/protected");
@@ -114,10 +125,14 @@ class JwtAuthenticationFilterTest {
         JwtAccessTokenClaims claims = new JwtAccessTokenClaims(
                 new UserId(1L),
                 new Email("renan@example.com"),
-                false
+                false,
+                sessionId()
         );
 
         when(validator.validate("valid-token")).thenReturn(claims);
+        when(sessions.findByIdAndUserId(claims.sessionId(), claims.userId())).thenReturn(Optional.of(
+                AuthSession.open(claims.sessionId(), claims.userId(),
+                        clock.instant().minusSeconds(60), clock.instant().plusSeconds(3600))));
         when(userRepository.findById(new UserId(1L))).thenReturn(Optional.empty());
 
         MockHttpServletRequest request = request("GET", "/api/protected");
@@ -136,10 +151,14 @@ class JwtAuthenticationFilterTest {
         JwtAccessTokenClaims claims = new JwtAccessTokenClaims(
                 new UserId(1L),
                 new Email("renan@example.com"),
-                false
+                false,
+                sessionId()
         );
 
         when(validator.validate("valid-token")).thenReturn(claims);
+        when(sessions.findByIdAndUserId(claims.sessionId(), claims.userId())).thenReturn(Optional.of(
+                AuthSession.open(claims.sessionId(), claims.userId(),
+                        clock.instant().minusSeconds(60), clock.instant().plusSeconds(3600))));
         when(userRepository.findById(new UserId(1L))).thenReturn(Optional.of(user(false)));
 
         MockHttpServletRequest request = request("GET", "/api/protected");
@@ -181,7 +200,7 @@ class JwtAuthenticationFilterTest {
         assertThat(filter.shouldNotFilter(request("GET", "/swagger-ui.html"))).isTrue();
         assertThat(filter.shouldNotFilter(request("GET", "/swagger-ui/index.html"))).isTrue();
         assertThat(filter.shouldNotFilter(request("POST", "/api/auth/login"))).isTrue();
-        assertThat(filter.shouldNotFilter(request("POST", "/api/auth/logout"))).isTrue();
+        assertThat(filter.shouldNotFilter(request("POST", "/api/auth/logout"))).isFalse();
     }
 
     @Test

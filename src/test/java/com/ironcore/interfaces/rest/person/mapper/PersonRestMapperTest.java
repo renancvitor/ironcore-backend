@@ -9,6 +9,7 @@ import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
 import com.ironcore.interfaces.rest.person.dto.PersonResponse;
 import org.junit.jupiter.api.Test;
 
+import static com.ironcore.domain.auth.AuthSessionTestFactory.sessionId;
 import static com.ironcore.domain.person.PersonTestFactory.restoredPerson;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -19,7 +20,8 @@ class PersonRestMapperTest {
         AuthenticatedUser authenticatedUser = new AuthenticatedUser(
                 new UserId(1L),
                 new Email("renan@example.com"),
-                false
+                false,
+                sessionId()
         );
 
         GetPersonCommand command = PersonRestMapper.toGetCommand(authenticatedUser);

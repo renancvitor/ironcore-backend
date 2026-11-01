@@ -1,6 +1,5 @@
 package com.ironcore.interfaces.rest.workoutplanning.workoutcycle;
 
-import org.junit.jupiter.params.provider.ValueSource;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
@@ -13,6 +12,7 @@ import com.ironcore.application.workoutplanning.workoutcycle.detail.*;
 import com.ironcore.application.workoutplanning.workoutcycle.list.*;
 import com.ironcore.application.workoutplanning.workoutcycle.start.*;
 import com.ironcore.application.workoutplanning.workoutcycle.update.*;
+import com.ironcore.domain.auth.repository.AuthSessionRepository;
 import com.ironcore.domain.exercise.valueobject.ExerciseId;
 import com.ironcore.domain.muscle.musclegroup.valueobject.MuscleGroupId;
 import com.ironcore.domain.person.valueobject.PersonId;
@@ -32,6 +32,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -40,6 +41,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -53,6 +55,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(WorkoutCycleController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class WorkoutCycleControllerTest {
+    @MockitoBean
+    private AuthSessionRepository authSessionRepository;
+
+    @MockitoBean
+    private Clock clock;
+
 
     private static final String ENDPOINT = "/api/users/me/workout-cycles";
 

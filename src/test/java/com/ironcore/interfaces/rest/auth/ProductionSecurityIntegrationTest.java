@@ -1,11 +1,12 @@
 package com.ironcore.interfaces.rest.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ironcore.domain.person.enums.SexType;
+import com.ironcore.infrastructure.persistence.auth.repository.AuthSessionJpaRepository;
 import com.ironcore.infrastructure.persistence.person.entity.PersonEntity;
 import com.ironcore.infrastructure.persistence.person.repository.PersonJpaRepository;
 import com.ironcore.infrastructure.persistence.user.entity.UserEntity;
 import com.ironcore.infrastructure.persistence.user.repository.UserJpaRepository;
-import com.ironcore.domain.person.enums.SexType;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,9 +20,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -36,6 +39,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles({"prod", "test"})
 class ProductionSecurityIntegrationTest {
+    @Autowired
+    private AuthSessionJpaRepository authSessions;
+
     private static final String ORIGIN = "https://app.ironcore.test";
     private static final String EMAIL = "security@ironcore.test";
     private static final String PASSWORD = "StrongPass123@";
@@ -47,6 +53,7 @@ class ProductionSecurityIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        authSessions.deleteAll();
         users.deleteAll();
         persons.deleteAll();
         var now = LocalDateTime.now();
