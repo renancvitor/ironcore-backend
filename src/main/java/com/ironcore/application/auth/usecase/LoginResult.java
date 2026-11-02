@@ -1,14 +1,11 @@
 package com.ironcore.application.auth.usecase;
 
+import com.ironcore.application.auth.port.SessionCredentials;
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.UserId;
 
-import java.time.LocalDateTime;
-
 public record LoginResult(
-        String accessToken,
-        String tokenType,
-        LocalDateTime expiresAt,
+        SessionCredentials credentials,
         UserId userId,
         Email email,
         String nickname,

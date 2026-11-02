@@ -21,4 +21,8 @@ public record InitialChangePasswordRequest(
         @Schema(format = "password")
         String confirmNewPassword
 ) {
+    @Override
+    public String toString() {
+        return "InitialChangePasswordRequest[currentPassword=[REDACTED], newPassword=[REDACTED], confirmNewPassword=[REDACTED]]";
+    }
 }

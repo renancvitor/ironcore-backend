@@ -3,8 +3,10 @@ package com.ironcore.interfaces.rest.workoutplanning;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ironcore.IroncoreBackendApplication;
+import com.ironcore.application.auth.service.AuthenticationAttemptLimiter;
 import com.ironcore.domain.person.enums.SexType;
 import com.ironcore.domain.workoutplanning.workoutday.enums.WeekDay;
+import com.ironcore.infrastructure.persistence.auth.repository.AuthSessionJpaRepository;
 import com.ironcore.infrastructure.persistence.logging.audit.repository.AuditLogJpaRepository;
 import com.ironcore.infrastructure.persistence.logging.error.repository.ErrorLogJpaRepository;
 import com.ironcore.infrastructure.persistence.person.entity.PersonEntity;
@@ -29,6 +31,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -39,8 +42,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -56,7 +59,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Testcontainers
 @ActiveProfiles("test")
+@MockitoBean(types = AuthenticationAttemptLimiter.class)
 class WorkoutPlanningIntegrationTest {
+    @Autowired
+    private AuthSessionJpaRepository authSessions;
+
 
     private static final String LOGIN_ENDPOINT = "/api/auth/login";
     private static final String TRAINING_GOALS_ENDPOINT = "/api/training-goals";
@@ -491,6 +498,7 @@ class WorkoutPlanningIntegrationTest {
     private void clearTestData() {
         errorLogJpaRepository.deleteAll();
         auditLogJpaRepository.deleteAll();
+        authSessions.deleteAll();
         userJpaRepository.deleteAll();
         personJpaRepository.deleteAll();
     }

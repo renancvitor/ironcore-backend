@@ -76,7 +76,7 @@ class ChangeNicknameUseCaseTest {
             );
 
             givenFixedClock();
-            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.of(user));
+            when(userRepository.findByIdForUpdate(command.actorUserId())).thenReturn(Optional.of(user));
             givenUpdatedUserIsPersisted();
 
             ChangeNicknameResult result = changeNicknameUseCase.execute(command);
@@ -85,7 +85,7 @@ class ChangeNicknameUseCaseTest {
             ArgumentCaptor<LoggableData> auditBeforeStateCaptor = ArgumentCaptor.forClass(LoggableData.class);
             ArgumentCaptor<LoggableData> auditAfterStateCaptor = ArgumentCaptor.forClass(LoggableData.class);
 
-            verify(userRepository).findById(command.actorUserId());
+            verify(userRepository).findByIdForUpdate(command.actorUserId());
             verify(userRepository).save(userCaptor.capture());
             verify(auditLogPublisher).publish(
                     eq(AuditActionType.UPDATE),
@@ -122,13 +122,13 @@ class ChangeNicknameUseCaseTest {
         void shouldFailWhenUserDoesNotExist() {
             ChangeNicknameCommand command = commandWithNickname();
 
-            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.empty());
+            when(userRepository.findByIdForUpdate(command.actorUserId())).thenReturn(Optional.empty());
 
             assertThatExceptionOfType(ResourceNotFoundException.class)
                     .isThrownBy(() -> changeNicknameUseCase.execute(command))
                     .withMessage("Usuário não encontrado.");
 
-            verify(userRepository).findById(command.actorUserId());
+            verify(userRepository).findByIdForUpdate(command.actorUserId());
             verify(userRepository, never()).save(any());
             verify(auditLogPublisher, never()).publish(any(), any(), any(), any(), any(), any(), any());
         }
@@ -138,13 +138,13 @@ class ChangeNicknameUseCaseTest {
             User user = inactiveUser();
             ChangeNicknameCommand command = commandWithNickname();
 
-            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.of(user));
+            when(userRepository.findByIdForUpdate(command.actorUserId())).thenReturn(Optional.of(user));
 
             assertThatExceptionOfType(UserInactiveException.class)
                     .isThrownBy(() -> changeNicknameUseCase.execute(command))
                     .withMessage("Usuário inativo.");
 
-            verify(userRepository).findById(command.actorUserId());
+            verify(userRepository).findByIdForUpdate(command.actorUserId());
             verify(userRepository, never()).save(any());
             verify(auditLogPublisher, never()).publish(any(), any(), any(), any(), any(), any(), any());
         }
@@ -161,13 +161,13 @@ class ChangeNicknameUseCaseTest {
                     null
             );
 
-            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.of(user));
+            when(userRepository.findByIdForUpdate(command.actorUserId())).thenReturn(Optional.of(user));
 
             assertThatExceptionOfType(OperationNotAllowedException.class)
                     .isThrownBy(() -> changeNicknameUseCase.execute(command))
                     .withMessage("Informe o apelido para atualização.");
 
-            verify(userRepository).findById(command.actorUserId());
+            verify(userRepository).findByIdForUpdate(command.actorUserId());
             verify(userRepository, never()).save(any());
             verify(auditLogPublisher, never()).publish(any(), any(), any(), any(), any(), any(), any());
         }
@@ -181,13 +181,13 @@ class ChangeNicknameUseCaseTest {
             );
 
             givenFixedClock();
-            when(userRepository.findById(command.actorUserId())).thenReturn(Optional.of(user));
+            when(userRepository.findByIdForUpdate(command.actorUserId())).thenReturn(Optional.of(user));
 
             assertThatExceptionOfType(InvalidUserException.class)
                     .isThrownBy(() -> changeNicknameUseCase.execute(command))
                     .withMessage("Apelido não pode ser nulo ou vazio.");
 
-            verify(userRepository).findById(command.actorUserId());
+            verify(userRepository).findByIdForUpdate(command.actorUserId());
             verify(userRepository, never()).save(any());
             verify(auditLogPublisher, never()).publish(any(), any(), any(), any(), any(), any(), any());
         }

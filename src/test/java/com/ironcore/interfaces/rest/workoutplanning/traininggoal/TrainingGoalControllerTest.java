@@ -3,6 +3,7 @@ package com.ironcore.interfaces.rest.workoutplanning.traininggoal;
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
 import com.ironcore.application.workoutplanning.traininggoal.usecase.ListTrainingGoalsUseCase;
 import com.ironcore.application.workoutplanning.traininggoal.usecase.TrainingGoalResult;
+import com.ironcore.domain.auth.repository.AuthSessionRepository;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.workoutplanning.traininggoal.valueobject.TrainingGoalCode;
 import com.ironcore.domain.workoutplanning.traininggoal.valueobject.TrainingGoalId;
@@ -18,6 +19,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Clock;
 import java.util.List;
 
 import static org.mockito.Mockito.verify;
@@ -31,6 +33,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(TrainingGoalController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class TrainingGoalControllerTest {
+    @MockitoBean
+    private AuthSessionRepository authSessionRepository;
+
+    @MockitoBean
+    private Clock clock;
+
 
     private static final String TRAINING_GOALS_ENDPOINT = "/api/training-goals";
 

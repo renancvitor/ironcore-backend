@@ -11,6 +11,7 @@ import com.ironcore.application.logging.error.port.ErrorLogPublisher;
 import com.ironcore.application.shared.pagination.PageResult;
 import com.ironcore.domain.activitytype.valueobject.ActivityTypeCode;
 import com.ironcore.domain.activitytype.valueobject.ActivityTypeId;
+import com.ironcore.domain.auth.repository.AuthSessionRepository;
 import com.ironcore.domain.equipmenttype.valueobject.EquipmentTypeCode;
 import com.ironcore.domain.equipmenttype.valueobject.EquipmentTypeId;
 import com.ironcore.domain.exercise.valueobject.ExerciseId;
@@ -30,6 +31,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Clock;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
@@ -40,6 +42,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(ExerciseController.class)
 @AutoConfigureMockMvc(addFilters = false)
 public class ListExercisesControllerTest {
+    @MockitoBean
+    private AuthSessionRepository authSessionRepository;
+
+    @MockitoBean
+    private Clock clock;
+
 
     private static final String EXERCISES_ENDPOINT = "/api/exercise-catalog/exercises";
 

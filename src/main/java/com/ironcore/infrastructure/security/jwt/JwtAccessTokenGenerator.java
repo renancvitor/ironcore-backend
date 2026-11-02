@@ -35,6 +35,9 @@ public class JwtAccessTokenGenerator implements AccessTokenGenerator {
         }
 
         Instant expiresAtInstant = clock.instant().plus(properties.getExpirationMinutes(), ChronoUnit.MINUTES);
+        if (subject.sessionExpiresAt().isBefore(expiresAtInstant)) {
+            expiresAtInstant = subject.sessionExpiresAt();
+        }
         LocalDateTime expiresAt = LocalDateTime.ofInstant(expiresAtInstant, clock.getZone());
 
         try {
@@ -43,6 +46,7 @@ public class JwtAccessTokenGenerator implements AccessTokenGenerator {
                 .withSubject(String.valueOf(subject.userId().value()))
                 .withClaim("email", subject.email().value())
                 .withClaim("mustChangePassword", subject.mustChangePassword())
+                .withClaim("sid", subject.sessionId().value().toString())
                 .withExpiresAt(expiresAtInstant)
                 .sign(Algorithm.HMAC256(properties.getSecret()));
 

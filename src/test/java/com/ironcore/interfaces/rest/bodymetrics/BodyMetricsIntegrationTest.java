@@ -3,13 +3,15 @@ package com.ironcore.interfaces.rest.bodymetrics;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ironcore.IroncoreBackendApplication;
+import com.ironcore.application.auth.service.AuthenticationAttemptLimiter;
 import com.ironcore.domain.person.enums.SexType;
+import com.ironcore.infrastructure.persistence.auth.repository.AuthSessionJpaRepository;
+import com.ironcore.infrastructure.persistence.bodymetrics.entity.BodyMetricsEntity;
+import com.ironcore.infrastructure.persistence.bodymetrics.repository.BodyMetricsJpaRepository;
 import com.ironcore.infrastructure.persistence.person.entity.PersonEntity;
 import com.ironcore.infrastructure.persistence.person.repository.PersonJpaRepository;
 import com.ironcore.infrastructure.persistence.user.entity.UserEntity;
 import com.ironcore.infrastructure.persistence.user.repository.UserJpaRepository;
-import com.ironcore.infrastructure.persistence.bodymetrics.entity.BodyMetricsEntity;
-import com.ironcore.infrastructure.persistence.bodymetrics.repository.BodyMetricsJpaRepository;
 import com.ironcore.interfaces.rest.bodymetrics.dto.BodyCircumferencesRequest;
 import com.ironcore.interfaces.rest.bodymetrics.dto.create.CreateBodyMetricsRequest;
 import com.ironcore.interfaces.rest.bodymetrics.dto.update.UpdateBodyMetricsRequest;
@@ -24,6 +26,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -31,8 +34,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -46,7 +49,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 )
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@MockitoBean(types = AuthenticationAttemptLimiter.class)
 class BodyMetricsIntegrationTest {
+    @Autowired
+    private AuthSessionJpaRepository authSessions;
+
 
     private static final String LOGIN_ENDPOINT = "/api/auth/login";
     private static final String BODY_METRICS_ENDPOINT = "/api/users/me/body-metrics";
@@ -74,6 +81,7 @@ class BodyMetricsIntegrationTest {
     @BeforeEach
     void setUp() {
         bodyMetricsJpaRepository.deleteAll();
+        authSessions.deleteAll();
         userJpaRepository.deleteAll();
         personJpaRepository.deleteAll();
         userJpaRepository.save(activeUser());
@@ -82,8 +90,40 @@ class BodyMetricsIntegrationTest {
     @AfterEach
     void tearDown() {
         bodyMetricsJpaRepository.deleteAll();
+        authSessions.deleteAll();
         userJpaRepository.deleteAll();
         personJpaRepository.deleteAll();
+    }
+
+    @Test
+    void isolatesBodyMetricsAcrossUsersForReadsWritesAndProgress() throws Exception {
+        Cookie owner = loginAndGetAccessTokenCookie();
+        Long id = createPersonBodyMetrics(owner, createRequest(80.0, "Private measurement"));
+        createPersonBodyMetrics(owner, createRequest(79.0, "Second private measurement"));
+        var second = activeUser();
+        second.setEmail("other@example.com");
+        userJpaRepository.save(second);
+        var login = mockMvc.perform(post("/api/auth/login").with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(java.util.Map.of("email", "other@example.com", "password", RAW_PASSWORD))))
+                .andExpect(status().isOk()).andReturn();
+        Cookie other = login.getResponse().getCookie("access_token");
+        mockMvc.perform(get(BODY_METRICS_ENDPOINT + "/{id}", id).cookie(other)).andExpect(status().isNotFound());
+        mockMvc.perform(put(BODY_METRICS_ENDPOINT + "/{id}", id).cookie(other).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(
+                                new UpdateBodyMetricsRequest(70.0, 180.0, circumferences(), "Unauthorized"))))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(delete(BODY_METRICS_ENDPOINT + "/{id}", id).cookie(other).with(csrf()))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(get(BODY_METRICS_ENDPOINT).cookie(other))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.metrics.totalElements").value(0));
+        mockMvc.perform(get(BODY_METRICS_ENDPOINT + "/progress/changes").cookie(other)
+                        .param("startDate", LocalDate.now().minusDays(1).toString()).param("endDate", LocalDate.now().toString()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.changes").isEmpty());
+        mockMvc.perform(get(BODY_METRICS_ENDPOINT + "/{id}", id).cookie(owner))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.weightKg").value(80.0));
+        createPersonBodyMetrics(other, createRequest(65.0, "Other measurement"));
+        mockMvc.perform(get(BODY_METRICS_ENDPOINT).cookie(owner))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.metrics.totalElements").value(2));
     }
 
     @Nested

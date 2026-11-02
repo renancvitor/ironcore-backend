@@ -1,8 +1,8 @@
 package com.ironcore.application.auth.usecase;
 
-import com.ironcore.application.auth.port.AccessTokenGenerator;
-import com.ironcore.application.auth.port.AccessTokenSubject;
+import com.ironcore.application.auth.LoginTestFactory;
 import com.ironcore.application.auth.port.GeneratedAccessToken;
+import com.ironcore.application.auth.service.AuthSessionIssuer;
 import com.ironcore.application.exception.InitialPasswordChangeRequiredException;
 import com.ironcore.application.exception.InvalidCredentialsException;
 import com.ironcore.application.exception.OperationNotAllowedException;
@@ -13,7 +13,6 @@ import com.ironcore.domain.user.valueobject.RawPassword;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -39,7 +38,7 @@ class LoginUseCaseTest {
     private PasswordHashingService passwordHashingService;
 
     @Mock
-    private AccessTokenGenerator accessTokenGenerator;
+    private AuthSessionIssuer authSessionIssuer;
 
     @InjectMocks
     private LoginUseCase useCase;
@@ -53,38 +52,24 @@ class LoginUseCaseTest {
             User user = activeUser();
             GeneratedAccessToken accessToken = generatedAccessToken();
 
-            when(userRepository.findByEmail(command.email()))
+            when(userRepository.findByEmailForUpdate(command.email()))
                     .thenReturn(Optional.of(user));
             when(passwordHashingService.matches(new RawPassword(command.rawPassword()), user.getPasswordHash()))
                     .thenReturn(true);
-            when(accessTokenGenerator.generate(new AccessTokenSubject(
-                    user.getId(),
-                    user.getEmail(),
-                    user.mustChangePassword()))
-            )
-                    .thenReturn(accessToken);
+            var credentials = LoginTestFactory.sessionCredentials();
+            when(authSessionIssuer.issue(user)).thenReturn(credentials);
 
             LoginResult result = useCase.execute(command);
 
-            assertThat(result.accessToken()).isEqualTo(accessToken.value());
-            assertThat(result.tokenType()).isEqualTo(accessToken.tokenType());
-            assertThat(result.expiresAt()).isEqualTo(accessToken.expiresAt());
+            assertThat(result.credentials().accessToken().value()).isEqualTo(accessToken.value());
+            assertThat(result.credentials().accessToken().tokenType()).isEqualTo(accessToken.tokenType());
+            assertThat(result.credentials().accessToken().expiresAt()).isEqualTo(accessToken.expiresAt());
             assertThat(result.userId()).isEqualTo(user.getId());
             assertThat(result.email()).isEqualTo(user.getEmail());
             assertThat(result.nickname()).isEqualTo(user.getNickname());
             assertThat(result.mustChangePassword()).isEqualTo(user.mustChangePassword());
 
-            ArgumentCaptor<AccessTokenSubject> subjectCaptor = ArgumentCaptor.forClass(AccessTokenSubject.class);
-
-            verify(userRepository).findByEmail(command.email());
-            verify(passwordHashingService).matches(new RawPassword(command.rawPassword()), user.getPasswordHash());
-            verify(accessTokenGenerator).generate(subjectCaptor.capture());
-
-            AccessTokenSubject subject = subjectCaptor.getValue();
-
-            assertThat(subject.userId()).isEqualTo(user.getId());
-            assertThat(subject.email()).isEqualTo(user.getEmail());
-            assertThat(subject.mustChangePassword()).isEqualTo(user.mustChangePassword());
+            verify(authSessionIssuer).issue(user);
         }
     }
 
@@ -95,16 +80,16 @@ class LoginUseCaseTest {
         void shouldFailWhenEmailDoesNotExist() {
             LoginCommand command = command();
 
-            when(userRepository.findByEmail(command.email()))
+            when(userRepository.findByEmailForUpdate(command.email()))
                     .thenReturn(Optional.empty());
 
             assertThatExceptionOfType(InvalidCredentialsException.class)
                     .isThrownBy(() -> useCase.execute(command))
                     .withMessage("Credenciais inválidas.");
 
-            verify(userRepository).findByEmail(command.email());
-            verify(passwordHashingService, never()).matches(any(), any());
-            verify(accessTokenGenerator, never()).generate(any());
+            verify(userRepository).findByEmailForUpdate(command.email());
+            verify(passwordHashingService).matches(new RawPassword(command.rawPassword()), null);
+            verify(authSessionIssuer, never()).issue(any());
         }
 
         @Test
@@ -112,7 +97,7 @@ class LoginUseCaseTest {
             LoginCommand command = command();
             User user = activeUser();
 
-            when(userRepository.findByEmail(command.email()))
+            when(userRepository.findByEmailForUpdate(command.email()))
                     .thenReturn(Optional.of(user));
             when(passwordHashingService.matches(new RawPassword(command.rawPassword()), user.getPasswordHash()))
                     .thenReturn(false);
@@ -121,9 +106,9 @@ class LoginUseCaseTest {
                     .isThrownBy(() -> useCase.execute(command))
                     .withMessage("Credenciais inválidas.");
 
-            verify(userRepository).findByEmail(command.email());
+            verify(userRepository).findByEmailForUpdate(command.email());
             verify(passwordHashingService).matches(new RawPassword(command.rawPassword()), user.getPasswordHash());
-            verify(accessTokenGenerator, never()).generate(any());
+            verify(authSessionIssuer, never()).issue(any());
         }
     }
 
@@ -135,16 +120,18 @@ class LoginUseCaseTest {
             LoginCommand command = command();
             User user = inactiveUser();
 
-            when(userRepository.findByEmail(command.email()))
+            when(userRepository.findByEmailForUpdate(command.email()))
                     .thenReturn(Optional.of(user));
+
+            when(passwordHashingService.matches(new RawPassword(command.rawPassword()), user.getPasswordHash())).thenReturn(true);
 
             assertThatExceptionOfType(OperationNotAllowedException.class)
                     .isThrownBy(() -> useCase.execute(command))
                     .withMessage("Usuário inativo.");
 
-            verify(userRepository).findByEmail(command.email());
-            verify(passwordHashingService, never()).matches(any(), any());
-            verify(accessTokenGenerator, never()).generate(any());
+            verify(userRepository).findByEmailForUpdate(command.email());
+            verify(passwordHashingService).matches(new RawPassword(command.rawPassword()), user.getPasswordHash());
+            verify(authSessionIssuer, never()).issue(any());
         }
 
         @Test
@@ -152,7 +139,7 @@ class LoginUseCaseTest {
             LoginCommand command = command();
             User user = activeUserWithMustChangePasswordTrue();
 
-            when(userRepository.findByEmail(command.email()))
+            when(userRepository.findByEmailForUpdate(command.email()))
                     .thenReturn(Optional.of(user));
             when(passwordHashingService.matches(new RawPassword(command.rawPassword()), user.getPasswordHash()))
                     .thenReturn(true);
@@ -161,9 +148,9 @@ class LoginUseCaseTest {
                     .isThrownBy(() -> useCase.execute(command))
                     .withMessage("Troca de senha inicial obrigatória.");
 
-            verify(userRepository).findByEmail(command.email());
+            verify(userRepository).findByEmailForUpdate(command.email());
             verify(passwordHashingService).matches(new RawPassword(command.rawPassword()), user.getPasswordHash());
-            verify(accessTokenGenerator, never()).generate(any());
+            verify(authSessionIssuer, never()).issue(any());
         }
     }
 }

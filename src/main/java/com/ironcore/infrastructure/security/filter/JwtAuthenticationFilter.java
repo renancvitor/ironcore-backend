@@ -1,5 +1,7 @@
 package com.ironcore.infrastructure.security.filter;
 
+import com.ironcore.domain.auth.model.AuthSession;
+import com.ironcore.domain.auth.repository.AuthSessionRepository;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
@@ -17,12 +19,12 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.Clock;
 import java.util.List;
 
 @Component
@@ -34,6 +36,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtAccessTokenValidator validator;
     private final UserRepository userRepository;
     private final ObjectProvider<ApiAuthenticationEntryPoint> authenticationEntryPointProvider;
+    private final AuthSessionRepository authSessionRepository;
+    private final Clock clock;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -55,6 +59,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
+        boolean logoutRequest = request.getMethod().equals(HttpMethod.POST.name())
+                && request.getServletPath().equals("/api/auth/logout");
 
         String token = recoveryToken(request);
 
@@ -62,11 +68,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 JwtAccessTokenClaims claims = validator.validate(token);
 
+                AuthSession session = authSessionRepository
+                        .findByIdAndUserId(claims.sessionId(), claims.userId())
+                        .orElseThrow(() -> new JwtTokenValidationException("Sessão inválida."));
+
+                if (!session.isActiveAt(clock.instant())) {
+                    throw new JwtTokenValidationException("Sessão expirada ou revogada.");
+                }
+
                 userRepository.findById(claims.userId())
                         .filter(User::isActive)
                         .ifPresent(user -> {
                             AuthenticatedUser principal = new AuthenticatedUser(
-                                    user.getId(), user.getEmail(), user.mustChangePassword()
+                                    user.getId(), user.getEmail(), user.mustChangePassword(), claims.sessionId()
                             );
 
                             UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
@@ -78,12 +92,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         });
             } catch (JwtTokenValidationException exception) {
                 SecurityContextHolder.clearContext();
-                authenticationEntryPointProvider.getObject().commence(
-                        request,
-                        response,
-                        new InsufficientAuthenticationException("JWT inválido ou expirado.", exception)
-                );
-                return;
+
+                if (!logoutRequest) {
+                    authenticationEntryPointProvider.getObject().commence(
+                            request,
+                            response,
+                            new InsufficientAuthenticationException("JWT inválido ou expirado.", exception)
+                    );
+                    return;
+                }
             }
         }
 
@@ -107,7 +124,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private boolean isPublicEndpoint(String method, String path) {
         return method.equals(HttpMethod.POST.name())
                 && (path.equals("/api/auth/login")
-                || path.equals("/api/auth/logout")
+                || path.equals("/api/auth/refresh")
                 || path.equals("/api/users/change-initial-password"));
     }
 }

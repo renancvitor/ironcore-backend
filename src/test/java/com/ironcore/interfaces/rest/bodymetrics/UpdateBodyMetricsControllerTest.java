@@ -1,8 +1,6 @@
 package com.ironcore.interfaces.rest.bodymetrics;
 
-import com.ironcore.domain.person.valueobject.PersonId;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ironcore.application.logging.error.port.ErrorLogPublisher;
 import com.ironcore.application.bodymetrics.create.CreateBodyMetricsUseCase;
 import com.ironcore.application.bodymetrics.delete.DeleteBodyMetricsUseCase;
 import com.ironcore.application.bodymetrics.get.GetBodyMetricsUseCase;
@@ -13,10 +11,13 @@ import com.ironcore.application.bodymetrics.progress.GetBodyMetricsProgressChart
 import com.ironcore.application.bodymetrics.update.UpdateBodyMetricsCommand;
 import com.ironcore.application.bodymetrics.update.UpdateBodyMetricsResult;
 import com.ironcore.application.bodymetrics.update.UpdateBodyMetricsUseCase;
+import com.ironcore.application.logging.error.port.ErrorLogPublisher;
+import com.ironcore.domain.auth.repository.AuthSessionRepository;
+import com.ironcore.domain.bodymetrics.repository.BodyMetricsRepository;
 import com.ironcore.domain.bodymetrics.valueobject.*;
+import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.UserId;
-import com.ironcore.domain.bodymetrics.repository.BodyMetricsRepository;
 import com.ironcore.infrastructure.security.jwt.JwtAccessTokenValidator;
 import com.ironcore.interfaces.rest.bodymetrics.dto.BodyCircumferencesRequest;
 import com.ironcore.interfaces.rest.bodymetrics.dto.update.UpdateBodyMetricsRequest;
@@ -29,6 +30,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 
 import static com.ironcore.interfaces.rest.support.security.AuthenticatedUserRequestPostProcessorFactory.authenticatedUser;
@@ -41,6 +43,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(BodyMetricsController.class)
 @AutoConfigureMockMvc(addFilters = false)
 public class UpdateBodyMetricsControllerTest {
+    @MockitoBean
+    private AuthSessionRepository authSessionRepository;
+
+    @MockitoBean
+    private Clock clock;
+
 
     private static final String BODY_METRICS_BASE_ENDPOINT = "/api/users/me/body-metrics";
     private static final String BODY_METRICS_ENDPOINT = BODY_METRICS_BASE_ENDPOINT + "/{id}";

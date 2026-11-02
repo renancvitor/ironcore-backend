@@ -5,6 +5,7 @@ import com.ironcore.application.exception.InvalidCredentialsException;
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.user.usecase.changepassword.ChangePasswordCommand;
+import com.ironcore.domain.auth.repository.AuthSessionRepository;
 import com.ironcore.domain.user.model.User;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.PasswordHash;
@@ -41,6 +42,9 @@ class UserPasswordChangeServiceTest {
     @Mock
     private Clock clock;
 
+    @Mock
+    private AuthSessionRepository authSessionRepository;
+
     @InjectMocks
     private UserPasswordChangeService userPasswordChangeService;
 
@@ -62,7 +66,7 @@ class UserPasswordChangeServiceTest {
             when(clock.instant()).thenReturn(fixedClock.instant());
             when(clock.getZone()).thenReturn(fixedClock.getZone());
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            when(userRepository.findByIdForUpdate(command.userId())).thenReturn(Optional.of(user));
             when(passwordHashingService.matches(command.currentPassword(), user.getPasswordHash()))
                     .thenReturn(true);
             when(passwordHashingService.matches(command.newPassword(), user.getPasswordHash()))
@@ -75,11 +79,12 @@ class UserPasswordChangeServiceTest {
 
             ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
 
-            verify(userRepository).findById(command.userId());
+            verify(userRepository).findByIdForUpdate(command.userId());
             verify(passwordHashingService).matches(command.currentPassword(), passwordHash("hashed-password"));
             verify(passwordHashingService).matches(command.newPassword(), passwordHash("hashed-password"));
             verify(passwordHashingService).hash(command.newPassword());
             verify(userRepository).save(userCaptor.capture());
+            verify(authSessionRepository).revokeAllByUserId(user.getId(), fixedClock.instant());
 
             User savedUser = userCaptor.getValue();
 
@@ -90,11 +95,13 @@ class UserPasswordChangeServiceTest {
         }
 
         @Test
-        void shouldRunBeforePasswordChangeRuleBeforePasswordValidation() {
+        void shouldRunBeforePasswordChangeRuleAfterCredentialValidation() {
             ChangePasswordCommand command = command();
             User user = activeUser();
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            when(userRepository.findByIdForUpdate(command.userId())).thenReturn(Optional.of(user));
+
+            when(passwordHashingService.matches(command.currentPassword(), user.getPasswordHash())).thenReturn(true);
 
             assertThatExceptionOfType(OperationNotAllowedException.class)
                     .isThrownBy(() -> userPasswordChangeService.changePassword(
@@ -105,8 +112,8 @@ class UserPasswordChangeServiceTest {
                     ))
                     .withMessage("Operação não permitida.");
 
-            verify(userRepository).findById(command.userId());
-            verify(passwordHashingService, never()).matches(any(), any());
+            verify(userRepository).findByIdForUpdate(command.userId());
+            verify(passwordHashingService).matches(command.currentPassword(), user.getPasswordHash());
             verify(passwordHashingService, never()).hash(any());
             verify(userRepository, never()).save(any());
         }
@@ -119,13 +126,13 @@ class UserPasswordChangeServiceTest {
         void shouldFailWhenUserNotFound() {
             ChangePasswordCommand command = command();
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.empty());
+            when(userRepository.findByIdForUpdate(command.userId())).thenReturn(Optional.empty());
 
             assertThatExceptionOfType(ResourceNotFoundException.class)
                     .isThrownBy(() -> userPasswordChangeService.changePassword(command))
                     .withMessage("Usuário não encontrado.");
 
-            verify(userRepository).findById(command.userId());
+            verify(userRepository).findByIdForUpdate(command.userId());
             verify(passwordHashingService, never()).matches(any(), any());
             verify(passwordHashingService, never()).hash(any());
             verify(userRepository, never()).save(any());
@@ -136,14 +143,16 @@ class UserPasswordChangeServiceTest {
             ChangePasswordCommand command = command();
             User user = inactiveUser();
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            when(userRepository.findByIdForUpdate(command.userId())).thenReturn(Optional.of(user));
+
+            when(passwordHashingService.matches(command.currentPassword(), user.getPasswordHash())).thenReturn(true);
 
             assertThatExceptionOfType(OperationNotAllowedException.class)
                     .isThrownBy(() -> userPasswordChangeService.changePassword(command))
                     .withMessage("Usuário inativo.");
 
-            verify(userRepository).findById(command.userId());
-            verify(passwordHashingService, never()).matches(any(), any());
+            verify(userRepository).findByIdForUpdate(command.userId());
+            verify(passwordHashingService).matches(command.currentPassword(), user.getPasswordHash());
             verify(passwordHashingService, never()).hash(any());
             verify(userRepository, never()).save(any());
         }
@@ -157,7 +166,7 @@ class UserPasswordChangeServiceTest {
             ChangePasswordCommand command = command();
             User user = activeUser();
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            when(userRepository.findByIdForUpdate(command.userId())).thenReturn(Optional.of(user));
             when(passwordHashingService.matches(command.currentPassword(), user.getPasswordHash()))
                     .thenReturn(false);
 
@@ -165,7 +174,7 @@ class UserPasswordChangeServiceTest {
                     .isThrownBy(() -> userPasswordChangeService.changePassword(command))
                     .withMessage("Senha atual inválida.");
 
-            verify(userRepository).findById(command.userId());
+            verify(userRepository).findByIdForUpdate(command.userId());
             verify(passwordHashingService).matches(command.currentPassword(), user.getPasswordHash());
             verify(passwordHashingService, never()).hash(any());
             verify(userRepository, never()).save(any());
@@ -176,7 +185,7 @@ class UserPasswordChangeServiceTest {
             ChangePasswordCommand command = command();
             User user = activeUser();
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            when(userRepository.findByIdForUpdate(command.userId())).thenReturn(Optional.of(user));
             when(passwordHashingService.matches(command.currentPassword(), user.getPasswordHash()))
                     .thenReturn(true);
             when(passwordHashingService.matches(command.newPassword(), user.getPasswordHash()))
@@ -186,7 +195,7 @@ class UserPasswordChangeServiceTest {
                     .isThrownBy(() -> userPasswordChangeService.changePassword(command))
                     .withMessage("A nova senha deve ser diferente da senha atual.");
 
-            verify(userRepository).findById(command.userId());
+            verify(userRepository).findByIdForUpdate(command.userId());
             verify(passwordHashingService).matches(command.currentPassword(), user.getPasswordHash());
             verify(passwordHashingService).matches(command.newPassword(), user.getPasswordHash());
             verify(passwordHashingService, never()).hash(any());
@@ -198,14 +207,16 @@ class UserPasswordChangeServiceTest {
             ChangePasswordCommand command = commandWithDifferentPasswordConfirmation();
             User user = activeUser();
 
-            when(userRepository.findById(command.userId())).thenReturn(Optional.of(user));
+            when(userRepository.findByIdForUpdate(command.userId())).thenReturn(Optional.of(user));
+
+            when(passwordHashingService.matches(command.currentPassword(), user.getPasswordHash())).thenReturn(true);
 
             assertThatExceptionOfType(BusinessRuleViolationException.class)
                     .isThrownBy(() -> userPasswordChangeService.changePassword(command))
                     .withMessage("A confirmação de senha não confere.");
 
-            verify(userRepository).findById(command.userId());
-            verify(passwordHashingService, never()).matches(any(), any());
+            verify(userRepository).findByIdForUpdate(command.userId());
+            verify(passwordHashingService).matches(command.currentPassword(), user.getPasswordHash());
             verify(passwordHashingService, never()).hash(any());
             verify(userRepository, never()).save(any());
         }

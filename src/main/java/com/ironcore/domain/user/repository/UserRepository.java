@@ -16,6 +16,10 @@ public interface UserRepository {
 
     Optional<User> findByEmail(Email email);
 
+    Optional<User> findByIdForUpdate(UserId id);
+
+    Optional<User> findByEmailForUpdate(Email email);
+
     boolean existsById(UserId id);
 
     boolean existsByEmail(Email email);

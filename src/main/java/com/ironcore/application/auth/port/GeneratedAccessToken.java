@@ -7,4 +7,8 @@ public record GeneratedAccessToken(
         String tokenType,
         LocalDateTime expiresAt
 ) {
+    @Override
+    public String toString() {
+        return "GeneratedAccessToken[value=[REDACTED], tokenType=" + tokenType + ", expiresAt=" + expiresAt + "]";
+    }
 }

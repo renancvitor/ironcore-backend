@@ -11,6 +11,7 @@ import com.ironcore.application.exercise.catalog.usecase.MuscleSubgroupItemResul
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
 import com.ironcore.domain.activitytype.valueobject.ActivityTypeCode;
 import com.ironcore.domain.activitytype.valueobject.ActivityTypeId;
+import com.ironcore.domain.auth.repository.AuthSessionRepository;
 import com.ironcore.domain.equipmenttype.valueobject.EquipmentTypeCode;
 import com.ironcore.domain.equipmenttype.valueobject.EquipmentTypeId;
 import com.ironcore.domain.muscle.musclegroup.valueobject.MuscleGroupCode;
@@ -30,6 +31,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Clock;
 import java.util.List;
 
 import static org.mockito.Mockito.verify;
@@ -43,6 +45,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(ExerciseCatalogController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class ExerciseCatalogControllerTest {
+    @MockitoBean
+    private AuthSessionRepository authSessionRepository;
+
+    @MockitoBean
+    private Clock clock;
+
 
     private static final String EXERCISE_CATALOG_BASE_ENDPOINT = "/api/exercise-catalog";
     private static final String ACTIVITY_TYPES_ENDPOINT = EXERCISE_CATALOG_BASE_ENDPOINT + "/activity-types";

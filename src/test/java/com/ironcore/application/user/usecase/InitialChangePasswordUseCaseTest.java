@@ -1,6 +1,7 @@
 package com.ironcore.application.user.usecase;
 
 import com.ironcore.application.exception.OperationNotAllowedException;
+import com.ironcore.application.user.service.PasswordHashingService;
 import com.ironcore.application.user.service.UserPasswordChangeService;
 import com.ironcore.application.user.usecase.initialchangepassword.InitialChangePasswordCommand;
 import com.ironcore.application.user.usecase.initialchangepassword.InitialChangePasswordUseCase;
@@ -36,6 +37,9 @@ class InitialChangePasswordUseCaseTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private PasswordHashingService passwordHashingService;
+
     @InjectMocks
     private InitialChangePasswordUseCase initialChangePasswordUseCase;
 
@@ -47,7 +51,7 @@ class InitialChangePasswordUseCaseTest {
             InitialChangePasswordCommand command = command();
             User user = activeUserWithMustChangePasswordTrue();
 
-            when(userRepository.findByEmail(command.email()))
+            when(userRepository.findByEmailForUpdate(command.email()))
                     .thenReturn(Optional.of(user));
             when(userPasswordChangeService.changePassword(
                     eq(user),
@@ -59,7 +63,7 @@ class InitialChangePasswordUseCaseTest {
 
             initialChangePasswordUseCase.execute(command);
 
-            verify(userRepository).findByEmail(command.email());
+            verify(userRepository).findByEmailForUpdate(command.email());
             verify(userPasswordChangeService).changePassword(
                     eq(user),
                     eq(command.currentPassword()),
@@ -78,7 +82,7 @@ class InitialChangePasswordUseCaseTest {
             InitialChangePasswordCommand command = command();
             User user = activeUserWithMustChangePasswordTrue();
 
-            when(userRepository.findByEmail(command.email()))
+            when(userRepository.findByEmailForUpdate(command.email()))
                     .thenReturn(Optional.of(user));
             when(userPasswordChangeService.changePassword(
                     eq(user),

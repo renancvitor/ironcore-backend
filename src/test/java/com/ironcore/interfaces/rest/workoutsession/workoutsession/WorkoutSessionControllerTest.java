@@ -1,12 +1,11 @@
 package com.ironcore.interfaces.rest.workoutsession.workoutsession;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ironcore.application.shared.pagination.PageResult;
 import com.ironcore.application.exception.OperationNotAllowedException;
-import com.ironcore.application.workoutsession.workoutsession.list.*;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
+import com.ironcore.application.shared.pagination.PageResult;
 import com.ironcore.application.workoutsession.workoutsession.close.CloseWorkoutSessionCommand;
 import com.ironcore.application.workoutsession.workoutsession.close.CloseWorkoutSessionResult;
 import com.ironcore.application.workoutsession.workoutsession.close.CloseWorkoutSessionUseCase;
@@ -17,6 +16,7 @@ import com.ironcore.application.workoutsession.workoutsession.detail.WorkoutSess
 import com.ironcore.application.workoutsession.workoutsession.detail.WorkoutSessionSetDetailResult;
 import com.ironcore.application.workoutsession.workoutsession.inprogress.GetInProgressWorkoutSessionCommand;
 import com.ironcore.application.workoutsession.workoutsession.inprogress.GetInProgressWorkoutSessionUseCase;
+import com.ironcore.application.workoutsession.workoutsession.list.*;
 import com.ironcore.application.workoutsession.workoutsession.notes.UpdateWorkoutSessionNotesCommand;
 import com.ironcore.application.workoutsession.workoutsession.notes.UpdateWorkoutSessionNotesUseCase;
 import com.ironcore.application.workoutsession.workoutsession.start.StartWorkoutSessionCommand;
@@ -32,6 +32,7 @@ import com.ironcore.application.workoutsession.workoutsessionset.delete.DeleteWo
 import com.ironcore.application.workoutsession.workoutsessionset.delete.DeleteWorkoutSessionSetUseCase;
 import com.ironcore.application.workoutsession.workoutsessionset.update.UpdateWorkoutSessionSetCommand;
 import com.ironcore.application.workoutsession.workoutsessionset.update.UpdateWorkoutSessionSetUseCase;
+import com.ironcore.domain.auth.repository.AuthSessionRepository;
 import com.ironcore.domain.exercise.valueobject.ExerciseId;
 import com.ironcore.domain.person.valueobject.PersonId;
 import com.ironcore.domain.user.repository.UserRepository;
@@ -66,6 +67,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -83,6 +85,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(WorkoutSessionController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class WorkoutSessionControllerTest {
+    @MockitoBean
+    private AuthSessionRepository authSessionRepository;
+
+    @MockitoBean
+    private Clock clock;
+
 
     @MockitoBean private ListWorkoutSessionsUseCase listWorkoutSessionsUseCase;
 

@@ -10,6 +10,8 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.util.List;
 
+import static com.ironcore.domain.auth.AuthSessionTestFactory.sessionId;
+
 public final class AuthenticatedUserRequestPostProcessorFactory {
 
     private AuthenticatedUserRequestPostProcessorFactory() {
@@ -28,6 +30,7 @@ public final class AuthenticatedUserRequestPostProcessorFactory {
                 new UserId(userId),
                 new Email(email),
                 initialPassword
+        , sessionId()
         );
 
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(

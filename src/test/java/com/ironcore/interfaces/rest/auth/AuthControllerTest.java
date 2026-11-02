@@ -1,15 +1,23 @@
 package com.ironcore.interfaces.rest.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ironcore.application.auth.port.GeneratedAccessToken;
+import com.ironcore.application.auth.port.SessionCredentials;
+import com.ironcore.application.auth.service.AuthenticationAttemptLimiter;
 import com.ironcore.application.auth.usecase.LoginCommand;
 import com.ironcore.application.auth.usecase.LoginResult;
 import com.ironcore.application.auth.usecase.LoginUseCase;
+import com.ironcore.application.auth.usecase.LogoutCommand;
 import com.ironcore.application.auth.usecase.LogoutUseCase;
+import com.ironcore.application.auth.usecase.RefreshSessionUseCase;
 import com.ironcore.application.exception.UserInactiveException;
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
+import com.ironcore.domain.auth.repository.AuthSessionRepository;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.UserId;
+import com.ironcore.infrastructure.security.cookie.AccessTokenCookieFactory;
+import com.ironcore.infrastructure.security.cookie.RefreshTokenCookieFactory;
 import com.ironcore.infrastructure.security.jwt.JwtAccessTokenValidator;
 import com.ironcore.infrastructure.security.jwt.exception.JwtTokenConfigurationException;
 import com.ironcore.infrastructure.security.jwt.exception.JwtTokenValidationException;
@@ -22,6 +30,7 @@ import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -32,9 +41,9 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -44,9 +53,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Import({AccessTokenCookieFactory.class, RefreshTokenCookieFactory.class})
 @WebMvcTest(AuthController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class AuthControllerTest {
+    @MockitoBean
+    private AuthenticationAttemptLimiter attemptLimiter;
+
+    @MockitoBean
+    private AuthSessionRepository authSessionRepository;
+
 
     private static final String LOGIN_ENDPOINT = "/api/auth/login";
 
@@ -67,6 +83,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private LogoutUseCase logoutUseCase;
+
+    @MockitoBean
+    private RefreshSessionUseCase refreshSessionUseCase;
 
     @MockitoBean
     private ErrorLogPublisher errorLogPublisher;
@@ -96,9 +115,9 @@ class AuthControllerTest {
             LoginRequest request = new LoginRequest("renan@example.com", "StrongPass123@");
             LocalDateTime expiresAt = LocalDateTime.now(clock).plusMinutes(60);
             LoginResult result = new LoginResult(
-                    "access-token",
-                    "Bearer",
-                    expiresAt,
+                    new SessionCredentials(
+                            new GeneratedAccessToken("access-token", "Bearer", expiresAt),
+                            "r".repeat(43), clock.instant().plusSeconds(604800)),
                     new UserId(1L),
                     new Email("renan@example.com"),
                     "Renan",
@@ -117,8 +136,8 @@ class AuthControllerTest {
                     .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Secure")))
                     .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("HttpOnly")))
                     .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("SameSite=None")))
-                    .andExpect(jsonPath("$.accessToken").value("access-token"))
-                    .andExpect(jsonPath("$.tokenType").value("Bearer"))
+                    .andExpect(jsonPath("$.accessToken").doesNotExist())
+                    .andExpect(jsonPath("$.tokenType").doesNotExist())
                     .andExpect(jsonPath("$.expiresAt").value(expiresAt.toString()))
                     .andExpect(jsonPath("$.userId").value(1L))
                     .andExpect(jsonPath("$.email").value("renan@example.com"))
@@ -224,7 +243,7 @@ class AuthControllerTest {
                     .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("HttpOnly")))
                     .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("SameSite=None")));
 
-            verify(logoutUseCase).execute();
+            verify(logoutUseCase).execute(new LogoutCommand(null, null, null));
         }
     }
 }

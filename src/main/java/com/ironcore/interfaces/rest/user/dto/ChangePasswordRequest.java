@@ -16,4 +16,8 @@ public record ChangePasswordRequest(
         @Schema(format = "password")
         String confirmNewPassword
 ) {
+    @Override
+    public String toString() {
+        return "ChangePasswordRequest[currentPassword=[REDACTED], newPassword=[REDACTED], confirmNewPassword=[REDACTED]]";
+    }
 }

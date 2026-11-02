@@ -11,4 +11,8 @@ public record BootstrapSingleUserCommand(
         String rawPassword,
         LocalDateTime createdAt
 ) {
+    @Override
+    public String toString() {
+        return "BootstrapSingleUserCommand[rawPassword=[REDACTED]]";
+    }
 }

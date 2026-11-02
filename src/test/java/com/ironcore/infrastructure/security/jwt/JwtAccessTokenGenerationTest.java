@@ -17,6 +17,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
+import static com.ironcore.domain.auth.AuthSessionTestFactory.sessionId;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
@@ -60,6 +61,7 @@ class JwtAccessTokenGenerationTest {
             assertThat(decodedJWT.getSubject()).isEqualTo("1");
             assertThat(decodedJWT.getClaim("email").asString()).isEqualTo("renan@example.com");
             assertThat(decodedJWT.getClaim("mustChangePassword").asBoolean()).isTrue();
+            assertThat(decodedJWT.getClaim("sid").asString()).isEqualTo(sessionId().value().toString());
             assertThat(decodedJWT.getExpiresAt()).isNotNull();
         }
     }
@@ -88,6 +90,15 @@ class JwtAccessTokenGenerationTest {
         }
     }
 
+    @Test
+    void accessTokenCannotOutliveItsSession() {
+        Instant sessionExpiresAt = clock.instant().plusSeconds(30);
+        var token = generator.generate(new AccessTokenSubject(new UserId(1L), new Email("renan@example.com"),
+                false, sessionId(), sessionExpiresAt));
+        assertThat(JWT.decode(token.value()).getExpiresAtAsInstant()).isEqualTo(sessionExpiresAt);
+        assertThat(token.expiresAt()).isEqualTo(LocalDateTime.ofInstant(sessionExpiresAt, clock.getZone()));
+    }
+
     private JwtTokenProperties validProperties() {
         JwtTokenProperties properties = new JwtTokenProperties();
         properties.setSecret(SECRET);
@@ -101,7 +112,9 @@ class JwtAccessTokenGenerationTest {
         return new AccessTokenSubject(
                 new UserId(1L),
                 new Email("renan@example.com"),
-                true
+                true,
+                sessionId(),
+                clock.instant().plusSeconds(86400)
         );
     }
 }

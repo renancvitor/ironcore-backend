@@ -14,4 +14,8 @@ public record RawPassword(String value) {
         }
     }
 
+    @Override
+    public String toString() {
+        return "RawPassword[value=[REDACTED]]";
+    }
 }

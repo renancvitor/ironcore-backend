@@ -6,6 +6,7 @@ import com.ironcore.application.workoutplanning.workoutday.create.*;
 import com.ironcore.application.workoutplanning.workoutday.delete.*;
 import com.ironcore.application.workoutplanning.workoutday.reorder.*;
 import com.ironcore.application.workoutplanning.workoutday.update.*;
+import com.ironcore.domain.auth.repository.AuthSessionRepository;
 import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.UserId;
 import com.ironcore.domain.workoutplanning.workoutcycle.valueobject.WorkoutCycleId;
@@ -24,6 +25,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 
 import static com.ironcore.interfaces.rest.support.security.AuthenticatedUserRequestPostProcessorFactory.authenticatedUser;
@@ -35,6 +37,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(WorkoutDayController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class WorkoutDayControllerTest {
+    @MockitoBean
+    private AuthSessionRepository authSessionRepository;
+
+    @MockitoBean
+    private Clock clock;
+
     private static final String ENDPOINT = "/api/users/me/workout-days";
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;

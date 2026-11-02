@@ -1,11 +1,13 @@
 package com.ironcore.interfaces.rest.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ironcore.application.auth.service.AuthenticationAttemptLimiter;
+import com.ironcore.domain.person.enums.SexType;
+import com.ironcore.infrastructure.persistence.auth.repository.AuthSessionJpaRepository;
 import com.ironcore.infrastructure.persistence.person.entity.PersonEntity;
 import com.ironcore.infrastructure.persistence.person.repository.PersonJpaRepository;
 import com.ironcore.infrastructure.persistence.user.entity.UserEntity;
 import com.ironcore.infrastructure.persistence.user.repository.UserJpaRepository;
-import com.ironcore.domain.person.enums.SexType;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,11 +19,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -35,7 +40,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 })
 @AutoConfigureMockMvc
 @ActiveProfiles({"prod", "test"})
+@MockitoBean(types = AuthenticationAttemptLimiter.class)
 class ProductionSecurityIntegrationTest {
+    @Autowired
+    private AuthSessionJpaRepository authSessions;
+
     private static final String ORIGIN = "https://app.ironcore.test";
     private static final String EMAIL = "security@ironcore.test";
     private static final String PASSWORD = "StrongPass123@";
@@ -47,6 +56,7 @@ class ProductionSecurityIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        authSessions.deleteAll();
         users.deleteAll();
         persons.deleteAll();
         var now = LocalDateTime.now();
@@ -76,7 +86,7 @@ class ProductionSecurityIntegrationTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"/api/auth/login", "/api/auth/logout", "/api/users/change-initial-password"})
+    @ValueSource(strings = {"/api/auth/login", "/api/auth/logout", "/api/auth/refresh", "/api/users/change-initial-password"})
     void rejectsMissingAndInvalidCsrfOnPublicWrites(String path) throws Exception {
         mvc.perform(post(path).header("Origin", ORIGIN).contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isForbidden());
@@ -144,6 +154,48 @@ class ProductionSecurityIntegrationTest {
     void doesNotExposeOpenApiInProduction(String path) throws Exception {
         mvc.perform(get(path)).andExpect(status().isNotFound());
     }
+
+    @Test
+    void exposesRetryAfterToTheAllowedOriginOnRateLimitedResponses() throws Exception {
+        org.mockito.Mockito.doThrow(new com.ironcore.application.exception.AuthenticationRateLimitException(30))
+                .when(applicationLimiter).checkClientIp(org.mockito.ArgumentMatchers.anyString());
+        var csrf = csrf();
+        mvc.perform(post("/api/auth/login").servletPath("/api/auth/login").header("Origin", ORIGIN)
+                        .cookie(csrf.cookie()).header(csrf.header(), csrf.token())
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(header().string("Retry-After", "30"))
+                .andExpect(header().string("Access-Control-Expose-Headers", "Retry-After"))
+                .andExpect(header().string("Access-Control-Allow-Origin", ORIGIN));
+    }
+
+    @Test
+    void secureResponsesKeepDefaultSecurityHeadersAndHideActuatorDetails() throws Exception {
+        mvc.perform(get("/api/auth/csrf").secure(true))
+                .andExpect(status().isOk())
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+                .andExpect(header().string("X-Frame-Options", "DENY"))
+                .andExpect(header().string("Strict-Transport-Security", containsString("max-age=")))
+                .andExpect(header().string("Cache-Control", containsString("no-store")));
+        mvc.perform(get("/actuator/env")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/actuator/health")).andExpect(jsonPath("$.components").doesNotExist());
+    }
+
+    @Test
+    void oversizedNewPasswordIsValidationErrorAndPreservesTheCurrentSession() throws Exception {
+        Cookie access = login(PASSWORD, csrf()).getResponse().getCookie("access_token");
+        var token = csrf();
+        String oversized = "a".repeat(73);
+        mvc.perform(post("/api/users/me/change-password").cookie(access, token.cookie())
+                        .header(token.header(), token.token()).contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(Map.of("currentPassword", PASSWORD,
+                                "newPassword", oversized, "confirmNewPassword", oversized))))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.message", containsString("72")));
+        assertThat(encoder.matches(PASSWORD, users.findAll().getFirst().getPasswordHash())).isTrue();
+        mvc.perform(get("/api/users/me").cookie(access)).andExpect(status().isOk());
+    }
+
+    @Autowired AuthenticationAttemptLimiter applicationLimiter;
 
     private MvcResult login(String password, Token csrf) throws Exception {
         return mvc.perform(post("/api/auth/login").header("Origin", ORIGIN).cookie(csrf.cookie())

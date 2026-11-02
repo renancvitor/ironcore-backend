@@ -50,6 +50,34 @@ class JwtAccessTokenValidatorTest {
     class TokenValidation {
 
         @Test
+        void shouldRejectTokenWithoutSessionId() {
+            String token = JWT.create()
+                    .withIssuer(ISSUER)
+                    .withSubject("1")
+                    .withClaim("email", "renan@example.com")
+                    .withClaim("mustChangePassword", false)
+                    .withExpiresAt(Instant.now().plusSeconds(3600))
+                    .sign(Algorithm.HMAC256(SECRET));
+
+            assertThatExceptionOfType(JwtTokenValidationException.class)
+                    .isThrownBy(() -> validator.validate(token));
+        }
+
+        @Test
+        void shouldFailWhenExpirationIsMissing() {
+            String token = JWT.create()
+                    .withIssuer(ISSUER)
+                    .withSubject("1")
+                    .withClaim("email", "renan@example.com")
+                    .withClaim("mustChangePassword", true)
+                    .sign(Algorithm.HMAC256(SECRET));
+
+            assertThatExceptionOfType(JwtTokenValidationException.class)
+                    .isThrownBy(() -> validator.validate(token))
+                    .withMessage("JWT sem expiração.");
+        }
+
+        @Test
         void shouldFailWhenTokenIsNull() {
             String token = null;
 
@@ -135,6 +163,28 @@ class JwtAccessTokenValidatorTest {
         }
     }
 
+    @Test
+    void rejectsUnsignedTokensOtherAlgorithmsAndForeignSignatures() {
+        for (Algorithm algorithm : java.util.List.of(Algorithm.none(), Algorithm.HMAC512(SECRET),
+                Algorithm.HMAC256("another-secret-with-at-least-thirty-two-bytes"))) {
+            String token = JWT.create().withIssuer(ISSUER).withSubject("1")
+                    .withClaim("email", "renan@example.com").withClaim("mustChangePassword", false)
+                    .withClaim("sid", "38bd6914-32e4-4bc8-afd2-deba635aa64c")
+                    .withExpiresAt(Instant.now().plusSeconds(3600)).sign(algorithm);
+            assertThatExceptionOfType(JwtTokenValidationException.class).isThrownBy(() -> validator.validate(token));
+        }
+    }
+
+    @Test
+    void rejectsPreviousSigningKeyAfterSecretRotation() {
+        String previous = validToken();
+        String replacement = "replacement-secret-with-at-least-thirty-two-bytes";
+        properties.setSecret(replacement);
+        assertThatExceptionOfType(JwtTokenValidationException.class).isThrownBy(() -> validator.validate(previous));
+        assertThat(validator.validate(token(ISSUER, "1", "renan@example.com", false, replacement)).userId())
+                .isEqualTo(new UserId(1L));
+    }
+
     private JwtTokenProperties validProperties() {
         JwtTokenProperties properties = new JwtTokenProperties();
         properties.setSecret(SECRET);
@@ -183,6 +233,7 @@ class JwtAccessTokenValidatorTest {
                 .withSubject(subject)
                 .withClaim("email", email)
                 .withClaim("mustChangePassword", mustChangePassword)
+                .withClaim("sid", "38bd6914-32e4-4bc8-afd2-deba635aa64c")
                 .withExpiresAt(Date.from(Instant.now().plus(1, ChronoUnit.HOURS)))
                 .sign(Algorithm.HMAC256(secret));
     }
