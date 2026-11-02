@@ -8,6 +8,7 @@ import com.ironcore.domain.user.valueobject.PasswordHash;
 import com.ironcore.infrastructure.exception.PersistenceException;
 import com.ironcore.infrastructure.persistence.person.entity.PersonEntity;
 import com.ironcore.infrastructure.persistence.person.repository.PersonJpaRepository;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -49,6 +50,9 @@ class UserRepositoryAdapterIntegrationTest {
     @Autowired
     private PersonJpaRepository personJpaRepository;
 
+    @Autowired
+    private EntityManager entityManager;
+
     private UserRepositoryAdapter adapter;
     private PersonEntity person;
 
@@ -66,7 +70,7 @@ class UserRepositoryAdapterIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        adapter = new UserRepositoryAdapter(userJpaRepository, personJpaRepository);
+        adapter = new UserRepositoryAdapter(userJpaRepository, personJpaRepository, entityManager);
         person = createPerson("Renan");
     }
 

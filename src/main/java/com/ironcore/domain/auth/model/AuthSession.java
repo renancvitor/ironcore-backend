@@ -15,10 +15,11 @@ public class AuthSession {
     private final Instant createdAt;
     private final Instant expiresAt;
     private Instant revokedAt;
+    private String refreshTokenHash;
     private final Long version;
 
     private AuthSession(AuthSessionId id, UserId userId, Instant createdAt, Instant expiresAt, Instant revokedAt,
-                        Long version) {
+                        Long version, String refreshTokenHash) {
         this.id = requireNonNull(id, "Dados obrigatórios da sessão não informados.");
         this.userId = requireNonNull(userId, "Dados obrigatórios da sessão não informados.");
         this.createdAt = requireNonNull(createdAt, "Dados obrigatórios da sessão não informados.");
@@ -27,15 +28,31 @@ public class AuthSession {
                 revokedAt, "Revogação deve ser informada e não pode anteceder a criação."
         );
         this.version = requiredNonNullAndPositive(version, "Versão da sessão inválida.");
+        this.refreshTokenHash = refreshTokenHash == null ? null : validateRefreshTokenHash(refreshTokenHash);
     }
 
-    public static AuthSession open(AuthSessionId id, UserId userId, Instant createdAt, Instant expiresAt) {
-        return new AuthSession(id, userId, createdAt, expiresAt, null, null);
+    public static AuthSession open(AuthSessionId id, UserId userId, Instant createdAt, Instant expiresAt,
+                                   String refreshTokenHash) {
+        return new AuthSession(id, userId, createdAt, expiresAt, null, null, validateRefreshTokenHash(refreshTokenHash));
     }
 
     public static AuthSession restore(AuthSessionId id, UserId userId, Instant createdAt, Instant expiresAt,
-                                      Instant revokedAt, Long version) {
-        return new AuthSession(id, userId, createdAt, expiresAt, revokedAt, version);
+                                      Instant revokedAt, Long version, String refreshTokenHash) {
+        return new AuthSession(id, userId, createdAt, expiresAt, revokedAt, version, refreshTokenHash);
+    }
+
+    public void rotateRefreshToken(String refreshTokenHash, Instant now) {
+        if (!isActiveAt(now)) {
+            throw new InvalidAuthSessionException("Sessão expirada ou revogada.");
+        }
+        this.refreshTokenHash = validateRefreshTokenHash(refreshTokenHash);
+    }
+
+    private static String validateRefreshTokenHash(String hash) {
+        if (hash == null || !hash.matches("[0-9a-f]{64}")) {
+            throw new InvalidAuthSessionException("Hash de refresh token inválido.");
+        }
+        return hash;
     }
 
     public boolean isActiveAt(Instant instant) {

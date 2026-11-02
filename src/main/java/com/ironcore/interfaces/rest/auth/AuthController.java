@@ -1,12 +1,14 @@
 package com.ironcore.interfaces.rest.auth;
 
-import com.ironcore.application.auth.port.GeneratedAccessToken;
+import com.ironcore.application.auth.port.SessionCredentials;
 import com.ironcore.application.auth.usecase.*;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
 import com.ironcore.infrastructure.security.cookie.AccessTokenCookieFactory;
+import com.ironcore.infrastructure.security.cookie.RefreshTokenCookieFactory;
 import com.ironcore.interfaces.rest.auth.api.AuthApi;
 import com.ironcore.interfaces.rest.auth.dto.LoginRequest;
 import com.ironcore.interfaces.rest.auth.dto.LoginResponse;
+import com.ironcore.interfaces.rest.auth.dto.RefreshResponse;
 import com.ironcore.interfaces.rest.auth.mapper.AuthRestMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -16,6 +18,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,6 +33,8 @@ public class AuthController implements AuthApi {
     private final LogoutUseCase logoutUseCase;
     private final CsrfTokenRepository csrfTokenRepository;
     private final AccessTokenCookieFactory accessTokenCookieFactory;
+    private final RefreshTokenCookieFactory refreshTokenCookieFactory;
+    private final RefreshSessionUseCase refreshSessionUseCase;
 
     @Override
     @PostMapping("/login")
@@ -45,34 +50,41 @@ public class AuthController implements AuthApi {
         csrfTokenRepository.saveToken(null, servletRequest, servletResponse);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, accessTokenCookieFactory.create(
-                        new GeneratedAccessToken(
-                                result.accessToken(),
-                                result.tokenType(),
-                                result.expiresAt()
-                        )
-                ))
+                .header(HttpHeaders.SET_COOKIE, accessTokenCookieFactory.create(result.credentials().accessToken()),
+                        refreshTokenCookieFactory.create(result.credentials()))
                 .body(response);
+    }
+
+    @Override
+    @PostMapping("/refresh")
+    public ResponseEntity<RefreshResponse> refresh(
+            @CookieValue(name = "refresh_token", required = false) String refreshToken
+    ) {
+        SessionCredentials credentials = refreshSessionUseCase.execute(refreshToken);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, accessTokenCookieFactory.create(credentials.accessToken()),
+                        refreshTokenCookieFactory.create(credentials))
+                .body(new RefreshResponse(credentials.accessToken().expiresAt()));
     }
 
     @Override
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser,
+            @CookieValue(name = "refresh_token", required = false) String refreshToken,
             HttpServletRequest servletRequest,
             HttpServletResponse servletResponse
     ) {
-        if (authenticatedUser != null) {
-            logoutUseCase.execute(new LogoutCommand(
-                    authenticatedUser.userId(),
-                    authenticatedUser.sessionId()
-            ));
-        }
+        logoutUseCase.execute(new LogoutCommand(
+                authenticatedUser == null ? null : authenticatedUser.userId(),
+                authenticatedUser == null ? null : authenticatedUser.sessionId(),
+                refreshToken
+        ));
 
         csrfTokenRepository.saveToken(null, servletRequest, servletResponse);
 
         return ResponseEntity.noContent()
-                .header(HttpHeaders.SET_COOKIE, accessTokenCookieFactory.clear())
+                .header(HttpHeaders.SET_COOKIE, accessTokenCookieFactory.clear(), refreshTokenCookieFactory.clear())
                 .build();
     }
 }

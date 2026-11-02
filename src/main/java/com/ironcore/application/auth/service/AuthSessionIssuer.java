@@ -2,7 +2,8 @@ package com.ironcore.application.auth.service;
 
 import com.ironcore.application.auth.port.AccessTokenGenerator;
 import com.ironcore.application.auth.port.AccessTokenSubject;
-import com.ironcore.application.auth.port.GeneratedAccessToken;
+import com.ironcore.application.auth.port.RefreshTokenGenerator;
+import com.ironcore.application.auth.port.SessionCredentials;
 import com.ironcore.domain.auth.model.AuthSession;
 import com.ironcore.domain.auth.repository.AuthSessionRepository;
 import com.ironcore.domain.auth.valueobject.AuthSessionId;
@@ -24,26 +25,30 @@ public class AuthSessionIssuer {
     private final AuthSessionRepository authSessionRepository;
     private final AccessTokenGenerator accessTokenGenerator;
     private final Clock clock;
+    private final RefreshTokenGenerator refreshTokenGenerator;
 
-    public GeneratedAccessToken issue(User user) {
+    public SessionCredentials issue(User user) {
         Instant now = clock.instant();
+        String refreshToken = refreshTokenGenerator.generate();
 
         AuthSession session = authSessionRepository.save(
                 AuthSession.open(
                         new AuthSessionId(UUID.randomUUID()),
                         user.getId(),
                         now,
-                        now.plus(SESSION_DURATION)
+                        now.plus(SESSION_DURATION),
+                        refreshTokenGenerator.hash(refreshToken)
                 )
         );
 
-        return accessTokenGenerator.generate(
+        return new SessionCredentials(accessTokenGenerator.generate(
                 new AccessTokenSubject(
                         user.getId(),
                         user.getEmail(),
                         user.mustChangePassword(),
-                        session.getId()
+                        session.getId(),
+                        session.getExpiresAt()
                 )
-        );
+        ), refreshToken, session.getExpiresAt());
     }
 }

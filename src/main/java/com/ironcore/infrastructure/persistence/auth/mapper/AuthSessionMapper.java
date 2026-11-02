@@ -25,6 +25,7 @@ public final class AuthSessionMapper {
             entity.setExpiresAt(session.getExpiresAt());
             entity.setRevokedAt(session.getRevokedAt());
             entity.setVersion(session.getVersion());
+            entity.setRefreshTokenHash(session.getRefreshTokenHash());
 
             return entity;
         } catch (RuntimeException exception) {
@@ -40,7 +41,8 @@ public final class AuthSessionMapper {
                     entity.getCreatedAt(),
                     entity.getExpiresAt(),
                     entity.getRevokedAt(),
-                    entity.getVersion()
+                    entity.getVersion(),
+                    entity.getRefreshTokenHash()
             );
         } catch (RuntimeException exception) {
             throw new DataMappingException("Falha ao converter sessão de entidade para domínio.", exception);

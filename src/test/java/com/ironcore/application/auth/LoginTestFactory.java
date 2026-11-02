@@ -1,9 +1,11 @@
 package com.ironcore.application.auth;
 
 import com.ironcore.application.auth.port.GeneratedAccessToken;
+import com.ironcore.application.auth.port.SessionCredentials;
 import com.ironcore.application.auth.usecase.LoginCommand;
 import com.ironcore.domain.user.valueobject.Email;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 public final class LoginTestFactory {
@@ -18,6 +20,11 @@ public final class LoginTestFactory {
                 new Email("renan@example.com"),
                 "StrongPass123@"
         );
+    }
+
+    public static SessionCredentials sessionCredentials() {
+        return new SessionCredentials(generatedAccessToken(), "r".repeat(43),
+                Instant.parse("2030-01-01T00:00:00Z"));
     }
 
     public static GeneratedAccessToken generatedAccessToken() {

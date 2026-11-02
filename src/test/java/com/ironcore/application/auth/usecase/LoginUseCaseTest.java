@@ -1,5 +1,6 @@
 package com.ironcore.application.auth.usecase;
 
+import com.ironcore.application.auth.LoginTestFactory;
 import com.ironcore.application.auth.port.GeneratedAccessToken;
 import com.ironcore.application.auth.service.AuthSessionIssuer;
 import com.ironcore.application.exception.InitialPasswordChangeRequiredException;
@@ -55,13 +56,14 @@ class LoginUseCaseTest {
                     .thenReturn(Optional.of(user));
             when(passwordHashingService.matches(new RawPassword(command.rawPassword()), user.getPasswordHash()))
                     .thenReturn(true);
-            when(authSessionIssuer.issue(user)).thenReturn(accessToken);
+            var credentials = LoginTestFactory.sessionCredentials();
+            when(authSessionIssuer.issue(user)).thenReturn(credentials);
 
             LoginResult result = useCase.execute(command);
 
-            assertThat(result.accessToken()).isEqualTo(accessToken.value());
-            assertThat(result.tokenType()).isEqualTo(accessToken.tokenType());
-            assertThat(result.expiresAt()).isEqualTo(accessToken.expiresAt());
+            assertThat(result.credentials().accessToken().value()).isEqualTo(accessToken.value());
+            assertThat(result.credentials().accessToken().tokenType()).isEqualTo(accessToken.tokenType());
+            assertThat(result.credentials().accessToken().expiresAt()).isEqualTo(accessToken.expiresAt());
             assertThat(result.userId()).isEqualTo(user.getId());
             assertThat(result.email()).isEqualTo(user.getEmail());
             assertThat(result.nickname()).isEqualTo(user.getNickname());

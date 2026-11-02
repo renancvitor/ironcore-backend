@@ -11,6 +11,7 @@ import com.ironcore.infrastructure.persistence.person.entity.PersonEntity;
 import com.ironcore.infrastructure.persistence.person.repository.PersonJpaRepository;
 import com.ironcore.infrastructure.persistence.user.entity.UserEntity;
 import com.ironcore.infrastructure.persistence.user.mapper.UserMapper;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -23,12 +24,14 @@ public class UserRepositoryAdapter implements UserRepository {
 
     private final UserJpaRepository userJpaRepository;
     private final PersonJpaRepository personJpaRepository;
+    private final EntityManager entityManager;
 
     @Override
     public Optional<User> findByIdForUpdate(UserId id) {
         Optional<UserEntity> entity;
         try {
             entity = userJpaRepository.findLockedById(id.value());
+            entity.ifPresent(entityManager::refresh);
         } catch (RuntimeException exception) {
             throw new PersistenceException("Falha ao bloquear usuário por id.", exception);
         }
@@ -45,6 +48,7 @@ public class UserRepositoryAdapter implements UserRepository {
         Optional<UserEntity> entity;
         try {
             entity = userJpaRepository.findLockedByEmail(email.value());
+            entity.ifPresent(entityManager::refresh);
         } catch (RuntimeException exception) {
             throw new PersistenceException("Falha ao bloquear usuário por email.", exception);
         }

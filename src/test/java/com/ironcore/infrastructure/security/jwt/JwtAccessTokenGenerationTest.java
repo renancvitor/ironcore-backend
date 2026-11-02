@@ -90,6 +90,15 @@ class JwtAccessTokenGenerationTest {
         }
     }
 
+    @Test
+    void accessTokenCannotOutliveItsSession() {
+        Instant sessionExpiresAt = clock.instant().plusSeconds(30);
+        var token = generator.generate(new AccessTokenSubject(new UserId(1L), new Email("renan@example.com"),
+                false, sessionId(), sessionExpiresAt));
+        assertThat(JWT.decode(token.value()).getExpiresAtAsInstant()).isEqualTo(sessionExpiresAt);
+        assertThat(token.expiresAt()).isEqualTo(LocalDateTime.ofInstant(sessionExpiresAt, clock.getZone()));
+    }
+
     private JwtTokenProperties validProperties() {
         JwtTokenProperties properties = new JwtTokenProperties();
         properties.setSecret(SECRET);
@@ -104,7 +113,8 @@ class JwtAccessTokenGenerationTest {
                 new UserId(1L),
                 new Email("renan@example.com"),
                 true,
-                sessionId()
+                sessionId(),
+                clock.instant().plusSeconds(86400)
         );
     }
 }

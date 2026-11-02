@@ -18,6 +18,7 @@ import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.RawPassword;
 import com.ironcore.domain.user.valueobject.UserId;
 import com.ironcore.infrastructure.security.cookie.AccessTokenCookieFactory;
+import com.ironcore.infrastructure.security.cookie.RefreshTokenCookieFactory;
 import com.ironcore.infrastructure.security.jwt.JwtAccessTokenValidator;
 import com.ironcore.interfaces.rest.user.dto.ChangeNicknameRequest;
 import com.ironcore.interfaces.rest.user.dto.ChangePasswordRequest;
@@ -49,6 +50,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UserControllerTest {
     @MockitoBean
     private AccessTokenCookieFactory accessTokenCookieFactory;
+
+    @MockitoBean
+    private RefreshTokenCookieFactory refreshTokenCookieFactory;
 
     @MockitoBean
     private AuthSessionRepository authSessionRepository;
@@ -94,9 +98,9 @@ class UserControllerTest {
 
         @Test
         void shouldReturnNoContentWhenPasswordIsChanged() throws Exception {
-            var token = com.ironcore.application.auth.LoginTestFactory.generatedAccessToken();
+            var token = com.ironcore.application.auth.LoginTestFactory.sessionCredentials();
             when(changePasswordUseCase.execute(any())).thenReturn(token);
-            when(accessTokenCookieFactory.create(token)).thenReturn("access_token=new-token; HttpOnly; Secure; Path=/");
+            when(accessTokenCookieFactory.create(token.accessToken())).thenReturn("access_token=new-token; HttpOnly; Secure; Path=/");
             ChangePasswordRequest request = new ChangePasswordRequest(
                     "OldPassword",
                     "NewPassword",
@@ -110,7 +114,7 @@ class UserControllerTest {
                     .andExpect(status().isNoContent())
                     .andExpect(content().string(""));
 
-            verify(accessTokenCookieFactory).create(token);
+            verify(accessTokenCookieFactory).create(token.accessToken());
 
             verify(changePasswordUseCase).execute(new ChangePasswordCommand(
                     new UserId(1L),

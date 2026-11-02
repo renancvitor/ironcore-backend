@@ -1,6 +1,6 @@
 package com.ironcore.interfaces.rest.user;
 
-import com.ironcore.application.auth.port.GeneratedAccessToken;
+import com.ironcore.application.auth.port.SessionCredentials;
 import com.ironcore.application.user.usecase.changepassword.ChangePasswordCommand;
 import com.ironcore.application.user.usecase.changepassword.ChangePasswordUseCase;
 import com.ironcore.application.user.usecase.getauthenticateduser.GetAuthenticatedUserUseCase;
@@ -12,6 +12,7 @@ import com.ironcore.application.user.usecase.update.ChangeNicknameResult;
 import com.ironcore.application.user.usecase.update.ChangeNicknameUseCase;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
 import com.ironcore.infrastructure.security.cookie.AccessTokenCookieFactory;
+import com.ironcore.infrastructure.security.cookie.RefreshTokenCookieFactory;
 import com.ironcore.interfaces.rest.user.api.UserApi;
 import com.ironcore.interfaces.rest.user.dto.*;
 import com.ironcore.interfaces.rest.user.mapper.UserChangePasswordMapper;
@@ -33,6 +34,7 @@ public class UserController implements UserApi {
     private final GetAuthenticatedUserUseCase getAuthenticatedUserUseCase;
     private final ChangeNicknameUseCase changeNicknameUseCase;
     private final AccessTokenCookieFactory accessTokenCookieFactory;
+    private final RefreshTokenCookieFactory refreshTokenCookieFactory;
 
     @Override
     @PostMapping("/me/change-password")
@@ -41,10 +43,11 @@ public class UserController implements UserApi {
             @RequestBody @Valid ChangePasswordRequest request
     ) {
         ChangePasswordCommand command = UserChangePasswordMapper.toChangePasswordCommand(authenticatedUser, request);
-        GeneratedAccessToken token = changePasswordUseCase.execute(command);
+        SessionCredentials credentials = changePasswordUseCase.execute(command);
 
         return ResponseEntity.noContent()
-                .header(HttpHeaders.SET_COOKIE, accessTokenCookieFactory.create(token))
+                .header(HttpHeaders.SET_COOKIE, accessTokenCookieFactory.create(credentials.accessToken()),
+                        refreshTokenCookieFactory.create(credentials))
                 .build();
     }
 

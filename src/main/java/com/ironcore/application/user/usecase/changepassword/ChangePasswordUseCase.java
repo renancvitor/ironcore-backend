@@ -1,6 +1,6 @@
 package com.ironcore.application.user.usecase.changepassword;
 
-import com.ironcore.application.auth.port.GeneratedAccessToken;
+import com.ironcore.application.auth.port.SessionCredentials;
 import com.ironcore.application.auth.service.AuthSessionIssuer;
 import com.ironcore.application.user.service.UserPasswordChangeService;
 import com.ironcore.domain.user.model.User;
@@ -16,7 +16,7 @@ public class ChangePasswordUseCase {
     private final AuthSessionIssuer authSessionIssuer;
 
     @Transactional
-    public GeneratedAccessToken execute(ChangePasswordCommand command) {
+    public SessionCredentials execute(ChangePasswordCommand command) {
         User user = userPasswordChangeService.changePassword(command);
 
         return authSessionIssuer.issue(user);

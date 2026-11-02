@@ -17,11 +17,14 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -81,6 +84,9 @@ class AuthSecurityIntegrationTest {
 
     @Autowired
     private JwtTokenProperties jwtTokenProperties;
+
+    @Autowired
+    private JdbcTemplate jdbc;
 
     @BeforeEach
     void setUp() {
@@ -270,6 +276,118 @@ class AuthSecurityIntegrationTest {
                     .andExpect(header().stringValues(HttpHeaders.SET_COOKIE, org.hamcrest.Matchers.hasItem(containsString("HttpOnly"))))
                     .andExpect(header().stringValues(HttpHeaders.SET_COOKIE, org.hamcrest.Matchers.hasItem(containsString("SameSite=None"))));
         }
+    }
+
+    @Test
+    void refreshWorksWithExpiredAccessTokenAndDoesNotExposeCredentialsInJson() throws Exception {
+        Cookie refreshToken = loginAndGetRefreshTokenCookie();
+        var result = mockMvc.perform(post("/api/auth/refresh").servletPath("/api/auth/refresh").with(csrf())
+                        .cookie(expiredAccessTokenCookie(), refreshToken))
+                .andExpect(status().isOk())
+                .andExpect(cookie().httpOnly("refresh_token", true))
+                .andExpect(cookie().secure("refresh_token", true))
+                .andExpect(cookie().path("refresh_token", "/api/auth"))
+                .andExpect(cookie().attribute("refresh_token", "SameSite", "None"))
+                .andExpect(cookie().exists("access_token"))
+                .andExpect(jsonPath("$.expiresAt").isString())
+                .andExpect(jsonPath("$.accessToken").doesNotExist())
+                .andExpect(jsonPath("$.refreshToken").doesNotExist())
+                .andReturn();
+
+        Cookie rotated = result.getResponse().getCookie("refresh_token");
+        assertThat(rotated.getValue()).isNotEqualTo(refreshToken.getValue());
+        mockMvc.perform(post("/api/auth/refresh").with(csrf()).cookie(refreshToken))
+                .andExpect(status().isUnauthorized())
+                .andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE));
+        mockMvc.perform(get(AUTHENTICATED_USER_ENDPOINT).cookie(result.getResponse().getCookie("access_token")))
+                .andExpect(status().isOk());
+        mockMvc.perform(post("/api/auth/refresh").with(csrf()).cookie(rotated)).andExpect(status().isOk());
+    }
+
+    @Test
+    void refreshRequiresCsrfAndAValidCredential() throws Exception {
+        Cookie refreshToken = loginAndGetRefreshTokenCookie();
+        mockMvc.perform(post("/api/auth/refresh").cookie(refreshToken)).andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/auth/refresh").with(csrf().useInvalidToken()).cookie(refreshToken))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/auth/refresh").with(csrf())).andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/auth/refresh").with(csrf()).cookie(new Cookie("refresh_token", "malformed")))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/auth/refresh").with(csrf()).cookie(new Cookie("refresh_token", "x".repeat(43))))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/auth/refresh").with(csrf()).cookie(refreshToken)).andExpect(status().isOk());
+    }
+
+    @Test
+    void logoutWithExpiredAccessRevokesOnlyTheSessionIdentifiedByRefresh() throws Exception {
+        Cookie first = loginAndGetRefreshTokenCookie();
+        Cookie second = loginAndGetRefreshTokenCookie();
+        mockMvc.perform(post(LOGOUT_ENDPOINT).servletPath(LOGOUT_ENDPOINT).with(csrf()).cookie(expiredAccessTokenCookie(), first))
+                .andExpect(status().isNoContent())
+                .andExpect(cookie().maxAge("access_token", 0))
+                .andExpect(cookie().maxAge("refresh_token", 0))
+                .andExpect(cookie().path("refresh_token", "/api/auth"));
+        mockMvc.perform(post("/api/auth/refresh").with(csrf()).cookie(first)).andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/auth/refresh").with(csrf()).cookie(second)).andExpect(status().isOk());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"inactive", "initial-password", "revoked", "expired", "legacy"})
+    void refreshRejectsSessionsAndUsersThatCannotAuthenticate(String state) throws Exception {
+        Cookie refreshToken = loginAndGetRefreshTokenCookie();
+        switch (state) {
+            case "inactive" -> jdbc.update("update users set active = false");
+            case "initial-password" -> jdbc.update("update users set must_change_password = true");
+            case "revoked" -> jdbc.update("update auth_sessions set revoked_at = current_timestamp");
+            case "expired" -> jdbc.update("update auth_sessions set created_at = ?, expires_at = ?",
+                    Instant.now().minusSeconds(120), Instant.now().minusSeconds(60));
+            case "legacy" -> jdbc.update("update auth_sessions set refresh_token_hash = null");
+            default -> throw new AssertionError(state);
+        }
+        mockMvc.perform(post("/api/auth/refresh").with(csrf()).cookie(refreshToken)).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void passwordChangeReplacesBothCookiesAndRevokesRefreshOnOtherDevices() throws Exception {
+        Cookie otherDevice = loginAndGetRefreshTokenCookie();
+        var loggedIn = mockMvc.perform(post(LOGIN_ENDPOINT).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new LoginRequest(EMAIL, RAW_PASSWORD))))
+                .andExpect(status().isOk()).andReturn();
+        var changed = mockMvc.perform(post("/api/users/me/change-password").with(csrf())
+                        .cookie(loggedIn.getResponse().getCookie("access_token"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"currentPassword\":\"StrongPass123@\",\"newPassword\":\"NewPass123@\",\"confirmNewPassword\":\"NewPass123@\"}"))
+                .andExpect(status().isNoContent())
+                .andExpect(cookie().exists("access_token"))
+                .andExpect(cookie().exists("refresh_token"))
+                .andReturn();
+        mockMvc.perform(post("/api/auth/refresh").with(csrf()).cookie(otherDevice)).andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/auth/refresh").with(csrf()).cookie(loggedIn.getResponse().getCookie("refresh_token")))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/auth/refresh").with(csrf()).cookie(changed.getResponse().getCookie("refresh_token")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void sessionsCreatedBeforeRefreshSupportKeepTheirAccessAndCanBeRevoked() throws Exception {
+        Cookie accessToken = loginAndGetAccessTokenCookie();
+        jdbc.update("update auth_sessions set refresh_token_hash = null");
+        mockMvc.perform(get(AUTHENTICATED_USER_ENDPOINT).cookie(accessToken)).andExpect(status().isOk());
+        mockMvc.perform(post(LOGOUT_ENDPOINT).servletPath(LOGOUT_ENDPOINT).with(csrf()).cookie(accessToken))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(get(AUTHENTICATED_USER_ENDPOINT).cookie(accessToken)).andExpect(status().isUnauthorized());
+    }
+
+    private Cookie loginAndGetRefreshTokenCookie() throws Exception {
+        var result = mockMvc.perform(post(LOGIN_ENDPOINT).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new LoginRequest(EMAIL, RAW_PASSWORD))))
+                .andExpect(status().isOk())
+                .andExpect(cookie().httpOnly("refresh_token", true))
+                .andExpect(cookie().secure("refresh_token", true))
+                .andReturn();
+        return result.getResponse().getCookie("refresh_token");
     }
 
     private Cookie loginAndGetAccessTokenCookie() throws Exception {

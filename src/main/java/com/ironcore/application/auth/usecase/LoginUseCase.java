@@ -1,6 +1,6 @@
 package com.ironcore.application.auth.usecase;
 
-import com.ironcore.application.auth.port.GeneratedAccessToken;
+import com.ironcore.application.auth.port.SessionCredentials;
 import com.ironcore.application.auth.service.AuthSessionIssuer;
 import com.ironcore.application.exception.InitialPasswordChangeRequiredException;
 import com.ironcore.application.exception.InvalidCredentialsException;
@@ -42,12 +42,10 @@ public class LoginUseCase {
             throw new InitialPasswordChangeRequiredException("Troca de senha inicial obrigatória.");
         }
 
-        GeneratedAccessToken accessToken = authSessionIssuer.issue(user);
+        SessionCredentials credentials = authSessionIssuer.issue(user);
 
         return new LoginResult(
-                accessToken.value(),
-                accessToken.tokenType(),
-                accessToken.expiresAt(),
+                credentials,
                 user.getId(),
                 user.getEmail(),
                 user.getNickname(),

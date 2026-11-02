@@ -1,10 +1,14 @@
 package com.ironcore.interfaces.rest.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ironcore.application.auth.port.GeneratedAccessToken;
+import com.ironcore.application.auth.port.SessionCredentials;
 import com.ironcore.application.auth.usecase.LoginCommand;
 import com.ironcore.application.auth.usecase.LoginResult;
 import com.ironcore.application.auth.usecase.LoginUseCase;
+import com.ironcore.application.auth.usecase.LogoutCommand;
 import com.ironcore.application.auth.usecase.LogoutUseCase;
+import com.ironcore.application.auth.usecase.RefreshSessionUseCase;
 import com.ironcore.application.exception.UserInactiveException;
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
 import com.ironcore.domain.auth.repository.AuthSessionRepository;
@@ -12,6 +16,7 @@ import com.ironcore.domain.user.repository.UserRepository;
 import com.ironcore.domain.user.valueobject.Email;
 import com.ironcore.domain.user.valueobject.UserId;
 import com.ironcore.infrastructure.security.cookie.AccessTokenCookieFactory;
+import com.ironcore.infrastructure.security.cookie.RefreshTokenCookieFactory;
 import com.ironcore.infrastructure.security.jwt.JwtAccessTokenValidator;
 import com.ironcore.infrastructure.security.jwt.exception.JwtTokenConfigurationException;
 import com.ironcore.infrastructure.security.jwt.exception.JwtTokenValidationException;
@@ -47,7 +52,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Import(AccessTokenCookieFactory.class)
+@Import({AccessTokenCookieFactory.class, RefreshTokenCookieFactory.class})
 @WebMvcTest(AuthController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class AuthControllerTest {
@@ -74,6 +79,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private LogoutUseCase logoutUseCase;
+
+    @MockitoBean
+    private RefreshSessionUseCase refreshSessionUseCase;
 
     @MockitoBean
     private ErrorLogPublisher errorLogPublisher;
@@ -103,9 +111,9 @@ class AuthControllerTest {
             LoginRequest request = new LoginRequest("renan@example.com", "StrongPass123@");
             LocalDateTime expiresAt = LocalDateTime.now(clock).plusMinutes(60);
             LoginResult result = new LoginResult(
-                    "access-token",
-                    "Bearer",
-                    expiresAt,
+                    new SessionCredentials(
+                            new GeneratedAccessToken("access-token", "Bearer", expiresAt),
+                            "r".repeat(43), clock.instant().plusSeconds(604800)),
                     new UserId(1L),
                     new Email("renan@example.com"),
                     "Renan",
@@ -231,7 +239,7 @@ class AuthControllerTest {
                     .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("HttpOnly")))
                     .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("SameSite=None")));
 
-            verify(logoutUseCase, never()).execute(any());
+            verify(logoutUseCase).execute(new LogoutCommand(null, null, null));
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.ironcore.infrastructure.persistence.auth.repository;
 
 import com.ironcore.domain.auth.model.AuthSession;
+import com.ironcore.domain.auth.model.AuthSessionReference;
 import com.ironcore.domain.auth.repository.AuthSessionRepository;
 import com.ironcore.domain.auth.valueobject.AuthSessionId;
 import com.ironcore.domain.user.valueobject.UserId;
@@ -10,6 +11,7 @@ import com.ironcore.infrastructure.persistence.auth.entity.AuthSessionEntity;
 import com.ironcore.infrastructure.persistence.auth.mapper.AuthSessionMapper;
 import com.ironcore.infrastructure.persistence.user.entity.UserEntity;
 import com.ironcore.infrastructure.persistence.user.repository.UserJpaRepository;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -25,6 +27,40 @@ public class AuthSessionRepositoryAdapter implements AuthSessionRepository {
 
     private final AuthSessionJpaRepository authSessionJpaRepository;
     private final UserJpaRepository userJpaRepository;
+    private final EntityManager entityManager;
+
+    @Override
+    public Optional<AuthSessionReference> findReferenceByRefreshTokenHash(String hash) {
+        Optional<AuthSessionJpaRepository.SessionReference> reference;
+        try {
+            reference = authSessionJpaRepository.findReferenceByRefreshTokenHash(hash);
+        } catch (RuntimeException exception) {
+            throw new PersistenceException("Falha ao identificar sessão por refresh token.", exception);
+        }
+        try {
+            return reference.map(value -> new AuthSessionReference(
+                    new AuthSessionId(value.getSessionId()), new UserId(value.getUserId())
+            ));
+        } catch (RuntimeException exception) {
+            throw new DataMappingException("Falha ao converter referência da sessão.", exception);
+        }
+    }
+
+    @Override
+    public Optional<AuthSession> findByRefreshTokenHash(String hash) {
+        Optional<AuthSessionEntity> entity;
+        try {
+            entity = authSessionJpaRepository.findByRefreshTokenHash(hash);
+            entity.ifPresent(entityManager::refresh);
+        } catch (RuntimeException exception) {
+            throw new PersistenceException("Falha ao buscar sessão por refresh token.", exception);
+        }
+        try {
+            return entity.map(AuthSessionMapper::toDomain);
+        } catch (RuntimeException exception) {
+            throw new DataMappingException("Falha ao converter sessão para domínio.", exception);
+        }
+    }
 
     @Override
     public AuthSession save(AuthSession session) {

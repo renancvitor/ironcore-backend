@@ -5,6 +5,11 @@ import com.ironcore.domain.user.valueobject.UserId;
 
 public record LogoutCommand(
         UserId userId,
-        AuthSessionId sessionId
+        AuthSessionId sessionId,
+        String refreshToken
 ) {
+    @Override
+    public String toString() {
+        return "LogoutCommand[userId=" + userId + ", sessionId=" + sessionId + ", refreshToken=[REDACTED]]";
+    }
 }

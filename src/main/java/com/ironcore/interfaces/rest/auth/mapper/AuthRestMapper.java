@@ -20,7 +20,7 @@ public final class AuthRestMapper {
 
     public static LoginResponse toResponse(LoginResult result) {
         return new LoginResponse(
-                result.expiresAt(),
+                result.credentials().accessToken().expiresAt(),
                 result.userId().value(),
                 result.email().value(),
                 result.nickname(),

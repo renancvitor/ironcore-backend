@@ -30,7 +30,7 @@ class ChangePasswordUseCaseTest {
         ChangePasswordCommand command = command();
 
         var user = com.ironcore.domain.user.UserTestFactory.activeUser();
-        var token = com.ironcore.application.auth.LoginTestFactory.generatedAccessToken();
+        var token = com.ironcore.application.auth.LoginTestFactory.sessionCredentials();
         org.mockito.Mockito.when(userPasswordChangeService.changePassword(command)).thenReturn(user);
         org.mockito.Mockito.when(authSessionIssuer.issue(user)).thenReturn(token);
         org.assertj.core.api.Assertions.assertThat(changePasswordUseCase.execute(command)).isSameAs(token);

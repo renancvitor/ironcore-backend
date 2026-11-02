@@ -33,6 +33,9 @@ public class AuthSessionEntity {
     @Column(name = "revoked_at")
     private Instant revokedAt;
 
+    @Column(name = "refresh_token_hash", length = 64)
+    private String refreshTokenHash;
+
     @Version
     @Column(nullable = false)
     private Long version;
