@@ -25,6 +25,38 @@ public class UserRepositoryAdapter implements UserRepository {
     private final PersonJpaRepository personJpaRepository;
 
     @Override
+    public Optional<User> findByIdForUpdate(UserId id) {
+        Optional<UserEntity> entity;
+        try {
+            entity = userJpaRepository.findLockedById(id.value());
+        } catch (RuntimeException exception) {
+            throw new PersistenceException("Falha ao bloquear usuário por id.", exception);
+        }
+
+        try {
+            return entity.map(UserMapper::toDomain);
+        } catch (RuntimeException exception) {
+            throw new DataMappingException("Falha ao converter usuário bloqueado para domínio.", exception);
+        }
+    }
+
+    @Override
+    public Optional<User> findByEmailForUpdate(Email email) {
+        Optional<UserEntity> entity;
+        try {
+            entity = userJpaRepository.findLockedByEmail(email.value());
+        } catch (RuntimeException exception) {
+            throw new PersistenceException("Falha ao bloquear usuário por email.", exception);
+        }
+
+        try {
+            return entity.map(UserMapper::toDomain);
+        } catch (RuntimeException exception) {
+            throw new DataMappingException("Falha ao converter usuário bloqueado para domínio.", exception);
+        }
+    }
+
+    @Override
     public User save(User user) {
         PersonEntity personReference = personJpaRepository.getReferenceById(user.getPersonId().value());
         UserEntity entity;

@@ -51,7 +51,7 @@ class LoginUseCaseTest {
             User user = activeUser();
             GeneratedAccessToken accessToken = generatedAccessToken();
 
-            when(userRepository.findByEmail(command.email()))
+            when(userRepository.findByEmailForUpdate(command.email()))
                     .thenReturn(Optional.of(user));
             when(passwordHashingService.matches(new RawPassword(command.rawPassword()), user.getPasswordHash()))
                     .thenReturn(true);
@@ -78,14 +78,14 @@ class LoginUseCaseTest {
         void shouldFailWhenEmailDoesNotExist() {
             LoginCommand command = command();
 
-            when(userRepository.findByEmail(command.email()))
+            when(userRepository.findByEmailForUpdate(command.email()))
                     .thenReturn(Optional.empty());
 
             assertThatExceptionOfType(InvalidCredentialsException.class)
                     .isThrownBy(() -> useCase.execute(command))
                     .withMessage("Credenciais inválidas.");
 
-            verify(userRepository).findByEmail(command.email());
+            verify(userRepository).findByEmailForUpdate(command.email());
             verify(passwordHashingService, never()).matches(any(), any());
             verify(authSessionIssuer, never()).issue(any());
         }
@@ -95,7 +95,7 @@ class LoginUseCaseTest {
             LoginCommand command = command();
             User user = activeUser();
 
-            when(userRepository.findByEmail(command.email()))
+            when(userRepository.findByEmailForUpdate(command.email()))
                     .thenReturn(Optional.of(user));
             when(passwordHashingService.matches(new RawPassword(command.rawPassword()), user.getPasswordHash()))
                     .thenReturn(false);
@@ -104,7 +104,7 @@ class LoginUseCaseTest {
                     .isThrownBy(() -> useCase.execute(command))
                     .withMessage("Credenciais inválidas.");
 
-            verify(userRepository).findByEmail(command.email());
+            verify(userRepository).findByEmailForUpdate(command.email());
             verify(passwordHashingService).matches(new RawPassword(command.rawPassword()), user.getPasswordHash());
             verify(authSessionIssuer, never()).issue(any());
         }
@@ -118,14 +118,14 @@ class LoginUseCaseTest {
             LoginCommand command = command();
             User user = inactiveUser();
 
-            when(userRepository.findByEmail(command.email()))
+            when(userRepository.findByEmailForUpdate(command.email()))
                     .thenReturn(Optional.of(user));
 
             assertThatExceptionOfType(OperationNotAllowedException.class)
                     .isThrownBy(() -> useCase.execute(command))
                     .withMessage("Usuário inativo.");
 
-            verify(userRepository).findByEmail(command.email());
+            verify(userRepository).findByEmailForUpdate(command.email());
             verify(passwordHashingService, never()).matches(any(), any());
             verify(authSessionIssuer, never()).issue(any());
         }
@@ -135,7 +135,7 @@ class LoginUseCaseTest {
             LoginCommand command = command();
             User user = activeUserWithMustChangePasswordTrue();
 
-            when(userRepository.findByEmail(command.email()))
+            when(userRepository.findByEmailForUpdate(command.email()))
                     .thenReturn(Optional.of(user));
             when(passwordHashingService.matches(new RawPassword(command.rawPassword()), user.getPasswordHash()))
                     .thenReturn(true);
@@ -144,7 +144,7 @@ class LoginUseCaseTest {
                     .isThrownBy(() -> useCase.execute(command))
                     .withMessage("Troca de senha inicial obrigatória.");
 
-            verify(userRepository).findByEmail(command.email());
+            verify(userRepository).findByEmailForUpdate(command.email());
             verify(passwordHashingService).matches(new RawPassword(command.rawPassword()), user.getPasswordHash());
             verify(authSessionIssuer, never()).issue(any());
         }

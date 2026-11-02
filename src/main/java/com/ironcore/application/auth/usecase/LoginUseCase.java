@@ -27,7 +27,7 @@ public class LoginUseCase {
         Email email = command.email();
         RawPassword rawPassword = new RawPassword(command.rawPassword());
 
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmailForUpdate(email)
                 .orElseThrow(() -> new InvalidCredentialsException("Credenciais inválidas."));
 
         if (!user.isActive()) {

@@ -18,7 +18,7 @@ public class InitialChangePasswordUseCase {
 
     @Transactional
     public void execute(InitialChangePasswordCommand command) {
-        User user = userRepository.findByEmail(command.email())
+        User user = userRepository.findByEmailForUpdate(command.email())
                 .orElseThrow(() -> new InvalidCredentialsException("Credenciais inválidas."));
 
         userPasswordChangeService.changePassword(

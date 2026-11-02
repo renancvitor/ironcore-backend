@@ -65,7 +65,7 @@ public class UserPasswordChangeService {
     }
 
     public User changePassword(ChangePasswordCommand command, Consumer<User> beforePasswordChange) {
-        User user = userRepository.findById(command.userId())
+        User user = userRepository.findByIdForUpdate(command.userId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
 
         if (!user.isActive()) {
