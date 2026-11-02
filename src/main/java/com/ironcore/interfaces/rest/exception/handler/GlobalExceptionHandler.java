@@ -3,17 +3,18 @@ package com.ironcore.interfaces.rest.exception.handler;
 import com.ironcore.application.exception.*;
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
 import com.ironcore.domain.exception.DomainException;
-import com.ironcore.domain.workoutsession.workoutsession.exception.WorkoutSessionConflictException;
 import com.ironcore.domain.logging.error.enums.ErrorCodeType;
+import com.ironcore.domain.workoutsession.workoutsession.exception.WorkoutSessionConflictException;
 import com.ironcore.infrastructure.exception.*;
-import com.ironcore.infrastructure.security.jwt.exception.JwtTokenException;
 import com.ironcore.infrastructure.security.jwt.exception.JwtTokenConfigurationException;
+import com.ironcore.infrastructure.security.jwt.exception.JwtTokenException;
 import com.ironcore.infrastructure.security.jwt.exception.JwtTokenGenerationException;
 import com.ironcore.infrastructure.security.jwt.exception.JwtTokenValidationException;
 import com.ironcore.interfaces.rest.exception.factory.ApiErrorResponseFactory;
 import com.ironcore.interfaces.rest.exception.factory.FieldErrorResponseFactory;
 import com.ironcore.interfaces.rest.exception.model.ApiErrorResponse;
 import com.ironcore.interfaces.rest.exception.model.FieldErrorResponse;
+import io.micrometer.core.instrument.Metrics;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,16 @@ import java.util.UUID;
 public class GlobalExceptionHandler {
 
     private final ErrorLogPublisher publisher;
+
+    @ExceptionHandler(AuthenticationRateLimitException.class)
+    public ResponseEntity<ApiErrorResponse> handleAuthenticationRateLimitException(
+            AuthenticationRateLimitException exception, HttpServletRequest request
+    ) {
+        Metrics.counter("authentication.rate.limit.rejections").increment();
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", Long.toString(exception.getRetryAfterSeconds()))
+                .body(ApiErrorResponseFactory.create(HttpStatus.TOO_MANY_REQUESTS, exception.getMessage(), request));
+    }
 
     @ExceptionHandler(WorkoutSessionConflictException.class)
     public ResponseEntity<ApiErrorResponse> handleWorkoutSessionConflictException(

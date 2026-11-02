@@ -1,6 +1,7 @@
 package com.ironcore.interfaces.rest.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ironcore.application.auth.service.AuthenticationAttemptLimiter;
 import com.ironcore.application.exception.InvalidCredentialsException;
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
 import com.ironcore.application.user.usecase.changepassword.ChangePasswordCommand;
@@ -48,6 +49,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(UserController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class UserControllerTest {
+    @MockitoBean
+    private AuthenticationAttemptLimiter attemptLimiter;
+
     @MockitoBean
     private AccessTokenCookieFactory accessTokenCookieFactory;
 

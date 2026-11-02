@@ -3,6 +3,7 @@ package com.ironcore.interfaces.rest.workoutsession;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ironcore.IroncoreBackendApplication;
+import com.ironcore.application.auth.service.AuthenticationAttemptLimiter;
 import com.ironcore.application.workoutsession.workoutsession.expire.ExpireWorkoutSessionsUseCase;
 import com.ironcore.domain.person.enums.SexType;
 import com.ironcore.infrastructure.persistence.auth.repository.AuthSessionJpaRepository;
@@ -55,6 +56,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(WorkoutSessionIntegrationTest.TimeConfiguration.class)
 @ActiveProfiles("test")
 @Testcontainers
+@MockitoBean(types = AuthenticationAttemptLimiter.class)
 class WorkoutSessionIntegrationTest {
     @Autowired
     private AuthSessionJpaRepository authSessions;

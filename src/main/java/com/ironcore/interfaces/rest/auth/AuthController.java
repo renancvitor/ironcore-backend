@@ -1,6 +1,8 @@
 package com.ironcore.interfaces.rest.auth;
 
 import com.ironcore.application.auth.port.SessionCredentials;
+import com.ironcore.application.auth.service.AuthenticationAttemptLimiter;
+import com.ironcore.application.exception.InvalidCredentialsException;
 import com.ironcore.application.auth.usecase.*;
 import com.ironcore.infrastructure.security.auth.AuthenticatedUser;
 import com.ironcore.infrastructure.security.cookie.AccessTokenCookieFactory;
@@ -35,6 +37,7 @@ public class AuthController implements AuthApi {
     private final AccessTokenCookieFactory accessTokenCookieFactory;
     private final RefreshTokenCookieFactory refreshTokenCookieFactory;
     private final RefreshSessionUseCase refreshSessionUseCase;
+    private final AuthenticationAttemptLimiter attemptLimiter;
 
     @Override
     @PostMapping("/login")
@@ -44,7 +47,19 @@ public class AuthController implements AuthApi {
             HttpServletResponse servletResponse
     ) {
         LoginCommand command = AuthRestMapper.toCommand(request);
-        LoginResult result = loginUseCase.execute(command);
+        var reservation = attemptLimiter.checkCredentials(command.email());
+        LoginResult result;
+        boolean invalidCredentials = false;
+        try {
+            result = loginUseCase.execute(command);
+        } catch (InvalidCredentialsException exception) {
+            invalidCredentials = true;
+            throw exception;
+        } finally {
+            if (!invalidCredentials) {
+                attemptLimiter.releaseCredentials(command.email(), reservation);
+            }
+        }
         LoginResponse response = AuthRestMapper.toResponse(result);
 
         csrfTokenRepository.saveToken(null, servletRequest, servletResponse);

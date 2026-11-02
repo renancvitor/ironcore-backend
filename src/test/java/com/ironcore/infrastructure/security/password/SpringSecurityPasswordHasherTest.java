@@ -33,6 +33,17 @@ class SpringSecurityPasswordHasherTest {
     class Matches {
 
         @Test
+        void shouldVerifyAgainstAFallbackHashWhenTheAccountDoesNotExist() {
+            PasswordEncoder encoder = org.mockito.Mockito.spy(new BCryptPasswordEncoder());
+            var hasher = new SpringSecurityPasswordHasher(encoder);
+            var password = new RawPassword("UnknownAccountPassword");
+
+            assertThat(hasher.matches(password, null)).isFalse();
+            org.mockito.Mockito.verify(encoder).matches(org.mockito.ArgumentMatchers.eq(password.value()),
+                    org.mockito.ArgumentMatchers.startsWith("$2"));
+        }
+
+        @Test
         void shouldReturnTrueWhenRawPasswordMatchesHash() {
             RawPassword rawPassword = new RawPassword("StrongPassword123");
 

@@ -1,6 +1,8 @@
 package com.ironcore.interfaces.rest.user;
 
 import com.ironcore.application.auth.port.SessionCredentials;
+import com.ironcore.application.auth.service.AuthenticationAttemptLimiter;
+import com.ironcore.application.exception.InvalidCredentialsException;
 import com.ironcore.application.user.usecase.changepassword.ChangePasswordCommand;
 import com.ironcore.application.user.usecase.changepassword.ChangePasswordUseCase;
 import com.ironcore.application.user.usecase.getauthenticateduser.GetAuthenticatedUserUseCase;
@@ -35,6 +37,7 @@ public class UserController implements UserApi {
     private final ChangeNicknameUseCase changeNicknameUseCase;
     private final AccessTokenCookieFactory accessTokenCookieFactory;
     private final RefreshTokenCookieFactory refreshTokenCookieFactory;
+    private final AuthenticationAttemptLimiter attemptLimiter;
 
     @Override
     @PostMapping("/me/change-password")
@@ -43,7 +46,19 @@ public class UserController implements UserApi {
             @RequestBody @Valid ChangePasswordRequest request
     ) {
         ChangePasswordCommand command = UserChangePasswordMapper.toChangePasswordCommand(authenticatedUser, request);
-        SessionCredentials credentials = changePasswordUseCase.execute(command);
+        var reservation = attemptLimiter.checkPasswordChange(command.userId());
+        SessionCredentials credentials;
+        boolean invalidCredentials = false;
+        try {
+            credentials = changePasswordUseCase.execute(command);
+        } catch (InvalidCredentialsException exception) {
+            invalidCredentials = true;
+            throw exception;
+        } finally {
+            if (!invalidCredentials) {
+                attemptLimiter.releasePasswordChange(command.userId(), reservation);
+            }
+        }
 
         return ResponseEntity.noContent()
                 .header(HttpHeaders.SET_COOKIE, accessTokenCookieFactory.create(credentials.accessToken()),
@@ -57,7 +72,19 @@ public class UserController implements UserApi {
             @RequestBody @Valid InitialChangePasswordRequest request
     ) {
         InitialChangePasswordCommand command = UserChangePasswordMapper.toInitialChangePasswordCommand(request);
-        initialChangePasswordUseCase.execute(command);
+        var reservation = attemptLimiter.checkCredentials(command.email());
+
+        boolean invalidCredentials = false;
+        try {
+            initialChangePasswordUseCase.execute(command);
+        } catch (InvalidCredentialsException exception) {
+            invalidCredentials = true;
+            throw exception;
+        } finally {
+            if (!invalidCredentials) {
+                attemptLimiter.releaseCredentials(command.email(), reservation);
+            }
+        }
 
         return ResponseEntity.noContent().build();
     }

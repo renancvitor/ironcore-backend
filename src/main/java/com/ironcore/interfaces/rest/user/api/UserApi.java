@@ -29,6 +29,7 @@ public interface UserApi {
     @ForbiddenResponse
     @NotFoundResponse
     @InternalServerErrorResponse
+    @TooManyRequestsResponse
     ResponseEntity<Void> changePassword(
             AuthenticatedUser authenticatedUser,
             ChangePasswordRequest request
@@ -48,6 +49,7 @@ public interface UserApi {
     @UnprocessableEntityResponse
     @ForbiddenResponse
     @InternalServerErrorResponse
+    @TooManyRequestsResponse
     ResponseEntity<Void>  changeInitialPassword(InitialChangePasswordRequest request);
 
     @Operation(

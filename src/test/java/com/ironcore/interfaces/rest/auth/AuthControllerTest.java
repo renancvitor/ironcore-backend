@@ -3,6 +3,7 @@ package com.ironcore.interfaces.rest.auth;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ironcore.application.auth.port.GeneratedAccessToken;
 import com.ironcore.application.auth.port.SessionCredentials;
+import com.ironcore.application.auth.service.AuthenticationAttemptLimiter;
 import com.ironcore.application.auth.usecase.LoginCommand;
 import com.ironcore.application.auth.usecase.LoginResult;
 import com.ironcore.application.auth.usecase.LoginUseCase;
@@ -56,6 +57,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(AuthController.class)
 @AutoConfigureMockMvc(addFilters = false)
 class AuthControllerTest {
+    @MockitoBean
+    private AuthenticationAttemptLimiter attemptLimiter;
+
     @MockitoBean
     private AuthSessionRepository authSessionRepository;
 

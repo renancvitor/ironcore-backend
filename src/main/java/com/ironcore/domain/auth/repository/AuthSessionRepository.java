@@ -18,5 +18,5 @@ public interface AuthSessionRepository {
 
     Optional<AuthSession> findByRefreshTokenHash(String hash);
 
-    int revokeAllByUserId(UserId userId, Instant revokedAt);
+    void revokeAllByUserId(UserId userId, Instant revokedAt);
 }

@@ -27,15 +27,14 @@ public class LoginUseCase {
         Email email = command.email();
         RawPassword rawPassword = new RawPassword(command.rawPassword());
 
-        User user = userRepository.findByEmailForUpdate(email)
-                .orElseThrow(() -> new InvalidCredentialsException("Credenciais inválidas."));
+        User user = userRepository.findByEmailForUpdate(email).orElse(null);
+        boolean validPassword = passwordHashingService.matches(rawPassword, user == null ? null : user.getPasswordHash());
+        if (user == null || !validPassword) {
+            throw new InvalidCredentialsException("Credenciais inválidas.");
+        }
 
         if (!user.isActive()) {
             throw new UserInactiveException("Usuário inativo.");
-        }
-
-        if (!passwordHashingService.matches(rawPassword, user.getPasswordHash())) {
-            throw new InvalidCredentialsException("Credenciais inválidas.");
         }
 
         if (user.mustChangePassword()) {

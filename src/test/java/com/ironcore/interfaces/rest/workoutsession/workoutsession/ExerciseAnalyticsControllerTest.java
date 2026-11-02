@@ -1,5 +1,7 @@
 package com.ironcore.interfaces.rest.workoutsession.workoutsession;
 
+import com.ironcore.application.auth.service.AuthenticationAttemptLimiter;
+
 import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
@@ -61,6 +63,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(ExerciseAnalyticsController.class)
 @Import(SecurityConfig.class)
+@MockitoBean(types = AuthenticationAttemptLimiter.class)
 class ExerciseAnalyticsControllerTest {
     @MockitoBean
     private AuthSessionRepository authSessionRepository;

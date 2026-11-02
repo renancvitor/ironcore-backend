@@ -7,6 +7,7 @@ import com.ironcore.interfaces.rest.auth.dto.RefreshResponse;
 import com.ironcore.interfaces.rest.openapi.BadRequestResponse;
 import com.ironcore.interfaces.rest.openapi.ForbiddenResponse;
 import com.ironcore.interfaces.rest.openapi.InternalServerErrorResponse;
+import com.ironcore.interfaces.rest.openapi.TooManyRequestsResponse;
 import com.ironcore.interfaces.rest.openapi.UnauthorizedResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -40,6 +41,7 @@ public interface AuthApi {
     @UnauthorizedResponse
     @ForbiddenResponse
     @InternalServerErrorResponse
+    @TooManyRequestsResponse
     ResponseEntity<LoginResponse> login(LoginRequest request, HttpServletRequest servletRequest,
                                         HttpServletResponse servletResponse);
 
@@ -53,6 +55,7 @@ public interface AuthApi {
     @UnauthorizedResponse
     @ForbiddenResponse
     @InternalServerErrorResponse
+    @TooManyRequestsResponse
     ResponseEntity<RefreshResponse> refresh(String refreshToken);
 
     @Operation(

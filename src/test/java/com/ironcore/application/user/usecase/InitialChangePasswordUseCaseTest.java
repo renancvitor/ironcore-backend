@@ -1,6 +1,7 @@
 package com.ironcore.application.user.usecase;
 
 import com.ironcore.application.exception.OperationNotAllowedException;
+import com.ironcore.application.user.service.PasswordHashingService;
 import com.ironcore.application.user.service.UserPasswordChangeService;
 import com.ironcore.application.user.usecase.initialchangepassword.InitialChangePasswordCommand;
 import com.ironcore.application.user.usecase.initialchangepassword.InitialChangePasswordUseCase;
@@ -35,6 +36,9 @@ class InitialChangePasswordUseCaseTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private PasswordHashingService passwordHashingService;
 
     @InjectMocks
     private InitialChangePasswordUseCase initialChangePasswordUseCase;

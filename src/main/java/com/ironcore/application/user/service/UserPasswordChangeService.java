@@ -2,7 +2,6 @@ package com.ironcore.application.user.service;
 
 import com.ironcore.application.exception.BusinessRuleViolationException;
 import com.ironcore.application.exception.InvalidCredentialsException;
-import com.ironcore.application.exception.OperationNotAllowedException;
 import com.ironcore.application.exception.ResourceNotFoundException;
 import com.ironcore.application.exception.UserInactiveException;
 import com.ironcore.application.user.usecase.changepassword.ChangePasswordCommand;
@@ -38,6 +37,10 @@ public class UserPasswordChangeService {
             RawPassword confirmPassword,
             Consumer<User> beforeChangePassword
     ) {
+        if (!passwordHashingService.matches(currentPassword, user.getPasswordHash())) {
+            throw new InvalidCredentialsException("Senha atual inválida.");
+        }
+
         if (!user.isActive()) {
             throw new UserInactiveException("Usuário inativo.");
         }
@@ -46,10 +49,6 @@ public class UserPasswordChangeService {
 
         if (!newPassword.equals(confirmPassword)) {
             throw new BusinessRuleViolationException("A confirmação de senha não confere.");
-        }
-
-        if (!passwordHashingService.matches(currentPassword, user.getPasswordHash())) {
-            throw new InvalidCredentialsException("Senha atual inválida.");
         }
 
         if (passwordHashingService.matches(newPassword, user.getPasswordHash())) {
@@ -67,31 +66,7 @@ public class UserPasswordChangeService {
     public User changePassword(ChangePasswordCommand command, Consumer<User> beforePasswordChange) {
         User user = userRepository.findByIdForUpdate(command.userId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
-
-        if (!user.isActive()) {
-            throw new UserInactiveException("Usuário inativo.");
-        }
-
-        beforePasswordChange.accept(user);
-
-        if (!command.newPassword().equals(command.confirmPassword())) {
-            throw new BusinessRuleViolationException("A confirmação de senha não confere.");
-        }
-
-        if (!passwordHashingService.matches(command.currentPassword(), user.getPasswordHash())) {
-            throw new InvalidCredentialsException("Senha atual inválida.");
-        }
-
-        if (passwordHashingService.matches(command.newPassword(), user.getPasswordHash())) {
-            throw new BusinessRuleViolationException("A nova senha deve ser diferente da senha atual.");
-        }
-
-        PasswordHash newPasswordHash = passwordHashingService.hash(command.newPassword());
-        LocalDateTime updatedAt = LocalDateTime.now(clock);
-
-        user.changePasswordHash(newPasswordHash, updatedAt);
-
-        return saveAndRevokeSessions(user);
+        return changePassword(user, command.currentPassword(), command.newPassword(), command.confirmPassword(), beforePasswordChange);
     }
 
     private User saveAndRevokeSessions(User user) {

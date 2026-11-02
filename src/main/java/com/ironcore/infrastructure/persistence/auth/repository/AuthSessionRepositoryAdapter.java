@@ -117,7 +117,7 @@ public class AuthSessionRepositoryAdapter implements AuthSessionRepository {
     }
 
     @Override
-    public int revokeAllByUserId(UserId userId, Instant revokedAt) {
+    public void revokeAllByUserId(UserId userId, Instant revokedAt) {
         List<AuthSessionEntity> entities;
 
         try {
@@ -143,7 +143,5 @@ public class AuthSessionRepositoryAdapter implements AuthSessionRepository {
                     "Falha ao revogar sessões do usuário.", exception
             );
         }
-
-        return entities.size();
     }
 }

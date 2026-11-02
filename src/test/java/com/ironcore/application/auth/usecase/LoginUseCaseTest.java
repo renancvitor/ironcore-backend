@@ -88,7 +88,7 @@ class LoginUseCaseTest {
                     .withMessage("Credenciais inválidas.");
 
             verify(userRepository).findByEmailForUpdate(command.email());
-            verify(passwordHashingService, never()).matches(any(), any());
+            verify(passwordHashingService).matches(new RawPassword(command.rawPassword()), null);
             verify(authSessionIssuer, never()).issue(any());
         }
 
@@ -123,12 +123,14 @@ class LoginUseCaseTest {
             when(userRepository.findByEmailForUpdate(command.email()))
                     .thenReturn(Optional.of(user));
 
+            when(passwordHashingService.matches(new RawPassword(command.rawPassword()), user.getPasswordHash())).thenReturn(true);
+
             assertThatExceptionOfType(OperationNotAllowedException.class)
                     .isThrownBy(() -> useCase.execute(command))
                     .withMessage("Usuário inativo.");
 
             verify(userRepository).findByEmailForUpdate(command.email());
-            verify(passwordHashingService, never()).matches(any(), any());
+            verify(passwordHashingService).matches(new RawPassword(command.rawPassword()), user.getPasswordHash());
             verify(authSessionIssuer, never()).issue(any());
         }
 

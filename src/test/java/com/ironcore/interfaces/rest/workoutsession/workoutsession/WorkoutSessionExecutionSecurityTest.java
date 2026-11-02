@@ -1,5 +1,7 @@
 package com.ironcore.interfaces.rest.workoutsession.workoutsession;
 
+import com.ironcore.application.auth.service.AuthenticationAttemptLimiter;
+
 import com.ironcore.application.logging.error.port.ErrorLogPublisher;
 import com.ironcore.application.shared.pagination.PageResult;
 import com.ironcore.application.workoutsession.workoutsession.close.CloseWorkoutSessionUseCase;
@@ -49,6 +51,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(WorkoutSessionController.class)
 @Import(SecurityConfig.class)
+@MockitoBean(types = AuthenticationAttemptLimiter.class)
 class WorkoutSessionExecutionSecurityTest {
     @MockitoBean
     private AuthSessionRepository authSessionRepository;
