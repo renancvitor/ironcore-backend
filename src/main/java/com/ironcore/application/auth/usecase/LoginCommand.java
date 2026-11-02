@@ -6,4 +6,8 @@ public record LoginCommand(
         Email email,
         String rawPassword
 ) {
+    @Override
+    public String toString() {
+        return "LoginCommand[rawPassword=[REDACTED]]";
+    }
 }

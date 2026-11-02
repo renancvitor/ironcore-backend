@@ -13,4 +13,8 @@ public record LoginRequest(
         @Schema(format = "password")
         String password
 ) {
+    @Override
+    public String toString() {
+        return "LoginRequest[password=[REDACTED]]";
+    }
 }

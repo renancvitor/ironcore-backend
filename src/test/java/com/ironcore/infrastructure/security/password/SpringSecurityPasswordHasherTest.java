@@ -14,6 +14,24 @@ class SpringSecurityPasswordHasherTest {
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private final SpringSecurityPasswordHasher passwordHasher = new SpringSecurityPasswordHasher(passwordEncoder);
 
+    @Test
+    void rejectsNewPasswordsBeyondBcryptByteLimitWithoutTruncation() {
+        for (String password : java.util.List.of("a".repeat(73), "\u00e1".repeat(37))) {
+            org.assertj.core.api.Assertions.assertThatThrownBy(() -> passwordHasher.hash(new RawPassword(password)))
+                    .isInstanceOf(com.ironcore.domain.user.exception.InvalidPasswordException.class);
+        }
+        var maximum = new RawPassword("\u00e1".repeat(36));
+        assertThat(passwordHasher.matches(maximum, passwordHasher.hash(maximum))).isTrue();
+    }
+
+    @Test
+    void rejectsOversizedLoginPasswordsForExistingAndMissingAccounts() {
+        var valid = passwordHasher.hash(new RawPassword("ValidPassword123@"));
+        var oversized = new RawPassword("a".repeat(73));
+        assertThat(passwordHasher.matches(oversized, valid)).isFalse();
+        assertThat(passwordHasher.matches(oversized, null)).isFalse();
+    }
+
     @Nested
     class Hash {
 

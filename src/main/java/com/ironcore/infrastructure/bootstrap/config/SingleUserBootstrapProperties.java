@@ -10,4 +10,8 @@ public record SingleUserBootstrapProperties(
         String email,
         String password
 ) {
+    @Override
+    public String toString() {
+        return "SingleUserBootstrapProperties[password=[REDACTED]]";
+    }
 }

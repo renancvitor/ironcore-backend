@@ -16,6 +16,25 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class CredentialsRedactionTest {
 
+    @Test
+    void passwordRepresentationsHideSecretsIncludingNestedCommands() {
+        String password = "PrivatePassword123@";
+        var raw = new com.ironcore.domain.user.valueobject.RawPassword(password);
+        var hash = new com.ironcore.domain.user.valueobject.PasswordHash("private-password-hash");
+        var objects = java.util.List.of(raw, hash,
+                new com.ironcore.infrastructure.bootstrap.config.SingleUserBootstrapProperties(false, "User", "Person", "user@example.com", password),
+                new com.ironcore.application.auth.usecase.LoginCommand(new Email("user@example.com"), password),
+                new com.ironcore.interfaces.rest.auth.dto.LoginRequest("user@example.com", password),
+                new com.ironcore.interfaces.rest.user.dto.ChangePasswordRequest(password, password, password),
+                new com.ironcore.interfaces.rest.user.dto.InitialChangePasswordRequest("user@example.com", password, password, password),
+                new com.ironcore.application.user.usecase.changepassword.ChangePasswordCommand(new UserId(1L), raw, raw, raw),
+                new com.ironcore.application.user.usecase.bootstrap.BootstrapSingleUserCommand("User", "Person",
+                        new Email("user@example.com"), password, LocalDateTime.now()));
+        objects.forEach(value -> assertThat(value.toString()).contains("[REDACTED]")
+                .doesNotContain(password, hash.value()));
+        assertThat(raw.value()).isEqualTo(password);
+    }
+
     private static final String ACCESS_TOKEN = "secret-access-token";
     private static final String REFRESH_TOKEN = "secret-refresh-token";
     private final GeneratedAccessToken accessToken = new GeneratedAccessToken(

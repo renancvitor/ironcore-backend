@@ -95,6 +95,37 @@ class BodyMetricsIntegrationTest {
         personJpaRepository.deleteAll();
     }
 
+    @Test
+    void isolatesBodyMetricsAcrossUsersForReadsWritesAndProgress() throws Exception {
+        Cookie owner = loginAndGetAccessTokenCookie();
+        Long id = createPersonBodyMetrics(owner, createRequest(80.0, "Private measurement"));
+        createPersonBodyMetrics(owner, createRequest(79.0, "Second private measurement"));
+        var second = activeUser();
+        second.setEmail("other@example.com");
+        userJpaRepository.save(second);
+        var login = mockMvc.perform(post("/api/auth/login").with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(java.util.Map.of("email", "other@example.com", "password", RAW_PASSWORD))))
+                .andExpect(status().isOk()).andReturn();
+        Cookie other = login.getResponse().getCookie("access_token");
+        mockMvc.perform(get(BODY_METRICS_ENDPOINT + "/{id}", id).cookie(other)).andExpect(status().isNotFound());
+        mockMvc.perform(put(BODY_METRICS_ENDPOINT + "/{id}", id).cookie(other).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(
+                                new UpdateBodyMetricsRequest(70.0, 180.0, circumferences(), "Unauthorized"))))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(delete(BODY_METRICS_ENDPOINT + "/{id}", id).cookie(other).with(csrf()))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(get(BODY_METRICS_ENDPOINT).cookie(other))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.metrics.totalElements").value(0));
+        mockMvc.perform(get(BODY_METRICS_ENDPOINT + "/progress/changes").cookie(other)
+                        .param("startDate", LocalDate.now().minusDays(1).toString()).param("endDate", LocalDate.now().toString()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.changes").isEmpty());
+        mockMvc.perform(get(BODY_METRICS_ENDPOINT + "/{id}", id).cookie(owner))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.weightKg").value(80.0));
+        createPersonBodyMetrics(other, createRequest(65.0, "Other measurement"));
+        mockMvc.perform(get(BODY_METRICS_ENDPOINT).cookie(owner))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.metrics.totalElements").value(2));
+    }
+
     @Nested
     class Authentication {
 
