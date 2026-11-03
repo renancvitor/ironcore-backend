@@ -2,8 +2,10 @@ package com.ironcore.infrastructure.persistence.auth.repository;
 
 import com.ironcore.infrastructure.persistence.auth.entity.AuthSessionEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -24,4 +26,8 @@ public interface AuthSessionJpaRepository extends JpaRepository<AuthSessionEntit
 
         Long getUserId();
     }
+
+    @Modifying
+    @Query("delete from AuthSessionEntity s where s.expiresAt < :cutoff")
+    void deleteExpiredBefore(Instant cutoff);
 }

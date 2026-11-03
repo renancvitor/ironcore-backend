@@ -144,4 +144,13 @@ public class AuthSessionRepositoryAdapter implements AuthSessionRepository {
             );
         }
     }
+
+    @Override
+    public void deleteExpiredBefore(Instant cutoff) {
+        try {
+            authSessionJpaRepository.deleteExpiredBefore(cutoff);
+        } catch (RuntimeException exception) {
+            throw new PersistenceException("Falha ao excluir sessões de autenticação expiradas.", exception);
+        }
+    }
 }
