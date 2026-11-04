@@ -18,7 +18,7 @@ import static org.mockito.Mockito.*;
 class AuthSessionCleanupSchedulerTest {
     @Test
     void shouldScheduleOnceADayAtThreeInSaoPaulo() throws Exception {
-        Scheduled scheduled = AuthSessionCleanupScheduler.class.getMethod("deleteExpiredBefore")
+        Scheduled scheduled = AuthSessionCleanupScheduler.class.getMethod("deleteExpiredSessions")
                 .getAnnotation(Scheduled.class);
         assertThat(scheduled).isNotNull();
         assertThat(scheduled.zone()).isEqualTo("America/Sao_Paulo");
