@@ -7,8 +7,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.TimeUnit;
-
 @Component
 @RequiredArgsConstructor
 public class AuthSessionCleanupScheduler {
@@ -17,9 +15,9 @@ public class AuthSessionCleanupScheduler {
     private final AuthSessionCleanupService cleanupService;
 
     @Scheduled(cron = "0 0 3 * * *", zone = "America/Sao_Paulo")
-    public void deleteExpiredBefore() {
+    public void deleteExpiredSessions() {
         try {
-            cleanupService.deleteExpiredBefore();
+            cleanupService.deleteExpiredSessions();
         } catch (RuntimeException exception) {
             log.error("Falha ao excluir sessões de autenticação expiradas.", exception);
         }

@@ -17,7 +17,7 @@ public class AuthSessionCleanupService {
     private final Clock clock;
 
     @Transactional
-    public void deleteExpiredBefore() {
+    public void deleteExpiredSessions() {
         Instant now = clock.instant();
         Instant cutoff = now.minus(Duration.ofDays(15));
 

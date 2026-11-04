@@ -20,7 +20,7 @@ class AuthSessionCleanupServiceTest {
         Clock clock = Clock.fixed(Instant.parse("2026-11-03T01:30:00.123456Z"), ZoneId.of(zone));
         AuthSessionCleanupService service = new AuthSessionCleanupService(repository, clock);
 
-        service.deleteExpiredBefore();
+        service.deleteExpiredSessions();
 
         verify(repository).deleteExpiredBefore(Instant.parse("2026-10-19T01:30:00.123456Z"));
         verifyNoMoreInteractions(repository);
@@ -33,7 +33,7 @@ class AuthSessionCleanupServiceTest {
         PersistenceException failure = new PersistenceException("Unavailable");
         doThrow(failure).when(repository).deleteExpiredBefore(any());
 
-        assertThatThrownBy(() -> new AuthSessionCleanupService(repository, clock).deleteExpiredBefore())
+        assertThatThrownBy(() -> new AuthSessionCleanupService(repository, clock).deleteExpiredSessions())
                 .isSameAs(failure);
     }
 }
