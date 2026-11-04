@@ -33,13 +33,13 @@ class AuthSessionCleanupSchedulerTest {
     void shouldLogFailureAndAllowFollowingRun(CapturedOutput output) {
         AuthSessionCleanupService service = mock(AuthSessionCleanupService.class);
         doThrow(new PersistenceException("Simulated cleanup failure")).doNothing()
-                .when(service).deleteExpiredBefore();
+                .when(service).deleteExpiredSessions();
         AuthSessionCleanupScheduler scheduler = new AuthSessionCleanupScheduler(service);
 
-        assertThatCode(scheduler::deleteExpiredBefore).doesNotThrowAnyException();
-        scheduler.deleteExpiredBefore();
+        assertThatCode(scheduler::deleteExpiredSessions).doesNotThrowAnyException();
+        scheduler.deleteExpiredSessions();
 
-        verify(service, times(2)).deleteExpiredBefore();
+        verify(service, times(2)).deleteExpiredSessions();
         assertThat(output.getOut()).contains("ERROR", "Falha ao excluir sessões de autenticação expiradas.",
                 "Simulated cleanup failure");
     }

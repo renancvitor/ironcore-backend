@@ -81,13 +81,13 @@ class AuthSessionCleanupPostgresIntegrationTest {
         List<UUID> ids = fixtures.stream().map(AuthSessionEntity::getId).toList();
         List<AuthSessionEntity> retained = fixtures.subList(1, fixtures.size());
 
-        service.deleteExpiredBefore();
+        service.deleteExpiredSessions();
 
         assertThat(sessions.findById(ids.getFirst())).isEmpty();
         assertThat(sessions.findAllById(ids)).usingRecursiveFieldByFieldElementComparatorIgnoringFields("user")
                 .containsExactlyInAnyOrderElementsOf(retained);
 
-        service.deleteExpiredBefore();
+        service.deleteExpiredSessions();
 
         assertThat(sessions.findAllById(ids)).usingRecursiveFieldByFieldElementComparatorIgnoringFields("user")
                 .containsExactlyInAnyOrderElementsOf(retained);
