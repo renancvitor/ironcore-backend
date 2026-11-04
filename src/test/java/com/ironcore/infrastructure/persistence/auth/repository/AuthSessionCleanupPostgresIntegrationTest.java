@@ -8,6 +8,7 @@ import com.ironcore.infrastructure.persistence.person.repository.PersonJpaReposi
 import com.ironcore.infrastructure.persistence.user.entity.UserEntity;
 import com.ironcore.infrastructure.persistence.user.repository.UserJpaRepository;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -93,12 +94,42 @@ class AuthSessionCleanupPostgresIntegrationTest {
                 .containsExactlyInAnyOrderElementsOf(retained);
     }
 
+    @Test
+    void cleanupUsesRenewedEffectiveDeadlineInsteadOfOriginalInactivityDeadline() {
+        Instant now = Instant.parse("2026-11-04T12:00:00Z");
+        when(clock.instant()).thenReturn(now);
+        UUID id = new TransactionTemplate(transactionManager).execute(status -> {
+            LocalDateTime created = LocalDateTime.ofInstant(now.minus(Duration.ofDays(60)), ZoneOffset.UTC);
+            PersonEntity person = persons.save(new PersonEntity(null, "Renewed", SexType.MALE,
+                    LocalDate.of(1990, 1, 1), created, null));
+            UserEntity user = users.save(new UserEntity(null, "Renewed", person,
+                    UUID.randomUUID() + "@example.com", "hash", false, true, created, null));
+            // Original inactivity deadline was 30 days ago; legitimate refreshes moved it forward.
+            AuthSessionEntity session = session(user, now.plus(Duration.ofDays(29)), false);
+            session.setCreatedAt(now.minus(Duration.ofDays(60)));
+            session.setAbsoluteExpiresAt(now.plus(Duration.ofDays(30)));
+            return sessions.saveAndFlush(session).getId();
+        });
+
+        service.deleteExpiredSessions();
+        assertThat(sessions.findById(id)).isPresent();
+
+        when(clock.instant()).thenReturn(now.plus(Duration.ofDays(44)));
+        service.deleteExpiredSessions();
+        assertThat(sessions.findById(id)).isPresent();
+
+        when(clock.instant()).thenReturn(now.plus(Duration.ofDays(44)).plusNanos(1_000));
+        service.deleteExpiredSessions();
+        assertThat(sessions.findById(id)).isEmpty();
+    }
+
     private AuthSessionEntity session(UserEntity user, Instant expiresAt, boolean revoked) {
         AuthSessionEntity session = new AuthSessionEntity();
         session.setId(UUID.randomUUID());
         session.setUser(user);
         session.setCreatedAt(expiresAt.minus(Duration.ofDays(7)));
         session.setExpiresAt(expiresAt);
+        session.setAbsoluteExpiresAt(expiresAt);
         session.setRevokedAt(revoked ? expiresAt.minusSeconds(1) : null);
         session.setRefreshTokenHash(UUID.randomUUID().toString().replace("-", "").repeat(2));
         return session;

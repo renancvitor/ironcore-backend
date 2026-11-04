@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
+import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
@@ -40,12 +41,13 @@ public class RefreshSessionUseCase {
                 .map(AuthSessionReference::userId).orElseThrow(this::invalidCredentials);
         User user = users.findByIdForUpdate(userId).orElseThrow(this::invalidCredentials);
         AuthSession session = sessions.findByRefreshTokenHash(hash).orElseThrow(this::invalidCredentials);
-        if (!user.isActive() || user.mustChangePassword() || !session.isActiveAt(clock.instant())) {
+        Instant now = clock.instant();
+        if (!user.isActive() || user.mustChangePassword() || !session.isActiveAt(now)) {
             throw invalidCredentials();
         }
 
         String nextToken = refreshTokens.generate();
-        session.rotateRefreshToken(refreshTokens.hash(nextToken), clock.instant());
+        session.rotateRefreshToken(refreshTokens.hash(nextToken), now);
         sessions.save(session);
 
         return new SessionCredentials(accessTokens.generate(new AccessTokenSubject(

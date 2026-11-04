@@ -27,8 +27,11 @@ public class AuthSessionEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
-    @Column(name = "expires_at", nullable = false, updatable = false)
+    @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
+
+    @Column(name = "absolute_expires_at", nullable = false, updatable = false)
+    private Instant absoluteExpiresAt;
 
     @Column(name = "revoked_at")
     private Instant revokedAt;

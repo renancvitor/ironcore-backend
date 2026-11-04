@@ -84,7 +84,7 @@ class JwtAuthenticationFilterTest {
         when(validator.validate("valid-token")).thenReturn(claims);
         when(sessions.findByIdAndUserId(claims.sessionId(), claims.userId())).thenReturn(Optional.of(
                 AuthSession.open(claims.sessionId(), claims.userId(),
-                        clock.instant().minusSeconds(60), clock.instant().plusSeconds(3600), "a".repeat(64))));
+                        clock.instant().minusSeconds(60), "a".repeat(64))));
         when(userRepository.findById(new UserId(1L))).thenReturn(Optional.of(user));
 
         MockHttpServletRequest request = request("GET", "/api/protected");
@@ -132,7 +132,7 @@ class JwtAuthenticationFilterTest {
         when(validator.validate("valid-token")).thenReturn(claims);
         when(sessions.findByIdAndUserId(claims.sessionId(), claims.userId())).thenReturn(Optional.of(
                 AuthSession.open(claims.sessionId(), claims.userId(),
-                        clock.instant().minusSeconds(60), clock.instant().plusSeconds(3600), "a".repeat(64))));
+                        clock.instant().minusSeconds(60), "a".repeat(64))));
         when(userRepository.findById(new UserId(1L))).thenReturn(Optional.empty());
 
         MockHttpServletRequest request = request("GET", "/api/protected");
@@ -158,7 +158,7 @@ class JwtAuthenticationFilterTest {
         when(validator.validate("valid-token")).thenReturn(claims);
         when(sessions.findByIdAndUserId(claims.sessionId(), claims.userId())).thenReturn(Optional.of(
                 AuthSession.open(claims.sessionId(), claims.userId(),
-                        clock.instant().minusSeconds(60), clock.instant().plusSeconds(3600), "a".repeat(64))));
+                        clock.instant().minusSeconds(60), "a".repeat(64))));
         when(userRepository.findById(new UserId(1L))).thenReturn(Optional.of(user(false)));
 
         MockHttpServletRequest request = request("GET", "/api/protected");

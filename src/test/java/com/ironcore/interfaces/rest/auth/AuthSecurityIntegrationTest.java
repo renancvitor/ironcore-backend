@@ -33,6 +33,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.Instant;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -342,8 +343,8 @@ class AuthSecurityIntegrationTest {
             case "inactive" -> jdbc.update("update users set active = false");
             case "initial-password" -> jdbc.update("update users set must_change_password = true");
             case "revoked" -> jdbc.update("update auth_sessions set revoked_at = current_timestamp");
-            case "expired" -> jdbc.update("update auth_sessions set created_at = ?, expires_at = ?",
-                    Instant.now().minusSeconds(120), Instant.now().minusSeconds(60));
+            case "expired" -> jdbc.update("update auth_sessions set created_at = ?, expires_at = ?, absolute_expires_at = ?",
+                    Instant.now().minusSeconds(120), Instant.now().minusSeconds(60), Instant.now().minusSeconds(60));
             case "legacy" -> jdbc.update("update auth_sessions set refresh_token_hash = null");
             default -> throw new AssertionError(state);
         }
@@ -391,6 +392,81 @@ class AuthSecurityIntegrationTest {
                 .andExpect(cookie().secure("refresh_token", true))
                 .andReturn();
         return result.getResponse().getCookie("refresh_token");
+    }
+
+    @Test
+    void newSessionHasThirtyDayRefreshCookieAndNinetyDayAbsoluteLimit() throws Exception {
+        Cookie token = loginAndGetRefreshTokenCookie();
+        var session = authSessions.findAll().getFirst();
+        assertThat(session.getExpiresAt()).isEqualTo(session.getCreatedAt().plus(Duration.ofDays(30)));
+        assertThat(session.getAbsoluteExpiresAt()).isEqualTo(session.getCreatedAt().plus(Duration.ofDays(90)));
+        assertThat(token.getMaxAge()).isBetween(2591990, 2592000);
+    }
+
+    @Test
+    void refreshPersistsRenewedInactivityAndKeepsTheAbsoluteLimit() throws Exception {
+        Cookie token = loginAndGetRefreshTokenCookie();
+        Instant now = Instant.now().truncatedTo(java.time.temporal.ChronoUnit.SECONDS);
+        Instant created = now.minus(Duration.ofDays(29));
+        Instant absolute = created.plus(Duration.ofDays(90));
+        jdbc.update("update auth_sessions set created_at = ?, expires_at = ?, absolute_expires_at = ?",
+                created, now.plus(Duration.ofDays(1)), absolute);
+        var result = mockMvc.perform(post("/api/auth/refresh").with(csrf()).cookie(token))
+                .andExpect(status().isOk()).andReturn();
+        var stored = authSessions.findAll().getFirst();
+        assertThat(stored.getExpiresAt()).isBetween(now.plus(Duration.ofDays(30)), Instant.now().plus(Duration.ofDays(30)));
+        assertThat(stored.getAbsoluteExpiresAt()).isEqualTo(absolute.truncatedTo(java.time.temporal.ChronoUnit.MICROS));
+        assertThat(result.getResponse().getCookie("refresh_token").getMaxAge()).isBetween(2591990, 2592000);
+        mockMvc.perform(post("/api/auth/refresh").with(csrf()).cookie(token)).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void refreshNearAbsoluteLimitCapsBothCookiesAndAccessToken() throws Exception {
+        Cookie token = loginAndGetRefreshTokenCookie();
+        Instant absolute = Instant.now().plusSeconds(120).truncatedTo(java.time.temporal.ChronoUnit.SECONDS);
+        jdbc.update("update auth_sessions set created_at = ?, expires_at = ?, absolute_expires_at = ?",
+                absolute.minus(Duration.ofDays(90)), absolute, absolute);
+        var result = mockMvc.perform(post("/api/auth/refresh").with(csrf()).cookie(token))
+                .andExpect(status().isOk()).andReturn();
+        assertThat(authSessions.findAll().getFirst().getExpiresAt()).isEqualTo(absolute);
+        for (String name : new String[]{"access_token", "refresh_token"}) {
+            Cookie cookie = result.getResponse().getCookie(name);
+            assertThat(cookie.getMaxAge()).isBetween(110, 120);
+            assertThat(cookie.isHttpOnly()).isTrue();
+            assertThat(cookie.getSecure()).isTrue();
+            assertThat(result.getResponse().getHeaders(HttpHeaders.SET_COOKIE))
+                    .anySatisfy(value -> assertThat(value).contains(name + "=", "Expires="));
+        }
+        assertThat(JWT.decode(result.getResponse().getCookie("access_token").getValue()).getExpiresAtAsInstant())
+                .isEqualTo(absolute);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void expiredSessionRejectsStillValidAccessAndRefreshTokens(boolean absoluteExpiry) throws Exception {
+        var result = mockMvc.perform(post(LOGIN_ENDPOINT).with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new LoginRequest(EMAIL, RAW_PASSWORD))))
+                .andExpect(status().isOk()).andReturn();
+        Instant expired = Instant.now().minusSeconds(1).truncatedTo(java.time.temporal.ChronoUnit.SECONDS);
+        Instant created = expired.minus(Duration.ofDays(absoluteExpiry ? 90 : 30));
+        jdbc.update("update auth_sessions set created_at = ?, expires_at = ?, absolute_expires_at = ?",
+                created, expired, absoluteExpiry ? expired : created.plus(Duration.ofDays(90)));
+        mockMvc.perform(get(AUTHENTICATED_USER_ENDPOINT).cookie(result.getResponse().getCookie("access_token")))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/auth/refresh").with(csrf()).cookie(result.getResponse().getCookie("refresh_token")))
+                .andExpect(status().isUnauthorized());
+        assertThat(authSessions.findAll().getFirst().getExpiresAt())
+                .isEqualTo(expired.truncatedTo(java.time.temporal.ChronoUnit.MICROS));
+    }
+
+    @Test
+    void authenticatedReadsDoNotExtendSessionDeadlines() throws Exception {
+        Cookie access = loginAndGetAccessTokenCookie();
+        var original = authSessions.findAll().getFirst();
+        mockMvc.perform(get(AUTHENTICATED_USER_ENDPOINT).cookie(access)).andExpect(status().isOk());
+        var stored = authSessions.findById(original.getId()).orElseThrow();
+        assertThat(stored.getExpiresAt()).isEqualTo(original.getExpiresAt());
+        assertThat(stored.getAbsoluteExpiresAt()).isEqualTo(original.getAbsoluteExpiresAt());
     }
 
     private Cookie loginAndGetAccessTokenCookie() throws Exception {

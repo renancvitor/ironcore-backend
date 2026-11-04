@@ -12,15 +12,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class AuthSessionIssuer {
-
-    private static final Duration SESSION_DURATION = Duration.ofDays(7);
 
     private final AuthSessionRepository authSessionRepository;
     private final AccessTokenGenerator accessTokenGenerator;
@@ -36,7 +33,6 @@ public class AuthSessionIssuer {
                         new AuthSessionId(UUID.randomUUID()),
                         user.getId(),
                         now,
-                        now.plus(SESSION_DURATION),
                         refreshTokenGenerator.hash(refreshToken)
                 )
         );
