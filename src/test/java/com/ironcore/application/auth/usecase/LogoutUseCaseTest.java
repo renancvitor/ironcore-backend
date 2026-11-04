@@ -43,7 +43,7 @@ class LogoutUseCaseTest {
         UserId owner = new UserId(1L);
         when(users.findByIdForUpdate(owner)).thenReturn(Optional.of(activeUser()));
         AuthSession session = AuthSession.open(sessionId(), owner,
-                clock.instant().minusSeconds(60), clock.instant().plusSeconds(3600), "a".repeat(64));
+                clock.instant().minusSeconds(60), "a".repeat(64));
         when(sessions.findByIdAndUserId(sessionId(), owner)).thenReturn(Optional.of(session));
 
         useCase.execute(new LogoutCommand(owner, sessionId(), null));

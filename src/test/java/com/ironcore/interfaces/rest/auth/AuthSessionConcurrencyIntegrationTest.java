@@ -253,7 +253,10 @@ class AuthSessionConcurrencyIntegrationTest {
         var renewed = refresh.execute(original.refreshToken());
 
         assertThat(renewed.refreshToken()).isNotEqualTo(original.refreshToken());
-        assertThat(renewed.sessionExpiresAt()).isEqualTo(stored.getExpiresAt());
+        assertThat(renewed.sessionExpiresAt()).isAfterOrEqualTo(stored.getExpiresAt());
+        assertThat(sessions.findById(sessionId).orElseThrow().getExpiresAt())
+                .isCloseTo(renewed.sessionExpiresAt(), org.assertj.core.api.Assertions.within(1, java.time.temporal.ChronoUnit.MICROS));
+        assertThat(sessions.findById(sessionId).orElseThrow().getAbsoluteExpiresAt()).isEqualTo(stored.getAbsoluteExpiresAt());
         assertThat(JWT.decode(renewed.accessToken().value()).getClaim("sid").asString()).isEqualTo(sessionId.toString());
         assertThat(sessions.findById(sessionId).orElseThrow().getRefreshTokenHash())
                 .isEqualTo(refreshTokens.hash(renewed.refreshToken()));
