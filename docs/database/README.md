@@ -88,7 +88,7 @@ Decisões atuais:
 
 ## Observações Sobre os Diagramas
 
-O diagrama ER inclui o recorte implementado de objetivos de treino, ciclos, dias e atividades. A imagem ER anterior é um recorte até planejamento; os complementos Mermaid em [ER](../diagram/er-sql/README.md) e o [fluxo de sessão](../diagram/sequence-log-diagram/README.md) descrevem execução e autenticação atuais. Geração por IA permanece blueprint de produto.
+O [diagrama ER](../diagram/er-sql/README.md) inclui o modelo implementado até V31, com planejamento, execução de treinos, sessões de autenticação e contadores de tentativas. O Mermaid complementa a imagem com um resumo dos relacionamentos de execução e autenticação. O [fluxo de sessão](../diagram/sequence-log-diagram/README.md) detalha a sequência de execução dos treinos. Geração por IA permanece blueprint de produto.
 
 Somente as tabelas criadas pelas migrations listadas acima devem ser tratadas como estado de banco implementado.
 

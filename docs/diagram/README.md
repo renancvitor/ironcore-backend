@@ -10,7 +10,7 @@ Alguns diagramas descrevem a fundação técnica atual, enquanto outros descreve
 
 | Diagrama                                                                                                       | Status | Observações |
 |----------------------------------------------------------------------------------------------------------------|---|---|
-| [ER SQL](./er-sql/README.md) | Implementado, com complemento | Imagem do recorte anterior e complemento Mermaid de execução/autenticação; migrations são a fonte de verdade para constraints físicas. |
+| [ER SQL](./er-sql/README.md) | Implementado, com complemento | A imagem inclui planejamento, execução de treinos e autenticação até V31; o Mermaid resume os relacionamentos de execução/autenticação. Migrations são a fonte de verdade para constraints físicas. |
 | [General Architecture](./general-architecture/README.md)                             | Parcialmente implementado / blueprint | Use código, configurações e documentação específica para confirmar o estado funcional. |
 | [Internal Architecture](./internal-architecture/README.md) | Parcialmente implementado | Use a árvore de packages e os testes como fonte de verdade para o que já existe. |
 | [Workout Generation Sequence](./sequence-diagram/README.md)                                        | Blueprint planejado | O fluxo de geração de treino com IA/LLM ainda não está implementado. |
