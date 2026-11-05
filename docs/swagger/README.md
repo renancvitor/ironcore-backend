@@ -20,7 +20,7 @@ http://localhost:8080/swagger-ui/index.html
 http://localhost:8080/v3/api-docs
 ```
 
-O acesso ao Swagger UI e ao `/v3/api-docs` é público na configuração de segurança atual.
+O acesso ao Swagger UI e ao `/v3/api-docs` é público quando habilitado; ambos estão desabilitados no perfil de produção.
 
 ## Documentos
 
@@ -37,10 +37,17 @@ Tags atuais:
 - `Medidas corporais`
 - `Catálogo de exercícios`
 - `Exercício`
+- `Objetivos de treino`
+- `Ciclo de treino`
+- `Dia de treino`
+- `Atividade de treino`
+- `Sessão de treino`
+- `Indicadores de execução`
 
 Fluxos documentados:
 
-- Login e logout.
+- Login, refresh e logout com revogação no servidor.
+- Workout Session, histórico e indicadores por exercício.
 - Troca inicial e troca normal de senha.
 - Consulta e alteração do usuário autenticado.
 - Atualização da pessoa vinculada ao usuário autenticado.
@@ -68,5 +75,13 @@ Endpoints protegidos herdam a exigência global de autenticação. Endpoints pú
 - Componentes OpenAPI reutilizáveis permanecem em `interfaces.rest.openapi`.
 - DTOs devem receber `@Schema` apenas quando isso acrescentar clareza real ao contrato.
 - Endpoints `GET` que recebem model attributes devem expor query params reais no OpenAPI.
+
+## Contratos de Sessão e Refresh
+
+O contrato atual inclui `POST /api/auth/refresh` (público quanto ao access token, com cookie de refresh e CSRF), login sem tokens no JSON, cookies `access_token` e `refresh_token`, e resposta `429`/`Retry-After` nos fluxos limitados. Logout revoga a sessão no servidor e limpa ambos os cookies.
+
+Workout Session expõe início, recuperação, detalhe, fechamento, relatos, execução de atividade, séries, modo de carga, histórico e evolução por exercício. Os nomes de campos e caminhos estão em [Workout Session](../workout-session/README.md); `WorkoutSessionApi` e `ExerciseAnalyticsApi` concentram as anotações. Não há mudança Java/OpenAPI nesta tarefa documental.
+
+Antes de uma escrita no Swagger, obtenha `GET /api/auth/csrf` e envie o token no header informado. Repita a obtenção após login/logout. A documentação é acessível nos perfis que a habilitam; Swagger UI e `/v3/api-docs` permanecem desabilitados em produção.
 
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>

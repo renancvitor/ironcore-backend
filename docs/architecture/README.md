@@ -21,6 +21,8 @@ Exemplos atuais:
 - `domain.equipmenttype`
 - `domain.exercise`
 - `domain.exercisemuscletarget`
+- `domain.auth`
+- `domain.workoutsession`
 - `domain.workoutplanning`
 - `domain.muscle`
 - `domain.logging.audit`
@@ -120,12 +122,20 @@ Decisões arquiteturais:
 - Body metrics possui fluxo funcional autenticado com CRUD, consulta, listagem, progresso, auditoria e testes.
 - Exercise catalog possui fluxo funcional de consulta com catálogos auxiliares, listagem paginada, filtros combinados, detalhe por id, seeds, OpenAPI e testes.
 - Workout planning possui fluxo funcional com ownership por `PersonId`, composição, lifecycle, edição, reorder, exclusão, detalhe, filtros, paginação, auditoria, OpenAPI e testes.
-- Cadastro público, recuperação de senha, refresh token, blacklist JWT e roles ficam fora do modelo single-user do IronCore.
+- Autenticação usa `AuthSession` persistida, rotação de refresh token, revogação no servidor e limites de tentativas. `STATELESS` significa ausência de sessão HTTP; não elimina o estado de autenticação no PostgreSQL.
+- Cadastro público, recuperação de senha e roles ficam fora do modelo single-user do IronCore.
 - Ativação/desativação de usuário permanece como suporte técnico interno e não possui endpoint funcional no modelo atual.
 - Swagger/OpenAPI está implementado para os contratos REST atuais via Springdoc.
 - MongoDB está disponível como dependência/serviço local, mas ainda não há módulo funcional de persistência documental.
-- Workout Session e geração com IA estão planejados, não implementados.
+- Workout Session está implementado com ownership por `PersonId`, aggregate sessão/atividades/séries, snapshots imutáveis do planejamento e consultas de histórico/indicadores por ports e projeções JPQL.
+- Schedulers cuidam da expiração de treinos, limpeza de sessões de autenticação e limites de tentativas. Geração com IA permanece planejada.
 
 Detalhes funcionais do módulo: [Workout Planning](../workout-planning/README.md).
+
+## Planejamento, Execução e Autenticação
+
+Os aggregates de planejamento e execução têm lifecycle independente. O início copia a prescrição para snapshots; edições de execução não alteram o planejamento. `AuthSession` pertence a `UserId` e controla credenciais de acesso; `WorkoutSession` pertence a `PersonId` e registra treino. São conceitos distintos.
+
+Detalhes: [Workout Session](../workout-session/README.md) e [Users e Auth](../users/README.md).
 
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>

@@ -83,7 +83,7 @@ O desenvolvimento do projeto busca consolidar habilidades como:
 
 <h2 id="status-atual-do-projeto" align="center">Status Atual do Projeto</h2>
 
-O <b>IronCore</b> está em evolução contínua. A primeira versão funcional do backend está publicada e integrada ao frontend, com autenticação single-user, pessoa vinculada ao usuário autenticado, métricas corporais, catálogo global de exercícios, workout planning, persistência relacional, logging, exceptions e testes automatizados. A implantação inicial em produção foi concluída e validada em outubro de 2026. Workout Session, histórico de execução e IA continuam como evoluções futuras.
+O <b>IronCore</b> está em evolução contínua. A primeira versão funcional do backend está publicada e integrada ao frontend, com autenticação single-user, pessoa vinculada ao usuário autenticado, métricas corporais, catálogo global de exercícios, workout planning, persistência relacional, logging, exceptions e testes automatizados. A implantação inicial em produção foi concluída e validada em outubro de 2026. Workout Session, histórico de execução e indicadores de força e cardio estão implementados. Geração com IA permanece futura.
 
 ### Já existe no projeto
 - Estrutura inicial do backend com Spring Boot.
@@ -94,7 +94,8 @@ O <b>IronCore</b> está em evolução contínua. A primeira versão funcional do
 - Persistência relacional com PostgreSQL.
 - Logging persistido de auditoria e erro.
 - Bootstrap opcional de pessoa e usuário único vinculado.
-- Login, logout e autenticação por JWT via cookie `access_token` na base single-user.
+- Login, logout no servidor, sessões persistidas, refresh token com rotação e autenticação por JWT via cookie `access_token` na base single-user.
+- [Workout Session](docs/workout-session/README.md) com snapshots históricos, execução parcial, séries, encerramento, expiração, histórico e indicadores de força e cardio.
 - Troca obrigatória de senha inicial, troca normal de senha, alteração de nickname e consulta do usuário autenticado.
 - Fluxo autenticado de pessoa com atualização de dados pessoais.
 - Fluxo autenticado de métricas corporais com ownership por `PersonId`, criação, atualização, exclusão, consulta por id, consulta do último registro, listagem paginada e progresso.
@@ -110,7 +111,6 @@ O <b>IronCore</b> está em evolução contínua. A primeira versão funcional do
 - MongoDB sobe localmente via Docker Compose, mas ainda não há uso funcional de domínio/documentos.
 
 ### Planejado para as próximas etapas
-- Workout Session e histórico de treinos.
 - Fluxo de geração de treino com apoio de IA.
 - Persistência documental para artefatos/contexto de IA, caso necessária.
 
@@ -176,6 +176,8 @@ Migrations existentes no repositório:
 - `V18__create_table_training_goals.sql` a `V21__create_table_workout_activities.sql`: criam o schema de workout planning.
 - `V22__seed_training_goals.sql`: carrega os objetivos de treino iniciais.
 - `V23__add_column_week_starts_on_to_workout_cycles.sql`: adiciona `week_starts_on` aos ciclos de treino, com padrão `SUNDAY` e preenchimento dos ciclos existentes.
+- `V24` a `V27`: sessões, atividades, séries e execução parcial.
+- `V28` a `V31`: sessões de autenticação, hash de refresh token, limites de tentativas e expiração absoluta. Nomes e constraints estão no índice de banco abaixo.
 
 Documentação detalhada: [Banco de Dados e Migrations](docs/database/README.md).
 
@@ -324,7 +326,7 @@ Os principais diagramas do projeto já estão disponíveis e funcionam como blue
 - [Diagrama de Arquitetura Geral](./docs/diagram/general-architecture/README.md): apresenta a visão macro entre frontend, backend, persistência e camada de IA.
 - [Diagrama de Arquitetura Interna](./docs/diagram/internal-architecture/README.md): detalha a organização interna da API em camadas.
 - [Diagrama de Sequência — Geração de Treino](./docs/diagram/sequence-diagram/README.md): mostra o fluxo planejado para geração de treino com apoio de IA.
-- [Diagrama de Sequência — Registro de Treino](./docs/diagram/sequence-log-diagram/README.md): mostra o fluxo planejado para registro de uma sessão real de treino.
+- [Diagrama de Sequência — Registro de Treino](./docs/diagram/sequence-log-diagram/README.md): mostra o fluxo implementado de início, execução parcial e encerramento.
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
@@ -370,7 +372,7 @@ Documentação detalhada: [Testes Automatizados](docs/testing/README.md).
 <h2 id="testando-a-api-via-insomnia" align="center">Testando a API via Insomnia</h2>
 
 > Esta seção será atualizada com uma coleção ou roteiro próprio quando os fluxos de API forem estabilizados.
-> O projeto já possui endpoints de autenticação, usuário autenticado, pessoa, body metrics, exercise catalog e workout planning.
+> O projeto já possui endpoints de autenticação, usuário autenticado, pessoa, body metrics, exercise catalog, workout planning e workout session.
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>
 
@@ -414,6 +416,7 @@ docs
  ├── project-structure
  ├── releases
  ├── swagger
+ ├── workout-session
  ├── workout-planning
  └── users
 ```
@@ -463,7 +466,7 @@ DB_PASSWORD_DEV=sua_senha
 MONGO_URL_DEV=<uri_local_do_mongodb>
 MONGO_USER_DEV=<usuario_local_do_mongodb>
 MONGO_PASSWORD_DEV=<senha_local_do_mongodb>
-JWT_SECRET=<segredo_local>
+JWT_SECRET=<segredo_local_com_pelo_menos_32_bytes_UTF8>
 ```
 Também existem variáveis opcionais para bootstrap inicial de pessoa e usuário: `IRONCORE_BOOTSTRAP_PERSON_ENABLED`, `IRONCORE_BOOTSTRAP_PERSON_NAME`, `IRONCORE_BOOTSTRAP_PERSON_SEX`, `IRONCORE_BOOTSTRAP_PERSON_BIRTH_DATE`, `IRONCORE_BOOTSTRAP_USER_ENABLED`, `IRONCORE_BOOTSTRAP_USER_NICKNAME`, `IRONCORE_BOOTSTRAP_USER_EMAIL` e `IRONCORE_BOOTSTRAP_USER_PASSWORD`.
 
@@ -476,7 +479,7 @@ SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
 ./mvnw clean verify --batch-mode
 ```
 
-8. Acesse a aplicação pela porta configurada (por padrão http://localhost:8080). O projeto possui endpoints de autenticação, usuário autenticado, pessoa, body metrics, exercise catalog e workout planning. A documentação Swagger UI fica disponível em `http://localhost:8080/swagger-ui/index.html`.<br>
+8. Acesse a aplicação pela porta configurada (por padrão http://localhost:8080). O projeto possui endpoints de autenticação, usuário autenticado, pessoa, body metrics, exercise catalog, workout planning e workout session. A documentação Swagger UI fica disponível em `http://localhost:8080/swagger-ui/index.html`.<br>
 ⚠️ **Lembre-se de manter o Docker rodando enquanto estiver utilizando a aplicação.**
 
 <p align="right"><a href="#sumario">⬆️ Voltar ao sumário</a></p>

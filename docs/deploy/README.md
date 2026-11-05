@@ -100,4 +100,14 @@ Os valores não são reproduzidos aqui. O workflow usa `secrets` e `vars` e não
 
 Consulte também [Banco de Dados e Migrations](../database/README.md) e [Testes Automatizados](../testing/README.md).
 
+## Sessões e Rotinas Após v1.2.0
+
+A versão atual requer migrations até V31. O segredo `JWT_SECRET` deve ter ao menos 32 bytes UTF-8; issuer vazio e duração de token não positiva impedem inicialização. Não registrar segredos ou cookies na configuração versionada.
+
+O perfil `prod` define `server.address=127.0.0.1`, `forward-headers-strategy=native` e proxies internos restritos a loopback. O proxy reverso precisa encaminhar corretamente protocolo/IP; o rate limiting utiliza o endereço remoto processado por essa configuração. CORS expõe `Retry-After` ao frontend autorizado.
+
+Rotinas habilitadas pelo scheduling da aplicação: expiração de treinos a cada 60 segundos, limpeza de sessões de autenticação diariamente às 03h de São Paulo e limpeza de tentativas a cada cinco minutos. Desabilitar o scheduler de outbox não desabilita essas rotinas. A limpeza de sessões usa `expires_at < agora - 15 dias`, não a idade de criação ou a data de revogação.
+
+JWTs antigos sem `sid` exigem novo login. A V31 mantém o teto anterior das sessões migradas; apenas sessões novas recebem os novos limites de 30/90 dias. Clientes precisam aceitar os dois cookies, coordenar refresh com rotação e manter CSRF nas escritas. Login não retorna mais tokens no JSON. Não há declaração de deploy deste próximo release; esta documentação descreve código integrado à main. Detalhes: [Users e Auth](../users/README.md).
+
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>

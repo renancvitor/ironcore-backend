@@ -93,4 +93,8 @@ Use Specification quando:
 - Exercise catalog usa Specifications para listagem com filtros combinados.
 - Workout planning usa `WorkoutCycleSpecification` para listagem de ciclos com ownership, filtros combináveis, paginação e ordenação.
 
+## Histórico e Indicadores de Workout Session
+
+O histórico usa projeção JPQL em `WorkoutSessionHistoryJpaRepository`, com ownership obrigatório, somente sessões encerradas, filtros opcionais e count query correspondente. O adapter normaliza/escapa `name` e fixa a ordenação decrescente. As consultas de evolução usam projeções por pessoa, exercício e período, ordenadas cronologicamente; não usam Specifications. Parâmetros e limites: [Workout Session](../workout-session/README.md).
+
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>

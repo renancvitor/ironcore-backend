@@ -210,4 +210,8 @@ Os itens abaixo não fazem parte da implementação atual e não representam com
 - [Estratégia de Logging](./README.md)
 - [Error Log](./error-log.md)
 
+## Execução de Treinos
+
+O enum de targets inclui `WORKOUT_SESSION`. Início, encerramento e mutações de relatos/execução/séries publicam auditoria com `WorkoutSessionAuditData`, incluindo estado anterior e posterior quando aplicável. Os snapshots de auditoria são registros da ação; os snapshots da prescrição na sessão preservam o planejamento de origem e têm finalidade distinta. Detalhes: [Workout Session](../workout-session/README.md).
+
 <p align="right"><a href="./README.md">🔄 Voltar para Logging</a></p>

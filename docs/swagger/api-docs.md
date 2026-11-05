@@ -47,6 +47,8 @@ O contrato aplica autenticação global aos endpoints protegidos.
 
 Endpoints públicos declaram `security: []`, deixando explícito que não exigem cookie JWT:
 
+- `GET /api/auth/csrf`
+- `POST /api/auth/refresh`
 - `POST /api/auth/login`
 - `POST /api/auth/logout`
 - `POST /api/users/change-initial-password`
@@ -79,5 +81,16 @@ Pontos principais de validação:
 - parâmetros de listagem de exercises expostos como `page`, `size`, `name`, `activityTypeId`, `equipmentTypeId`, `muscleGroupId`, `muscleSubgroupId` e `targetRole`.
 - endpoints de workout planning para `TrainingGoal`, `WorkoutCycle`, `WorkoutDay` e `WorkoutActivity`.
 - parâmetros da listagem de ciclos expostos como `workoutStatus`, `trainingGoalId`, `startDate`, `endDate`, `name`, `page` e `size`.
+
+## Contratos de Sessão e Refresh
+
+Na inspeção do JSON gerado, conferir também:
+
+- `LoginResponse` sem `accessToken`/`tokenType` e `RefreshResponse` com `expiresAt`.
+- Paths de execução e analytics descritos em [Workout Session](../workout-session/README.md), incluindo `name`, `workoutCycleId`, `workoutDayId` e paginação do histórico.
+- PATCH com distinção entre campo omitido e `null` explícito, métricas analíticas anuláveis e respostas `409` de conflito.
+- Resposta `429` nos fluxos de autenticação limitados, com `Retry-After`.
+
+As interfaces `WorkoutSessionApi` e `ExerciseAnalyticsApi` e os DTOs são as fontes implementadas; esta tarefa não altera suas anotações Java. O endpoint permanece desabilitado em produção.
 
 <p align="right"><a href="README.md">Voltar para Swagger/OpenAPI</a></p>

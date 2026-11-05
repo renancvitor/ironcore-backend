@@ -4,7 +4,7 @@
 
 O módulo `workoutplanning` implementa o planejamento de treinos da pessoa vinculada ao usuário autenticado. Neste documento, `workout` pode ser usado como abreviação de `WorkoutCycle`.
 
-O escopo implementado cobre objetivos de treino, ciclos, dias, atividades prescritas, composição, lifecycle, consultas e auditoria. Workout Session, histórico de sessões e geração por IA não fazem parte deste módulo.
+O escopo implementado cobre objetivos de treino, ciclos, dias, atividades prescritas, composição, lifecycle, consultas e auditoria. A execução e o histórico estão implementados no módulo separado [Workout Session](../workout-session/README.md). Geração por IA permanece futura.
 
 ## Composição e Ownership
 
@@ -218,5 +218,11 @@ Os alvos de auditoria são `WORKOUT_CYCLE`, `WORKOUT_DAY` e `WORKOUT_ACTIVITY`. 
 - [Swagger/OpenAPI](../swagger/README.md)
 - [Testes Automatizados](../testing/README.md)
 - [Release v1.0.0](../releases/v1.0.0/README.md)
+
+## Integração com Workout Session
+
+Somente ciclos `IN_PROGRESS` permitem iniciar execução de um dia com atividades. A sessão captura nomes, dia da semana, ordem e prescrição em snapshots; alterações posteriores de ciclo, dia, atividade ou catálogo não reescrevem o histórico. O detalhe e a busca por nome do histórico usam os snapshots de ciclo/dia, inclusive após mudanças da origem.
+
+Os commits `5a20acd` e `783b097` ajustam consultas e respostas de Workout Session; não acrescentam uma nova busca de ciclos nem alteram o lifecycle do planejamento. `weekStartsOn` já pertence à v1.2.0 e não é uma novidade deste próximo release.
 
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>

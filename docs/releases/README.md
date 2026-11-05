@@ -14,7 +14,10 @@ Cada release possui seu próprio `README.md` para facilitar navegação direta p
 | `v0.4.0` | [Person e ownership por PersonId](./v0.4.0/README.md) | Histórico |
 | `v0.5.0` | [Swagger/OpenAPI](./v0.5.0/README.md) | Histórico |
 | `v0.6.0` | [Exercise Catalog](./v0.6.0/README.md) | Histórico |
-| `v1.0.0` | [Primeira versão estável do IronCore Backend](./v1.0.0/README.md) | Atual |
+| `v1.0.0` | [Primeira versão estável do IronCore Backend](./v1.0.0/README.md) | Histórico |
+| `v1.1.0` | [Produção, Segurança e Evoluções da API](./v1.1.0/README.md) | Histórico publicado |
+| `v1.2.0` | [Início da Semana Configurável](./v1.2.0/README.md) | Última publicada, 24/10/2026 |
+| Próximo release | [Workout Session e autenticação persistida](./next/README.md) | Em preparação; candidata `v1.3.0` |
 
 ## Regra de Manutenção
 
