@@ -107,4 +107,8 @@ Crie uma exception nova apenas quando houver uma semântica recorrente que não 
 
 - O error logging está implementado, mas depende de uma requisição chegar ao REST exception handler ou de publicação explícita de error log.
 
+## Conflitos de Sessão e Limites de Autenticação
+
+`WorkoutSessionConflictException` recebe `409 Conflict`; invariantes de domínio de sessão, atividade e série recebem `400`. `AuthenticationRateLimitException` recebe `429 Too Many Requests` com `Retry-After` em segundos e incremento de `authentication.rate.limit.rejections`. Falhas de JWT/sessão são tratadas como autenticação inválida. Contratos: [Workout Session](../workout-session/README.md) e [Users e Auth](../users/README.md).
+
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>

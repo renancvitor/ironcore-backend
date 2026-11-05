@@ -2,7 +2,7 @@
 
 ## Estado do projeto
 
-O IronCore Backend está em desenvolvimento ativo e ainda não representa uma versão estável destinada a uso em produção.
+O IronCore Backend possui releases estáveis desde v1.0.0 e está publicado em produção. O desenvolvimento continua ativo; a documentação corrente acompanha a main, que pode conter mudanças posteriores à última release publicada.
 
 A segurança continua sendo tratada como parte da arquitetura do projeto, especialmente nos fluxos relacionados a:
 
@@ -100,14 +100,17 @@ Fazem parte desse modelo:
 - troca obrigatória da senha inicial;
 - troca normal de senha;
 - acesso autenticado aos dados da pessoa;
-- ownership de métricas corporais por `PersonId`.
+- ownership de métricas corporais, planejamento e execução de treinos por `PersonId`;
+- sessões persistidas, revogação no logout e após troca de senha;
+- refresh token com rotação, janela de inatividade de 30 dias e limite absoluto de 90 dias;
+- CSRF nas escritas, CORS com credenciais e limites persistidos de tentativas.
+
+Regras, cookies, transição e retenção estão em [Users e Auth](docs/users/README.md). A expiração do JWT, a validade da sessão e a limpeza física do registro são independentes.
 
 Algumas funcionalidades comuns em aplicações multiusuário estão fora do escopo atual, incluindo:
 
 - cadastro público;
 - recuperação de senha;
-- refresh token;
-- blacklist de JWT;
 - roles;
 - permissões administrativas;
 - gerenciamento público de usuários.

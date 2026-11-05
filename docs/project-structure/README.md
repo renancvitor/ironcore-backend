@@ -237,7 +237,15 @@ src/main/resources
         ├── V20__create_table_workout_days.sql
         ├── V21__create_table_workout_activities.sql
         ├── V22__seed_training_goals.sql
-        └── V23__add_column_week_starts_on_to_workout_cycles.sql
+        ├── V23__add_column_week_starts_on_to_workout_cycles.sql
+        ├── V24__create_table_workout_sessions.sql
+        ├── V25__create_table_workout_session_activities.sql
+        ├── V26__create_table_workout_session_sets.sql
+        ├── V27__allow_partial_workout_session_set_execution.sql
+        ├── V28__create_table_auth_sessions.sql
+        ├── V29__add_auth_session_refresh_token.sql
+        ├── V30__create_auth_attempt_limits.sql
+        └── V31__add_auth_session_absolute_expiration.sql
 ```
 
 ## Testes
@@ -298,5 +306,31 @@ src/test/java/com/ironcore
 - `Exercise Catalog` representa catálogo global controlado pelo sistema, com consulta por endpoints REST e carga por migrations/seeds.
 - `Workout Planning` representa objetivos, ciclos, dias e atividades prescritas da pessoa, com composição e ownership por `PersonId`.
 - Diagramas podem conter blueprint planejado; confirmar o estado real por código, migrations e testes.
+
+## Módulos Integrados Após v1.2.0
+
+O esqueleto acima deve ser lido junto aos seguintes acréscimos:
+
+```text
+domain/auth                         # AuthSession, referência, id e repository
+domain/workoutsession
+  analytics                         # cálculos de força e cardio
+  workoutsession                    # aggregate, snapshots e lifecycle
+  workoutsessionactivity            # prescrição capturada e execução
+  workoutsessionset                 # séries e normalização de carga
+application/auth                    # emissão, refresh, logout, limpeza e limites
+application/workoutsession          # início, consultas, edição, expiração e indicadores
+infrastructure/persistence/auth     # sessões e contadores PostgreSQL
+infrastructure/persistence/workoutsession
+infrastructure/scheduling/auth      # limpeza de sessões e tentativas
+infrastructure/scheduling/workoutsession
+infrastructure/security/cookie      # factories dos dois cookies
+infrastructure/security/token       # geração e hash do refresh token
+interfaces/rest/workoutsession      # controllers, APIs, DTOs e mappers
+docs/workout-session
+docs/releases/next
+```
+
+O índice completo de migrations V1–V31 fica em [Banco de Dados](../database/README.md); contratos e testes seguem os mesmos módulos/camadas. Configuração de produção inclui confiança restrita no proxy loopback e bind local.
 
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>

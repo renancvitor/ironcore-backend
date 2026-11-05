@@ -26,6 +26,7 @@ Alguns documentos descrevem funcionalidades já implementadas, enquanto outros r
 - [Users e Auth](users/README.md): domínio de usuário, bootstrap, autenticação single-user, JWT e endpoints atuais.
 - [Body Metrics](body-metrics/README.md): fluxo funcional de métricas corporais, endpoints REST, cálculos, progresso e ownership por `PersonId`.
 - [Catálogo de Exercises](exercises/README.md): catálogo global controlado pelo sistema, catálogos auxiliares, filtros combinados, endpoints e seeds.
+- [Workout Session](workout-session/README.md): execução parcial, snapshots históricos, lifecycle, séries, histórico e indicadores.
 - [Workout Planning](workout-planning/README.md): objetivos, ciclos, dias, atividades, lifecycle, composição, consultas e ownership por `PersonId`.
 
 ### Observabilidade e registros
@@ -49,10 +50,14 @@ Alguns documentos descrevem funcionalidades já implementadas, enquanto outros r
 - [v0.6.0](releases/v0.6.0/README.md): exercise catalog com catálogos auxiliares, filtros, paginação, OpenAPI e seeds.
 - [v1.0.0](releases/v1.0.0/README.md): primeira versão estável do backend, com workout planning consolidado.
 
+- [v1.1.0](releases/v1.1.0/README.md): produção, CSRF e evoluções da API.
+- [v1.2.0](releases/v1.2.0/README.md): início da semana configurável no planejamento.
+- [Próximo release](releases/next/README.md): preparação documental, inventário desde v1.2.0 e versão candidata.
+
 ## Observações
 
 - A documentação usa termos técnicos em inglês quando eles representam código, camadas, módulos, ferramentas ou conceitos comuns no desenvolvimento backend.
-- Backend e frontend estão integrados e publicados em produção desde outubro de 2026. Workout Session, histórico de treinos, IA e Kafka continuam como evoluções planejadas; workout planning está implementado.
+- Backend e frontend estão integrados e publicados em produção desde outubro de 2026. Workout Planning e Workout Session, histórico e indicadores estão implementados; IA e Kafka permanecem evoluções planejadas.
 - Releases anteriores preservam história do projeto e não devem ser reescritos para refletir o estado atual.
 
 <p align="right"><a href="../README.md">Voltar para a documentação principal</a></p>

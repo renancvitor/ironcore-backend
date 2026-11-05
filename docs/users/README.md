@@ -4,7 +4,7 @@
 
 O módulo `users` representa a conta de acesso dentro do backend.
 
-Este módulo entrega o baseline de autenticação single-user: bootstrap opcional do usuário inicial, troca obrigatória de senha inicial, login com JWT, cookie `access_token`, logout, troca normal de senha, atualização de nickname e consulta do usuário autenticado.
+Este módulo entrega autenticação single-user: bootstrap opcional do usuário inicial, troca obrigatória de senha inicial, login com JWT e sessões persistidas, cookies de acesso/refresh, rotação de credenciais, logout no servidor, troca normal de senha, atualização de nickname e consulta do usuário autenticado.
 
 Dados pessoais pertencem a `Person`, não a `User`.
 
@@ -27,6 +27,8 @@ Implementado:
 - JWT issuing and validation.
 - REST login endpoint.
 - REST logout endpoint.
+- Refresh com rotação, expiração por inatividade e limite absoluto de sessão.
+- Revogação no logout/troca de senha, limites de tentativas e limpeza de registros vencidos.
 - Mandatory initial password change endpoint.
 - Authenticated password change endpoint.
 - Authenticated nickname update endpoint.
@@ -164,8 +166,8 @@ Body:
 Resposta:
 
 - `200 OK`
-- Body com `accessToken`, `tokenType`, `expiresAt`, `userId`, `email`, `nickname` e `mustChangePassword`.
-- Header `Set-Cookie` com o cookie `access_token`.
+- Body com `expiresAt`, `userId`, `email`, `nickname` e `mustChangePassword`; sem tokens no JSON.
+- Headers `Set-Cookie` com `access_token` e `refresh_token`.
 
 O login é bloqueado enquanto `mustChangePassword` estiver ativo. Nesse caso, o usuário deve usar o endpoint de troca inicial de senha.
 
@@ -178,9 +180,9 @@ POST /api/auth/logout
 Resposta:
 
 - `204 No Content`
-- Header `Set-Cookie` removendo o cookie `access_token` com `Max-Age=0`.
+- Headers `Set-Cookie` removendo `access_token` e `refresh_token` com `Max-Age=0`.
 
-O logout atual remove o cookie no cliente. Não há blacklist server-side de JWT no modelo atual.
+O logout revoga no servidor a sessão identificada pelo usuário autenticado ou pelo refresh token, limpa ambos os cookies e invalida o CSRF anterior. Pode ser chamado sem access token válido, usando o refresh token; não exige autenticação na configuração HTTP, mas exige CSRF. Não há blacklist individual de JWT: a validação consulta a sessão persistida.
 
 ### Troca Inicial de Senha
 
@@ -195,7 +197,7 @@ Body:
   "email": "user@example.com",
   "currentPassword": "senha-inicial",
   "newPassword": "nova-senha",
-  "confirmPassword": "nova-senha"
+  "confirmNewPassword": "nova-senha"
 }
 ```
 
@@ -290,7 +292,7 @@ O cookie de autenticação emitido no login possui:
 
 Como o cookie é marcado com `Secure`, clientes que aplicam regras de navegador podem exigir HTTPS para persistir/enviar o cookie automaticamente. Em testes locais via ferramenta HTTP, confirme se o cookie está sendo armazenado e reenviado.
 
-O token também é retornado no corpo do `LoginResponse`. O filtro de autenticação, porém, recupera o token pelo cookie `access_token`.
+Tokens não são retornados no JSON de login ou refresh. O filtro autentica pelo cookie `access_token`; `Authorization: Bearer` não é o mecanismo implementado.
 
 ## Regras de Senha
 
@@ -315,12 +317,13 @@ Componentes principais:
 
 Decisões atuais:
 
-- API stateless com `SessionCreationPolicy.STATELESS`.
+- API sem sessão HTTP com `SessionCreationPolicy.STATELESS`, mas com estado de autenticação persistido em PostgreSQL (`auth_sessions`).
 - CSRF habilitado com `CookieCsrfTokenRepository`. O cliente obtém token e nome do header por `GET /api/auth/csrf` e envia o header nas operações de escrita, incluindo autenticação. Login e logout invalidam o token CSRF anterior.
 - JWT assinado com HMAC256.
 - Issuer padrão: `IronCore`.
 - Expiração padrão: `120` minutos.
-- Claims atuais: `sub` com user id, `email` e `mustChangePassword`.
+- Claims atuais: `sub` com user id, `email`, `mustChangePassword`, `sid` UUID da sessão e `exp`. JWT sem `sid` é rejeitado.
+- `JWT_SECRET` exige pelo menos 32 bytes UTF-8; issuer não vazio e duração positiva são validados na inicialização.
 - CORS local habilitado para `http://localhost:*` e `http://127.0.0.1:*`, com credenciais. Em produção, `FRONTEND_ORIGIN` define a origem, com padrão `https://ironcore.dev.br`.
 
 ## Erros Relevantes
@@ -332,6 +335,7 @@ Decisões atuais:
 | `403 Forbidden` | Usuário inativo.                                                                     |
 | `404 Not Found` | Usuário autenticado não encontrado.                                                  |
 | `422 Unprocessable Entity` | Confirmação de senha divergente, nova senha igual à atual ou operação não permitida. |
+| `429 Too Many Requests` | Limite de tentativas; header `Retry-After` em segundos. |
 | `500 Internal Server Error` | Falha interna de JWT/configuração ou erro inesperado.                                |
 
 ## Fora do Escopo Deliberado
@@ -340,9 +344,55 @@ Decisões atuais:
 
 - Cadastro público de usuário.
 - Recuperação de senha.
-- Refresh token.
-- Blacklist/revogação server-side de JWT.
 - Roles/perfis de autorização.
 - Endpoint público para ativar/desativar usuário.
+
+## Sessões Persistidas, Refresh e Concorrência
+
+A Issue #325/PR #326 introduziu `AuthSession`, refresh com rotação e revogação server-side. O filtro valida assinatura, issuer, expiração e claims, consulta a sessão por `sid` e usuário e verifica usuário ativo. Login e refresh também rejeitam usuário com troca inicial pendente. Sessão ausente, revogada ou vencida invalida o JWT mesmo antes de seu `exp`.
+
+```http
+POST /api/auth/refresh
+```
+
+Sem body; usa cookie `refresh_token` e header CSRF. Não exige access token válido. Retorna `200` com `{ "expiresAt": "2026-11-04T12:00:00" }` (valor ilustrativo, `LocalDateTime` do access token) e renova ambos os cookies. Credencial ausente, inválida, reutilizada após rotação, usuário inativo ou sessão expirada retorna `401`.
+
+O refresh token é opaco, gerado com aleatoriedade segura e persistido somente como hash SHA-256. A rotação substitui o hash na mesma sessão: a credencial anterior deixa de ser aceita. Não existe período de tolerância para refresh concorrente. Dois refreshes com a mesma credencial aceitam-na apenas uma vez; clientes devem coordenar a renovação.
+
+Login, refresh, logout e troca de senha coordenam concorrência por bloqueio do usuário e releitura do estado persistido; a sessão também tem versão. Falha na emissão de credenciais faz rollback da operação transacional. Troca de senha revoga todas as sessões anteriores; a troca normal emite nova sessão e ambos os cookies para a requisição atual, mantendo `204`. A troca inicial mantém `204` sem autenticar automaticamente. Alteração de nickname não deve restaurar senha antiga em concorrência.
+
+O cookie `refresh_token` tem `HttpOnly`, `Secure`, `Path=/api/auth`, `SameSite` configurável (base `None`, produção `Lax`) e `Max-Age` até `sessionExpiresAt`. O access cookie mantém `Path=/` e idade até a expiração do JWT. Cookies não usam `Domain` explícito.
+
+Após login/logout, obtenha novamente `GET /api/auth/csrf` antes de outra escrita. O CSRF é exigido também no refresh e nas trocas de senha, mesmo em endpoints públicos. CORS permite credenciais e métodos GET, PATCH, POST, PUT, DELETE e OPTIONS, expondo `Retry-After`.
+
+## Expiração, Transição e Limpeza
+
+A Issue #329/PR #330 define a política atual:
+
+| Conceito | Regra |
+|---|---|
+| Access token | Padrão de 120 minutos, limitado também pelo `expiresAt` da sessão na emissão |
+| Nova sessão | `expiresAt = createdAt + 30 dias`, `absoluteExpiresAt = createdAt + 90 dias` |
+| Refresh válido | `expiresAt = min(agora + 30 dias, absoluteExpiresAt)` |
+| Requisição autenticada comum | Não renova a janela de inatividade |
+| Limite absoluto | Não se desloca no refresh; no limite é necessário novo login |
+| Limpeza física | Job diário às 03h em `America/Sao_Paulo`, exclui `expires_at < agora - 15 dias` |
+
+Expiração e revogação bloqueiam acesso imediatamente na validação, sem depender da limpeza (Issue #327/PR #328). Revogação não muda o critério da limpeza: uma sessão revogada não é removida apenas por ter sido revogada; aguarda a expiração mais a retenção. O job não remove usuários nem logs. Falhas são registradas e o agendamento permanece disponível para nova tentativa.
+
+Transição: JWT antigo sem `sid` exige novo login. A V29 permite hash nulo em sessões anteriores, que não possuem credencial de refresh. A V31 preenche `absolute_expires_at` com o `expires_at` já existente, preservando o teto anterior. Não concede automaticamente 30/90 dias aos registros migrados nem recupera sessões já vencidas. Sessões novas seguem a política completa. Um access token já emitido mantém seu próprio `exp`; refresh não prolonga aquele JWT, emite outro.
+
+## Limites de Tentativas e Proteções de Credenciais
+
+Os limites são persistidos em `auth_attempt_limits`, identificados por hash do sujeito, e compartilhados entre instâncias:
+
+- IP: padrão 120 requisições por minuto, nos POST de login, refresh, troca inicial e troca normal de senha.
+- Credenciais por e-mail (login/troca inicial) e troca normal por usuário: padrão 20 tentativas por janela de 300 segundos. Reservas são liberadas quando o resultado não é credencial inválida; não constituem limite geral da API.
+- Configuração: `security.auth-rate-limit.account-limit`, `account-window-seconds` e `ip-limit-per-minute`. Rejeição retorna `429` com `Retry-After` e incrementa `authentication.rate.limit.rejections`.
+- Limpeza dos contadores a cada cinco minutos, mantendo a maior janela configurada (conta ou um minuto).
+- IP vem de `request.getRemoteAddr()`. Em produção, o servidor escuta `127.0.0.1` e confia em headers encaminhados somente pelo proxy loopback configurado, evitando aceitar indiscriminadamente `X-Forwarded-For` do cliente.
+- Senhas exigem ao menos oito caracteres; a geração de hash BCrypt rejeita mais de 72 bytes UTF-8. DTOs/commands sensíveis redigem credenciais em `toString`; respostas não expõem JWT ou refresh token.
+
+Testes de referência: `AuthenticationHardeningIntegrationTest`, `AuthSessionConcurrencyIntegrationTest`, `AuthSessionExpirationTest`, `AuthSessionCleanupPostgresIntegrationTest` e `AuthSessionMigrationPostgresIntegrationTest`. Ver [Testes](../testing/README.md).
 
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>

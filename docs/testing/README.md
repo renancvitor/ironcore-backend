@@ -226,4 +226,22 @@ O sucesso do CI de um `push` na `main` pode executar o CD conforme as condiçõe
 - Fluxos de segurança devem cobrir autenticação válida, autenticação inválida e acesso a rotas protegidas.
 - Novos módulos funcionais devem incluir testes proporcionais ao risco antes de serem tratados como entrega fechada.
 
+## Workout Session e Sessões de Autenticação
+
+Testes incorporados após v1.2.0:
+
+| Recorte | Evidência no código de testes |
+|---|---|
+| Fluxo de treino com PostgreSQL/Flyway real | `WorkoutSessionIntegrationTest`: início, recuperação, ownership, CSRF, execução parcial, encerramento, expiração, correção posterior, snapshots, histórico e indicadores |
+| Schema e concorrência do aggregate | `WorkoutSessionPersistenceTest`, `WorkoutSessionCreationTest`, `WorkoutSessionMapperTest` |
+| Histórico | `WorkoutSessionHistoryPostgresIntegrationTest`, `WorkoutSessionHistoryQueryIntegrationTest` |
+| Indicadores e dados ausentes | `ExecutionMetricsCalculatorTest`, `ExerciseEvolutionUseCasesTest`, `ExerciseAnalyticsPostgresIntegrationTest`, `ExerciseAnalyticsQueryIntegrationTest` |
+| HTTP de execução | `WorkoutSessionControllerTest`, `WorkoutSessionExecutionSecurityTest`, `WorkoutSessionPatchRequestTest`, `ExerciseAnalyticsControllerTest` |
+| Refresh e invalidação concorrente | `AuthSessionConcurrencyIntegrationTest`: rotação única, logout/troca de senha versus refresh, bloqueio/releitura de usuário e rollback |
+| Segurança | `AuthenticationHardeningIntegrationTest`, `AuthSecurityIntegrationTest`, `ProductionSecurityIntegrationTest`, `TrustedProxyConfigurationTest`, `CredentialsRedactionTest` |
+| Expiração de autenticação | `AuthSessionExpirationTest`: janela renovada só por refresh, teto absoluto e fronteiras |
+| Limpeza e migração | `AuthSessionCleanupPostgresIntegrationTest`, `AuthSessionMigrationPostgresIntegrationTest`, `AuthSessionCleanupServiceTest`, `AuthSessionCleanupSchedulerTest` |
+
+Alguns nomes antigos de testes fazem referência à política anterior de refresh sem extensão; a autoridade é a asserção atual e os testes específicos de expiração, não apenas o nome do método. Testcontainers requer Docker acessível; ausência de execução ou testes ignorados não comprova aprovação dos cenários. O registro de validação documental e a base examinada estão no [próximo release](../releases/next/README.md).
+
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>

@@ -42,6 +42,14 @@ A configuração base da aplicação habilita o Flyway e usa `hibernate.ddl-auto
 | `V21__create_table_workout_activities.sql` | `workout_activities` | Armazena atividades prescritas de cada dia. |
 | `V22__seed_training_goals.sql` | `training_goals` | Insere os objetivos iniciais de treino. |
 | `V23__add_column_week_starts_on_to_workout_cycles.sql` | `workout_cycles` | Adiciona `week_starts_on INTEGER NOT NULL DEFAULT 1`, definindo `SUNDAY` como início da semana nos ciclos existentes e como padrão no banco. |
+| `V24__create_table_workout_sessions.sql` | `workout_sessions` | Sessão por pessoa, snapshots, lifecycle e índice único parcial de sessão em andamento. |
+| `V25__create_table_workout_session_activities.sql` | `workout_session_activities` | Snapshots da prescrição e execução opcional; ordem única por sessão. |
+| `V26__create_table_workout_session_sets.sql` | `workout_session_sets` | Séries, carga, modo, repetições e relato; número único por atividade. |
+| `V27__allow_partial_workout_session_set_execution.sql` | `workout_session_sets` | Substitui a constraint de execução, permitindo carga/modo, repetições ou relato isolados. |
+| `V28__create_table_auth_sessions.sql` | `auth_sessions` | Sessão UUID por usuário, expiração, revogação e versão. |
+| `V29__add_auth_session_refresh_token.sql` | `auth_sessions` | Hash opcional de refresh token, formato hexadecimal de 64 caracteres e índice único. |
+| `V30__create_auth_attempt_limits.sql` | `auth_attempt_limits` | Contadores por hash do sujeito e janela, com índice de limpeza por início da janela. |
+| `V31__add_auth_session_absolute_expiration.sql` | `auth_sessions` | Limite absoluto obrigatório; registros existentes recebem o expires_at anterior como teto. |
 
 ## Modelo Implementado
 
@@ -80,7 +88,7 @@ Decisões atuais:
 
 ## Observações Sobre os Diagramas
 
-O diagrama ER inclui o recorte implementado de objetivos de treino, ciclos, dias e atividades. Diagramas de geração por IA e de Workout Session continuam blueprint de produto.
+O diagrama ER inclui o recorte implementado de objetivos de treino, ciclos, dias e atividades. A imagem ER anterior é um recorte até planejamento; os complementos Mermaid em [ER](../diagram/er-sql/README.md) e o [fluxo de sessão](../diagram/sequence-log-diagram/README.md) descrevem execução e autenticação atuais. Geração por IA permanece blueprint de produto.
 
 Somente as tabelas criadas pelas migrations listadas acima devem ser tratadas como estado de banco implementado.
 
@@ -100,5 +108,17 @@ PostgreSQL é usado pela persistência funcional atual. MongoDB está preparado 
 `application-prod.yml` habilita o Flyway e mantém `baseline-on-migrate=false`. O banco de produção é PostgreSQL no Supabase, na região de São Paulo, com conexão TLS. As credenciais são configuradas fora do Git, em `/etc/ironcore/ironcore.env` na VPS.
 
 O bootstrap inicial foi executado e posteriormente desabilitado em produção. **O rollback do JAR não desfaz migrations Flyway**; mudanças de schema devem permanecer compatíveis com a versão anterior que poderá ser restaurada. Arquitetura e fluxo de publicação: [Deploy e Produção](../deploy/README.md).
+
+## Constraints de Execução e Autenticação
+
+- V24: `person_id` obrigatório com cascade; ciclo/dia opcionais com `SET NULL`. `ck_workout_sessions_lifecycle` relaciona status, fim e motivo; `ck_workout_sessions_dates` valida data local, limite às 03h do dia seguinte e timestamps. `uk_workout_sessions_person_in_progress` é único por pessoa apenas em `IN_PROGRESS`; há índices de pessoa, ciclo e dia.
+- V25: atividade pertence à sessão com cascade; referências a atividade planejada e exercício usam `SET NULL`. Ordem positiva única por sessão, faixa de repetições consistente, valores planejados/executados com checks de sinal. Índices para origem e exercício.
+- V26/V27: cascade da atividade para séries, `UNIQUE (workout_session_activity_id, set_number)`, número e repetições positivos; carga `NUMERIC(8,2)` não negativa. A constraint final exige carga e modo juntos e pelo menos carga, repetições ou relato não vazio. A uniformidade de modo entre séries é regra de domínio, não check SQL entre linhas.
+- V28: `user_id` referencia `users` com cascade; expiração posterior à criação e revogação não anterior à criação; versão para concorrência e índice por usuário.
+- V29: hash aceita `NULL` para transição de registros anteriores, caso contrário exige 64 caracteres `[0-9a-f]`; índice único sobre `refresh_token_hash`.
+- V30: `subject_hash` é chave primária, `attempts >= 0` e índice por `window_started_at`.
+- V31: `expires_at <= absolute_expires_at`, com limite absoluto posterior à criação e até `created_at + INTERVAL '2160 hours'`. O backfill usa a expiração existente, sem conceder nova janela aos registros antigos.
+
+Modelo: `persons -> workout_sessions -> workout_session_activities -> workout_session_sets` e `users -> auth_sessions`. `auth_attempt_limits` é independente, sem FK para usuário. A validade da sessão e a retenção dos registros têm regras diferentes: [Users e Auth](../users/README.md).
 
 <p align="right"><a href="../README.md">Voltar para a documentação técnica</a></p>

@@ -26,6 +26,8 @@ A interface agrupa os endpoints pelas tags configuradas no contrato OpenAPI:
 - `Ciclo de treino`: operações de ciclo, lifecycle, detalhe e listagem.
 - `Dia de treino`: composição e reorder de dias.
 - `Atividade de treino`: composição e reorder de atividades.
+- `Sessão de treino`: início, execução, encerramento e histórico.
+- `Indicadores de execução`: evolução de força e cardio por exercício.
 
 ## Autenticação
 
@@ -35,13 +37,16 @@ O backend usa o cookie HTTP-only `access_token` como mecanismo de autenticação
 
 Fluxo operacional:
 
-1. Execute `POST /api/auth/login`.
-2. O backend retorna o usuário autenticado e emite o cookie `access_token`.
+1. Obtenha `GET /api/auth/csrf` e envie token e cookies nas escritas, incluindo `POST /api/auth/login`.
+2. O backend retorna o usuário autenticado e emite `access_token` e `refresh_token`; obtenha novo CSRF após login.
 3. Requisições protegidas devem enviar esse cookie.
-4. Execute `POST /api/auth/logout` para expirar o cookie.
+4. Use `POST /api/auth/refresh` com CSRF e refresh cookie para renovar o acesso.
+5. Execute `POST /api/auth/logout` para revogar a sessão e expirar ambos os cookies.
 
 Endpoints públicos aparecem sem exigência de autenticação no contrato:
 
+- `GET /api/auth/csrf`
+- `POST /api/auth/refresh`
 - `POST /api/auth/login`
 - `POST /api/auth/logout`
 - `POST /api/users/change-initial-password`
@@ -63,5 +68,11 @@ Campos de senha são documentados com `format: password`.
 A documentação visual por GIFs não foi criada nesta etapa.
 
 Como o projeto ainda está em expansão, demonstrações por endpoint tenderiam a gerar alto custo de manutenção e pouco valor técnico. Quando os fluxos funcionais estiverem mais maduros, a documentação visual poderá ser adicionada por jornadas completas, como autenticação, atualização de dados do usuário, ciclo de métricas corporais, consulta do exercise catalog e planejamento de workout.
+
+## Contratos de Sessão e Refresh
+
+As tags de sessão e indicadores expõem os contratos de [Workout Session](../workout-session/README.md). Use os ids retornados de sessão, atividade e série nas operações seguintes; não confunda ids de atividades executadas com ids do planejamento.
+
+Coordene refresh no cliente: a rotação aceita a credencial anterior apenas uma vez. O fluxo completo de cookies e CSRF está em [Users e Auth](../users/README.md). Swagger UI e `/v3/api-docs` permanecem desabilitados em produção.
 
 <p align="right"><a href="README.md">Voltar para Swagger/OpenAPI</a></p>

@@ -308,4 +308,22 @@ De forma resumida, o fluxo implementado funciona assim:
 - A API atual do catálogo expõe consultas e não CRUD público.
 - A imagem deste diagrama foi criada com o [dbdiagram.io](https://dbdiagram.io/).
 
+## Complemento Atual: Execução e Autenticação
+
+A imagem no início representa o recorte anterior; este complemento registra V24–V31 sem atribuir tabelas novas à imagem antiga. `workout_cycles.week_starts_on` é `INTEGER NOT NULL DEFAULT 1` desde V23.
+
+```mermaid
+erDiagram
+    persons ||--o{ workout_sessions : possui
+    workout_cycles o|--o{ workout_sessions : origem_opcional
+    workout_days o|--o{ workout_sessions : origem_opcional
+    workout_sessions ||--o{ workout_session_activities : captura
+    workout_activities o|--o{ workout_session_activities : origem_opcional
+    exercises o|--o{ workout_session_activities : referencia_opcional
+    workout_session_activities ||--o{ workout_session_sets : registra
+    users ||--o{ auth_sessions : autentica
+```
+
+`auth_attempt_limits` mantém contadores independentes por hash e janela. Sessões de treino têm snapshots, data local, status/motivo e versão; atividades capturam a prescrição e execução parcial; séries guardam carga/modo/repetições/relato. Sessões de autenticação têm UUID, expirações móvel/absoluta, revogação, hash do refresh e versão. Tipos, cascades e constraints: [Banco de Dados](../../database/README.md).
+
 <p align="right"><a href="../../../README.md">Voltar para a documentação completa</a></p>
